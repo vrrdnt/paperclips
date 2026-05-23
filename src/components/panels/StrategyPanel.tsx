@@ -83,13 +83,13 @@ export function StrategyPanel({ snap: s }: Props) {
   useEffect(() => {
     if (s.tourneyCount !== prevCountRef.current && ct) {
       prevCountRef.current = s.tourneyCount;
-      startAnimation(ct.payoff);
+      startAnimation(ct.payoff, ct.totalRounds);
     }
   }, [s.tourneyCount]);
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
-  function startAnimation(payoff: number[][]) {
+  function startAnimation(payoff: number[][], totalRounds: number) {
     if (timerRef.current) clearTimeout(timerRef.current);
     setRunning(true);
     setAnimRound(0);
@@ -102,8 +102,8 @@ export function StrategyPanel({ snap: s }: Props) {
       return CELLS[3];
     }
 
-    const TOTAL_ROUNDS = 5;
-    const GAMES = 6;
+    const TOTAL_ROUNDS = Math.min(totalRounds, 20);
+    const GAMES = Math.max(3, Math.ceil(60 / TOTAL_ROUNDS));
     let round = 0;
     let game = 0;
 
@@ -159,8 +159,8 @@ export function StrategyPanel({ snap: s }: Props) {
 
             <div style={{ fontSize: 9, color: 'var(--text-muted)', textAlign: 'center', marginTop: 2 }}>
               {running
-                ? `Round ${animRound} — ${ct.stratH} vs ${ct.stratV}`
-                : `${ct.stratH} vs ${ct.stratV}`}
+                ? `Round ${animRound} / ${ct.totalRounds} — ${ct.stratH} vs ${ct.stratV}`
+                : `${ct.stratH} vs ${ct.stratV} · ${ct.totalRounds} matchups`}
             </div>
 
             {!running && (

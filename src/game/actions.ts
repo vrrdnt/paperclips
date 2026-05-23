@@ -137,45 +137,63 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   const payoff = [[aa, ab], [ba, bb]];
   const choiceNames = CHOICE_PAIRS[Math.floor(Math.random() * CHOICE_PAIRS.length)];
 
-  const active = s.strategies.filter(n => n !== pickedStrat);
-  active.push(pickedStrat);
+  const active = [...s.strategies];
+  const totals: Record<string, number> = {};
+  for (const n of active) totals[n] = 0;
 
-  const scores = active.map(name => {
-    let score = 0;
-    for (let round = 0; round < 10; round++) {
-      const move = stratMove(name, round, payoff);
-      score += move === 1 ? (payoff[0][0] + payoff[0][1]) / 2 : (payoff[1][0] + payoff[1][1]) / 2;
+  // Round-robin: every strategy plays every other strategy (and itself), 10 games each
+  for (const hName of active) {
+    for (const vName of active) {
+      let hPrev = 1, vPrev = 1;
+      for (let r = 0; r < 10; r++) {
+        const hm = stratMove(hName, r, payoff, vPrev);
+        const vm = stratMove(vName, r, payoff, hPrev);
+        if (hm === 1 && vm === 1) { totals[hName] += payoff[0][0]; totals[vName] += payoff[0][0]; }
+        else if (hm === 1 && vm === 2) { totals[hName] += payoff[0][1]; totals[vName] += payoff[1][0]; }
+        else if (hm === 2 && vm === 1) { totals[hName] += payoff[1][0]; totals[vName] += payoff[0][1]; }
+        else { totals[hName] += payoff[1][1]; totals[vName] += payoff[1][1]; }
+        hPrev = hm; vPrev = vm;
+      }
     }
-    return { name, score };
-  });
+  }
 
+  const scores = active.map(name => ({ name, score: totals[name] }));
   scores.sort((a, b) => b.score - a.score);
   const winner = scores[0];
-  const picked = scores.find(s2 => s2.name === pickedStrat);
-  const placement = scores.indexOf(picked!);
+  const picked = scores.find(s2 => s2.name === pickedStrat)!;
+  const placement = scores.indexOf(picked);
 
-  let yomiGain = winner.score * s.yomiBoost;
-  if (placement <= 2) yomiGain *= (3 - placement);
+  let yomiGain = picked.score * s.yomiBoost;
+  if (placement === 0) yomiGain += 50000;
+  else if (placement === 1) yomiGain += 30000;
+  else if (placement === 2) yomiGain += 20000;
   s.yomi += Math.floor(yomiGain);
 
-  s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score.toFixed(1)}`).join(' | ');
+  s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
   s.tourneyCount++;
   s.currentTournament = {
     stratH: pickedStrat, stratV: winner.name,
     payoff, choiceNames,
-    results: scores.map(sc => `${sc.name}: ${sc.score.toFixed(1)}`),
+    totalRounds: active.length * active.length,
+    results: scores.map(sc => `${sc.name}: ${sc.score}`),
   };
 }
 
-function stratMove(name: string, round: number, payoff: number[][]): number {
+function stratMove(name: string, round: number, payoff: number[][], opponentPrev = 1): number {
   switch (name) {
     case 'A100': return 1;
     case 'B100': return 2;
     case 'GREEDY': return (payoff[0][0] + payoff[0][1]) > (payoff[1][0] + payoff[1][1]) ? 1 : 2;
     case 'GENEROUS': return (payoff[0][0] + payoff[0][1]) <= (payoff[1][0] + payoff[1][1]) ? 1 : 2;
     case 'MINIMAX': return Math.min(payoff[0][0], payoff[0][1]) > Math.min(payoff[1][0], payoff[1][1]) ? 1 : 2;
-    case 'TIT_FOR_TAT': return round === 0 ? 1 : round % 2 === 0 ? 1 : 2;
-    case 'BEAT_LAST': return round === 0 ? 2 : round % 2 === 0 ? 2 : 1;
+    case 'TIT_FOR_TAT': return round === 0 ? 1 : opponentPrev;
+    case 'BEAT_LAST': {
+      if (round === 0) return 2;
+      // Play whichever move gives higher payoff against what opponent played last
+      return opponentPrev === 1
+        ? (payoff[0][0] >= payoff[1][0] ? 1 : 2)
+        : (payoff[0][1] >= payoff[1][1] ? 1 : 2);
+    }
     default: return Math.random() < 0.5 ? 1 : 2;
   }
 }
