@@ -103,6 +103,17 @@ export default function App() {
             <CombatPanel snap={snap} />
           </div>
         </main>
+
+        <footer style={{ textAlign: 'center', padding: '16px 0 4px', fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+          Based on{' '}
+          <a href="https://www.decisionproblem.com/paperclips/" target="_blank" rel="noopener noreferrer"
+            style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+            Universal Paperclips
+          </a>
+          {' '}by Frank Lantz &amp; NYU Game Center.
+          All game design and mechanics are their work.
+          This is a non-commercial fan reskin — not affiliated with or endorsed by the original creators.
+        </footer>
       </div>
     </div>
   );
