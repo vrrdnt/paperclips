@@ -30,7 +30,7 @@ export function ProbeDesignPanel({ snap: s }: Props) {
   const probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
 
   return (
-    <SectionCard title="Probe Design" icon={<Satellite size={11} />}>
+    <SectionCard title="Probe Design" icon={<Satellite size={14} />}>
       <div className="stat-row">
         <span className="stat-label">Probe trust</span>
         <span className="stat-value">{s.probeTrust} / {s.maxTrust}</span>

@@ -15,7 +15,7 @@ export function StrategyPanel({ snap: s }: Props) {
   const [picked, setPicked] = useState(s.strategies[0] || 'RANDOM');
 
   return (
-    <SectionCard title="Strategy" icon={<Swords size={11} />}>
+    <SectionCard title="Strategy" icon={<Swords size={14} />}>
       <div className="stat-row">
         <span className="stat-label">Yomi</span>
         <span className="stat-value-lg">{formatWithCommas(s.yomi)}</span>

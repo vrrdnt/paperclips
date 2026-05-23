@@ -14,7 +14,7 @@ export function SpacePanel({ snap: s }: Props) {
 
   return (
     <>
-      <SectionCard title="Universe" icon={<Globe size={11} />}>
+      <SectionCard title="Universe" icon={<Globe size={14} />}>
         <div className="stat-row">
           <span className="stat-label">Probes</span>
           <span className="stat-value-lg">{spellf(s.probeCount)}</span>
@@ -52,7 +52,7 @@ export function SpacePanel({ snap: s }: Props) {
 
       {/* Space factories */}
       {s.factoryFlag === 1 && (
-        <SectionCard title="Space Factories" icon={<Globe size={11} />}>
+        <SectionCard title="Space Factories" icon={<Globe size={14} />}>
           <div className="stat-row">
             <span className="stat-label">Factories</span>
             <span className="stat-value">{s.factoryLevel}</span>

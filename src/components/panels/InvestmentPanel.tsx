@@ -65,7 +65,7 @@ export function InvestmentPanel({ snap: s }: Props) {
   if (!s.investmentEngineFlag) return null;
 
   return (
-    <SectionCard title="Investments" icon={<BarChart2 size={11} />}>
+    <SectionCard title="Investments" icon={<BarChart2 size={14} />}>
       <div className="stat-row">
         <span className="stat-label">Bankroll</span>
         <span className="stat-value-lg">${spellf(s.bankroll)}</span>

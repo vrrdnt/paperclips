@@ -17,7 +17,7 @@ export function PowerPanel({ snap: s }: Props) {
     : 0;
 
   return (
-    <SectionCard title="Power" icon={<Battery size={11} />}>
+    <SectionCard title="Power" icon={<Battery size={14} />}>
       <div className="stat-row">
         <span className="stat-label">Stored power</span>
         <span className="stat-value">{formatWithCommas(s.storedPower, 0)}</span>

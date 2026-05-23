@@ -17,7 +17,7 @@ export function SwarmPanel({ snap: s }: Props) {
   const statusLabel = STATUS_LABELS[Math.min(s.swarmStatus, STATUS_LABELS.length - 1)] ?? 'Unknown';
 
   return (
-    <SectionCard title="Drone Swarm" icon={<Users size={11} />}>
+    <SectionCard title="Drone Swarm" icon={<Users size={14} />}>
       <div className="swarm-badge">{statusLabel}</div>
 
       <div className="stat-row">

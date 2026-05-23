@@ -18,7 +18,7 @@ export function Console({ snap }: Props) {
   }, [snap.readouts]);
 
   return (
-    <SectionCard title="Log" icon={<Terminal size={11} />}>
+    <SectionCard title="Log" icon={<Terminal size={14} />}>
       <div className="console-panel">
         {[...snap.readouts].reverse().map((line, i) => (
           <div key={i} className="console-line">{line || ' '}</div>

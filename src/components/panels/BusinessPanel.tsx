@@ -19,7 +19,7 @@ export function BusinessPanel({ snap: s }: Props) {
   return (
     <>
       {/* Clip maker */}
-      <SectionCard title="Paperclips" icon={<Zap size={11} />}>
+      <SectionCard title="Paperclips" icon={<Zap size={14} />}>
         <div className="stat-row">
           <span className="stat-label">Clips made</span>
           <span className="stat-value-lg">{spellf(s.clips)}</span>
@@ -40,7 +40,7 @@ export function BusinessPanel({ snap: s }: Props) {
       </SectionCard>
 
       {/* Funds / revenue */}
-      <SectionCard title="Business" icon={<DollarSign size={11} />}>
+      <SectionCard title="Business" icon={<DollarSign size={14} />}>
         <div className="stat-row">
           <span className="stat-label">Funds</span>
           <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
@@ -102,7 +102,7 @@ export function BusinessPanel({ snap: s }: Props) {
 
       {/* Marketing */}
       {s.humanFlag === 1 && (
-        <SectionCard title="Marketing" icon={<TrendingUp size={11} />}>
+        <SectionCard title="Marketing" icon={<TrendingUp size={14} />}>
           <div className="stat-row">
             <span className="stat-label">Level</span>
             <span className="stat-value">{s.marketingLvl}</span>
