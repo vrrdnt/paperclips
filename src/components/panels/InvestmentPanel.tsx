@@ -17,26 +17,26 @@ function StockRow({ st }: { st: Stock }) {
   const priceColor  = up ? '#50b050' : '#c05050';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2.5rem 1fr 60px', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-      {/* Symbol + price */}
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{st.symbol}</div>
-        <div style={{ fontSize: 10, color: priceColor, fontVariantNumeric: 'tabular-nums' }}>
-          ${formatWithCommas(st.price, 2)}
-          <span style={{ marginLeft: 2, fontSize: 9 }}>{up ? '▲' : '▼'}</span>
+    <div style={{ padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2.5rem 1fr', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        {/* Symbol + price */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{st.symbol}</div>
+          <div style={{ fontSize: 10, color: priceColor, fontVariantNumeric: 'tabular-nums' }}>
+            ${formatWithCommas(st.price, 2)}
+            <span style={{ marginLeft: 2, fontSize: 9 }}>{up ? '▲' : '▼'}</span>
+          </div>
+        </div>
+
+        {/* Profit + held */}
+        <div>
+          <div style={{ fontSize: 10, color: profitColor, fontVariantNumeric: 'tabular-nums' }}>
+            {st.profit >= 0 ? '+' : ''}${formatWithCommas(Math.abs(st.profit), 2)}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{formatWithCommas(st.amount)} shares</div>
         </div>
       </div>
-
-      {/* Profit + held */}
-      <div>
-        <div style={{ fontSize: 10, color: profitColor, fontVariantNumeric: 'tabular-nums' }}>
-          {st.profit >= 0 ? '+' : ''}${formatWithCommas(Math.abs(st.profit), 2)}
-        </div>
-        <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{formatWithCommas(st.amount)} shares</div>
-      </div>
-
-      {/* Sparkline */}
-      <Sparkline data={st.priceHistory ?? [st.price]} width={60} height={22} />
+      <Sparkline data={st.priceHistory ?? [st.price]} height={22} />
     </div>
   );
 }
@@ -73,7 +73,6 @@ export function InvestmentPanel({ snap: s }: Props) {
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-muted)', marginBottom: 2, padding: '0 0 2px' }}>
             <span>SYMBOL / PRICE</span>
             <span>P&amp;L / HELD</span>
-            <span>CHART</span>
           </div>
           {s.stocks.map(st => (
             <StockRow key={st.symbol} st={st} />

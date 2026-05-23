@@ -23,11 +23,13 @@ export function ManufacturingPanel({ snap: s }: Props) {
         <span className="stat-label">AutoClippers</span>
         <span className="stat-value">{s.clipmakerLevel}</span>
       </div>
-      <div className="stat-row">
-        <span className="stat-label">Rate</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ marginBottom: 6 }}>
+        <div className="stat-row">
+          <span className="stat-label">Rate</span>
+          <span className="stat-value">{formatWithCommas(s.clipmakerRate, 1)}/s</span>
+        </div>
+        <div style={{ marginTop: 3 }}>
           <Sparkline data={h.clipmakerRate} yMax={m.clipmakerRate} />
-          <span className="stat-value" style={{ minWidth: 60 }}>{formatWithCommas(s.clipmakerRate, 1)}/s</span>
         </div>
       </div>
       <div style={{ marginTop: 6 }}>

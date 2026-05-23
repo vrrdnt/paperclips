@@ -31,14 +31,16 @@ export function BusinessPanel({ snap: s }: Props) {
           <span className="stat-label">Unsold</span>
           <span className="stat-value">{spellf(s.unsoldClips)}</span>
         </div>
-        <div className="stat-row">
-          <span className="stat-label">Rate</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ marginBottom: 6 }}>
+          <div className="stat-row">
+            <span className="stat-label">Rate</span>
+            <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
+          </div>
+          <div style={{ marginTop: 3 }}>
             <Sparkline data={h.clipRate} yMax={m.clipRate} />
-            <span className="stat-value" style={{ minWidth: 60 }}>{formatWithCommas(s.clipRate, 1)}/s</span>
           </div>
         </div>
-        <div style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 2 }}>
           <Btn variant="primary" full onClick={() => { clipClick(G); }}>
             Make Paperclip
           </Btn>
@@ -47,19 +49,23 @@ export function BusinessPanel({ snap: s }: Props) {
 
       {/* Funds / revenue */}
       <SectionCard title="Business" icon={<DollarSign size={14} />}>
-        <div className="stat-row">
-          <span className="stat-label">Funds</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ marginBottom: 6 }}>
+          <div className="stat-row">
+            <span className="stat-label">Funds</span>
+            <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
+          </div>
+          <div style={{ marginTop: 3 }}>
             <Sparkline data={h.funds} yMax={m.funds} />
-            <span className="stat-value-lg" style={{ minWidth: 72 }}>${formatWithCommas(s.funds, 2)}</span>
           </div>
         </div>
         {s.revPerSecFlag === 1 && (
-          <div className="stat-row">
-            <span className="stat-label">Revenue/s</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ marginBottom: 6 }}>
+            <div className="stat-row">
+              <span className="stat-label">Revenue/s</span>
+              <span className="stat-value">${formatWithCommas(s.avgRev, 2)}</span>
+            </div>
+            <div style={{ marginTop: 3 }}>
               <Sparkline data={h.avgRev} yMax={m.avgRev} />
-              <span className="stat-value" style={{ minWidth: 60 }}>${formatWithCommas(s.avgRev, 2)}</span>
             </div>
           </div>
         )}
@@ -88,11 +94,13 @@ export function BusinessPanel({ snap: s }: Props) {
         <hr className="divider" />
 
         {/* Wire */}
-        <div className="stat-row">
-          <span className="stat-label">Wire</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ marginBottom: 4 }}>
+          <div className="stat-row">
+            <span className="stat-label">Wire</span>
+            <span className="stat-value">{spellf(s.wire)}</span>
+          </div>
+          <div style={{ marginTop: 3 }}>
             <Sparkline data={h.wire} yMax={m.wire} />
-            <span className="stat-value" style={{ minWidth: 50 }}>{spellf(s.wire)}</span>
           </div>
         </div>
         <div className="stat-row">
