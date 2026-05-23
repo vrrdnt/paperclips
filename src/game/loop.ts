@@ -402,9 +402,13 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 let sellDelay = 0;
 let stockGainThreshold = 0.5;
 
+function riskVal(s: GameState): number {
+  return s.investRisk === 'low' ? 7 : s.investRisk === 'hi' ? 1 : 5;
+}
+
 function tickInvestmentShop(s: GameState): void {
   if (!s.humanFlag) return;
-  const riskiness = 5; // could be configurable
+  const riskiness = riskVal(s);
   const budget = Math.ceil((s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0)) / riskiness);
   if (s.stocks.length < 5 && s.bankroll >= 5 && budget >= 1 && Math.random() < 0.25) {
     createStock(s, budget, riskiness);
@@ -437,7 +441,7 @@ function generateSymbol(): string {
 }
 
 function tickInvestmentUpdate(s: GameState): void {
-  const riskiness = 5;
+  const riskiness = riskVal(s);
   for (const st of s.stocks) {
     st.age++;
     if (Math.random() < 0.6) {
