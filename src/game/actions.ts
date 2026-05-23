@@ -353,6 +353,8 @@ export function entertainSwarm(s: GameState): void {
   if (s.creativity < s.entertainCost) return;
   s.creativity -= s.entertainCost;
   s.boredomLevel = 0;
+  s.boredomFlag = 0;
+  if (s.swarmStatus === 4) s.swarmStatus = 3;
   displayMessage(s, 'Swarm entertained');
 }
 
@@ -360,5 +362,8 @@ export function synchSwarm(s: GameState): void {
   if (s.yomi < s.synchCost) return;
   s.yomi -= s.synchCost;
   s.disorgFlag = 0;
+  s.disorgCounter = 0;
+  s.disorgMsg = 0;
+  s.swarmStatus = 3;
   displayMessage(s, 'Swarm synchronized');
 }

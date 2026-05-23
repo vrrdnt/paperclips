@@ -7,14 +7,16 @@ import { G } from '../../game/state';
 import { feedSwarm, entertainSwarm, synchSwarm } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
-const STATUS_LABELS = ['Frenzied', 'Disorganized', 'Subdued', 'Content', 'Bored'];
+const STATUS_MAP: Record<number, string> = {
+  0: 'Disorganized', 1: 'Frenzied', 2: 'Subdued', 3: 'Content', 4: 'Bored', 7: 'Online',
+};
 
 interface Props { snap: DisplaySnapshot; }
 
 export function SwarmPanel({ snap: s }: Props) {
   if (!s.swarmFlag) return null;
 
-  const statusLabel = STATUS_LABELS[Math.min(s.swarmStatus, STATUS_LABELS.length - 1)] ?? 'Unknown';
+  const statusLabel = STATUS_MAP[s.swarmStatus] ?? 'Unknown';
 
   return (
     <SectionCard title="Drone Swarm" icon={<Users size={14} />}>
