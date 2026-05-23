@@ -18,7 +18,7 @@ function StockRow({ st, graphs }: { st: Stock; graphs: boolean }) {
 
   return (
     <div style={{ padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2.5rem 1fr', alignItems: 'center', gap: 8, marginBottom: graphs ? 4 : 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8, marginBottom: graphs ? 4 : 0 }}>
         {/* Symbol + price */}
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{st.symbol}</div>
@@ -29,7 +29,7 @@ function StockRow({ st, graphs }: { st: Stock; graphs: boolean }) {
         </div>
 
         {/* Profit + held */}
-        <div>
+        <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 10, color: profitColor, fontVariantNumeric: 'tabular-nums' }}>
             {st.profit >= 0 ? '+' : ''}${formatWithCommas(Math.abs(st.profit), 2)}
           </div>

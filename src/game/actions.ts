@@ -116,16 +116,26 @@ export function investUpgrade(s: GameState): void {
 // ── Strategy / Tournament ─────────────────────────────────────────────────
 const STRAT_NAMES = ['RANDOM', 'A100', 'B100', 'GREEDY', 'GENEROUS', 'MINIMAX', 'TIT_FOR_TAT', 'BEAT_LAST'];
 
+const CHOICE_PAIRS: [string, string][] = [
+  ['cooperate', 'defect'], ['swerve', 'straight'], ['macro', 'micro'],
+  ['fight', 'back down'], ['bet', 'fold'], ['raise', 'lower'],
+  ['opera', 'football'], ['go', 'stay'], ['heads', 'tails'],
+  ['particle', 'wave'], ['discrete', 'continuous'], ['peace', 'war'],
+  ['search', 'evaluate'], ['lead', 'follow'], ['accept', 'reject'],
+  ['attack', 'decay'],
+];
+
 export function runTourney(s: GameState, pickedStrat: string): void {
   if (s.operations < s.newTourneyCost) return;
   s.standardOps -= s.newTourneyCost;
   s.operations = Math.floor(s.standardOps + s.tempOps);
 
-  const aa = Math.floor(Math.random() * 10);
-  const ab = Math.floor(Math.random() * 10);
-  const ba = Math.floor(Math.random() * 10);
-  const bb = Math.floor(Math.random() * 10);
+  const aa = Math.ceil(Math.random() * 10);
+  const ab = Math.ceil(Math.random() * 10);
+  const ba = Math.ceil(Math.random() * 10);
+  const bb = Math.ceil(Math.random() * 10);
   const payoff = [[aa, ab], [ba, bb]];
+  const choiceNames = CHOICE_PAIRS[Math.floor(Math.random() * CHOICE_PAIRS.length)];
 
   const active = s.strategies.filter(n => n !== pickedStrat);
   active.push(pickedStrat);
@@ -149,9 +159,10 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   s.yomi += Math.floor(yomiGain);
 
   s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score.toFixed(1)}`).join(' | ');
+  s.tourneyCount++;
   s.currentTournament = {
     stratH: pickedStrat, stratV: winner.name,
-    payoff,
+    payoff, choiceNames,
     results: scores.map(sc => `${sc.name}: ${sc.score.toFixed(1)}`),
   };
 }

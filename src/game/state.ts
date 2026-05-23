@@ -114,9 +114,11 @@ export interface GameState {
   yomiBoost: number;
   tourneyResult: string;
   newTourneyCost: number;
+  tourneyCount: number;
   currentTournament: {
     stratH: string; stratV: string;
     payoff: number[][];
+    choiceNames: [string, string];
     results: string[];
   } | null;
   // ── Flags ─────────────────────────────────────────────────────────────────
@@ -281,7 +283,7 @@ export function makeInitialState(): GameState {
 
     strategies: ['RANDOM'], autoTourneyFlag: 0, autoTourneyStatus: 1,
     yomiBoost: 1, tourneyResult: 'Pick strategy, run tournament, gain yomi',
-    newTourneyCost: 1000, currentTournament: null,
+    newTourneyCost: 1000, tourneyCount: 0, currentTournament: null,
 
     compFlag: 0, projectsFlag: 0, autoClipperFlag: 0, megaClipperFlag: 0,
     revPerSecFlag: 0, strategyEngineFlag: 0, investmentEngineFlag: 0,

@@ -15,7 +15,12 @@ export function loadGame(): GameState {
     if (!raw) return makeInitialState();
     const loaded = JSON.parse(raw) as GameState;
     // Merge with initial state so new fields have defaults
-    return { ...makeInitialState(), ...loaded };
+    const merged = { ...makeInitialState(), ...loaded };
+    // Drop stale tournament objects that predate the choiceNames field
+    if (merged.currentTournament && !merged.currentTournament.choiceNames) {
+      merged.currentTournament = null;
+    }
+    return merged;
   } catch {
     return makeInitialState();
   }
