@@ -74,7 +74,7 @@ export function addMem(s: GameState): void {
 // ── Quantum compute ───────────────────────────────────────────────────────
 export function qComp(s: GameState): void {
   s.qFade = 1;
-  if (s.qChips[0] === 0) {
+  if (s.nextQchip === 0) {
     displayMessage(s, 'Need Photonic Chips');
     return;
   }

@@ -85,12 +85,12 @@ export function ComputingPanel({ snap: s }: Props) {
           <hr className="divider" />
           <div className="stat-row">
             <span className="stat-label">Qubits active</span>
-            <span className="stat-value">{s.qChips.filter(Boolean).length} / {s.qChips.length}</span>
+            <span className="stat-value">{s.nextQchip} / {s.qChips.length}</span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, margin: '6px 0' }}>
             {s.qChips.map((v, i) => {
-              const active = v !== 0;
+              const active = i < s.nextQchip;
               const abs = Math.abs(v);
               const hue = v >= 0 ? 185 : 270;
               return (
@@ -116,7 +116,7 @@ export function ComputingPanel({ snap: s }: Props) {
             {s.qChips.map((v, i) => {
               const x = (i / (s.qChips.length - 1)) * 100;
               const y = 14 - v * 11;
-              const active = v !== 0;
+              const active = i < s.nextQchip;
               return (
                 <g key={i}>
                   <line x1={`${x}%`} y1="14" x2={`${x}%`} y2={y} stroke={active ? (v >= 0 ? '#2dd4bf' : '#a78bfa') : '#222'} strokeWidth="1.5" strokeLinecap="round" />

@@ -222,7 +222,8 @@ function tickQuantum(s: GameState): void {
   s.qFade = Math.max(0, s.qFade - 0.001);
   for (let i = 0; i < 10; i++) {
     const seed = (i + 1) * 0.1;
-    s.qChips[i] = s.qChips[i] > 0 ? Math.sin(s.qClock * seed * s.qChips[i]) : 0;
+    const active = i < s.nextQchip ? 1 : 0;
+    s.qChips[i] = Math.sin(s.qClock * seed * active);
   }
 }
 
