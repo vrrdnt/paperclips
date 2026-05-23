@@ -120,6 +120,7 @@ export interface GameState {
     stratH: string; stratV: string;
     payoff: number[][];
     choiceNames: [string, string];
+    totalRounds: number;
     results: string[];
   } | null;
   // ── Flags ─────────────────────────────────────────────────────────────────
