@@ -40,9 +40,9 @@ export function tick(s: GameState): void {
   if (s.ticks % 10 === 0) tickRevenue(s);
   if (s.ticks % 100 === 0) tickClipRate(s);
   if (s.ticks % 250 === 0) saveGame(s);
-  if (s.ticks % 1000 === 0 && s.humanFlag) tickInvestmentShop(s);
+  if (s.ticks % 100 === 0 && s.humanFlag) tickInvestmentShop(s);
   if (s.ticks % 250 === 0 && s.humanFlag) tickInvestmentUpdate(s);
-  if (s.ticks % 50 === 0 && s.humanFlag) tickInvestmentSell(s);
+  if (s.ticks % 250 === 0 && s.humanFlag) tickInvestmentSell(s);
 
   if (s.ticks % 10 === 0 && s.humanFlag) tickSales(s);
   if (s.spaceFlag) tickSpace(s);
