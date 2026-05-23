@@ -56,6 +56,19 @@ export function InvestmentPanel({ snap: s }: Props) {
         <span className="stat-value">{s.investLevel}</span>
       </div>
 
+      <div className="stat-row" style={{ marginTop: 4 }}>
+        <span className="stat-label">Risk</span>
+        <select
+          className="strat-select"
+          value={s.investRisk}
+          onChange={e => { G.investRisk = e.target.value as 'low' | 'med' | 'hi'; }}
+        >
+          <option value="low">Low</option>
+          <option value="med">Med</option>
+          <option value="hi">High</option>
+        </select>
+      </div>
+
       <div className="row" style={{ marginTop: 6 }}>
         <Btn onClick={() => { investDeposit(G); }} disabled={s.funds <= 0}>
           Deposit

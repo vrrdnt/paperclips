@@ -102,6 +102,7 @@ export interface GameState {
   investLevel: number;
   investUpgradeCost: number;
   portfolioSize: number;
+  investRisk: 'low' | 'med' | 'hi';
   // ── Yomi / Honor / Trust ──────────────────────────────────────────────────
   yomi: number;
   honor: number;
@@ -277,7 +278,7 @@ export function makeInitialState(): GameState {
     wirePriceCounter: 0, wirePriceTimer: 0, wireBuyerStatus: 1,
 
     bankroll: 0, stocks: [], investLevel: 0, investUpgradeCost: 100,
-    portfolioSize: 5,
+    portfolioSize: 5, investRisk: 'med',
 
     yomi: 0, honor: 0, maxTrust: 20, maxTrustCost: 91117.99,
 
