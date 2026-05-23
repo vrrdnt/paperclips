@@ -117,7 +117,7 @@ export default function App() {
           {' '}·{' '}
           <a href="https://github.com/vrrdnt/paperclips" target="_blank" rel="noopener noreferrer"
             style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            GitHub
+            vrrdnt/paperclips
           </a>
         </footer>
       </div>
