@@ -150,7 +150,7 @@ body { background: var(--bg); min-height: 100vh; }
   border-bottom: 1px solid var(--border);
 }
 
-.section-title svg { opacity: .6; }
+.section-title svg { opacity: 1; color: #d0d0d0; }
 
 /* ── Buttons ────────────────────────────────────────────────────── */
 .btn {
