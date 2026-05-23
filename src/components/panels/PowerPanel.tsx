@@ -10,7 +10,7 @@ import { spellf, formatWithCommas } from '../../game/format';
 interface Props { snap: DisplaySnapshot; }
 
 export function PowerPanel({ snap: s }: Props) {
-  if (!s.factoryFlag) return null;
+  if (!s.projectFlags[127]) return null;
 
   const storedPct = s.batterySize > 0
     ? Math.min(100, (s.storedPower / (s.batteryLevel * s.batterySize)) * 100) || 0

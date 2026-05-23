@@ -596,7 +596,7 @@ export const ALL_PROJECTS: Project[] = [
     title: 'Hostile Takeover ',
     priceTag: '($1,000,000)',
     description: 'Acquire a controlling interest in Global Fasteners, our biggest rival. (+1 Trust)',
-    trigger: (s) => s.bankroll >= 10000,
+    trigger: (s) => s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0) >= 10000,
     cost: (s) => s.funds >= 1000000,
     effect: (s) => {
       s.projectFlags[37] = 1;
