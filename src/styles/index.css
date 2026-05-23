@@ -254,10 +254,15 @@ body { background: var(--bg); min-height: 100vh; }
   font-size: 11px;
   font-family: 'Consolas', 'Courier New', monospace;
   min-height: 80px;
+  max-height: 120px;
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
 }
 
+.console-panel::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
 .console-line { color: var(--text-dim); line-height: 1.6; }
-.console-line:first-child { color: var(--text); }
+.console-line:last-of-type { color: var(--text); }
 
 /* ── Projects ───────────────────────────────────────────────────── */
 .project-list { display: flex; flex-direction: column; gap: 6px; }

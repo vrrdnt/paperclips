@@ -477,7 +477,7 @@ function tickEndGame(s: GameState): void {
 
 // ── Utility ───────────────────────────────────────────────────────────────
 export function displayMessage(s: GameState, msg: string): void {
-  s.readouts = [msg, ...s.readouts.slice(0, 4)];
+  s.readouts = [msg, ...s.readouts].slice(0, 50);
 }
 
 export { buyWire };
