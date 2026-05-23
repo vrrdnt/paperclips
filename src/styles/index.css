@@ -311,25 +311,14 @@ body { background: var(--bg); min-height: 100vh; }
 }
 
 /* ── Quantum chip display ───────────────────────────────────────── */
-.qchip-row {
-  display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
-  margin: 4px 0;
+@keyframes q-pulse {
+  0%   { box-shadow: 0 0 2px rgba(255,255,255,0.7), 0 0 6px rgba(220,235,255,0.4); }
+  50%  { box-shadow: 0 0 5px rgba(255,255,255,1.0), 0 0 12px rgba(220,235,255,0.65), 0 0 22px rgba(180,210,255,0.25); }
+  100% { box-shadow: 0 0 2px rgba(255,255,255,0.7), 0 0 6px rgba(220,235,255,0.4); }
 }
 
-.qchip {
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-  border: 1px solid var(--border);
-  background: var(--panel2);
-  transition: background 0.15s, opacity 0.15s;
-}
-
-.qchip.active {
-  background: var(--accent);
-  border-color: #a0a0a0;
+.qchip-active {
+  animation: q-pulse 0.9s ease-in-out infinite;
 }
 
 /* ── Investment stock table ─────────────────────────────────────── */
