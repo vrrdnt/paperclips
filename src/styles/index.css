@@ -381,6 +381,21 @@ body { background: var(--bg); min-height: 100vh; }
   animation: q-ring 0.48s ease-out infinite;
 }
 
+@keyframes q-stray-anim {
+  0%   { opacity: 0;   transform: scale(0.5); }
+  25%  { opacity: 0.7; transform: scale(1); }
+  75%  { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0;   transform: scale(0.3); }
+}
+
+.q-stray {
+  position: absolute;
+  width: 2px; height: 2px;
+  border-radius: 50%;
+  background: rgba(220, 240, 255, 0.85);
+  animation: q-stray-anim 0.38s ease-in-out infinite;
+}
+
 /* ── Investment stock table ─────────────────────────────────────── */
 .stock-table {
   width: 100%;
