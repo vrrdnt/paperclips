@@ -15,7 +15,7 @@ export function Btn({ variant = 'default', full, children, className = '', ...re
   ].filter(Boolean).join(' ');
 
   return (
-    <button className={cls} {...rest}>
+    <button type="button" className={cls} {...rest}>
       {children}
     </button>
   );
