@@ -12,6 +12,7 @@ interface Props { snap: DisplaySnapshot; }
 
 export function BusinessPanel({ snap: s }: Props) {
   const h = useGameStore(st => st.histories);
+  const m = useGameStore(st => st.maxima);
   const price = s.margin.toFixed(2);
   const wireTrendUp = s.wireCost > s.wireBasePrice;
   const wireTrendDown = s.wireCost < s.wireBasePrice;
@@ -28,16 +29,13 @@ export function BusinessPanel({ snap: s }: Props) {
         </div>
         <div className="stat-row">
           <span className="stat-label">Unsold</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sparkline data={h.unsoldClips} />
-            <span className="stat-value">{spellf(s.unsoldClips)}</span>
-          </div>
+          <span className="stat-value">{spellf(s.unsoldClips)}</span>
         </div>
         <div className="stat-row">
           <span className="stat-label">Rate</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sparkline data={h.clipRate} />
-            <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
+            <Sparkline data={h.clipRate} yMax={m.clipRate} />
+            <span className="stat-value" style={{ minWidth: 60 }}>{formatWithCommas(s.clipRate, 1)}/s</span>
           </div>
         </div>
         <div style={{ marginTop: 8 }}>
@@ -52,16 +50,16 @@ export function BusinessPanel({ snap: s }: Props) {
         <div className="stat-row">
           <span className="stat-label">Funds</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sparkline data={h.funds} />
-            <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
+            <Sparkline data={h.funds} yMax={m.funds} />
+            <span className="stat-value-lg" style={{ minWidth: 72 }}>${formatWithCommas(s.funds, 2)}</span>
           </div>
         </div>
         {s.revPerSecFlag === 1 && (
           <div className="stat-row">
             <span className="stat-label">Revenue/s</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Sparkline data={h.avgRev} />
-              <span className="stat-value">${formatWithCommas(s.avgRev, 2)}</span>
+              <Sparkline data={h.avgRev} yMax={m.avgRev} />
+              <span className="stat-value" style={{ minWidth: 60 }}>${formatWithCommas(s.avgRev, 2)}</span>
             </div>
           </div>
         )}
@@ -93,8 +91,8 @@ export function BusinessPanel({ snap: s }: Props) {
         <div className="stat-row">
           <span className="stat-label">Wire</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sparkline data={h.wire} />
-            <span className="stat-value">{spellf(s.wire)}</span>
+            <Sparkline data={h.wire} yMax={m.wire} />
+            <span className="stat-value" style={{ minWidth: 50 }}>{spellf(s.wire)}</span>
           </div>
         </div>
         <div className="stat-row">
