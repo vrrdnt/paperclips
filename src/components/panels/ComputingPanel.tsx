@@ -9,6 +9,69 @@ import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
+// Catmull-Rom spline → SVG cubic bezier path through pts
+function catmullPath(pts: [number, number][]): string {
+  if (pts.length < 2) return '';
+  let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[Math.min(pts.length - 1, i + 2)];
+    const cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)} ${cp2x.toFixed(1)} ${cp2y.toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+function QWave({ chips, activeCount }: { chips: number[]; activeCount: number }) {
+  const W = 100, H = 28, MID = 14, AMP = 11;
+  const pts: [number, number][] = chips.map((v, i) => [
+    (i / (chips.length - 1)) * W,
+    MID - v * AMP,
+  ]);
+  const linePath = catmullPath(pts);
+  const fillPath = linePath
+    + ` L ${W} ${MID} L 0 ${MID} Z`;
+
+  return (
+    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+      <defs>
+        <linearGradient id="qwfill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="rgba(255,255,255,0.12)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </linearGradient>
+      </defs>
+      {/* Baseline */}
+      <line x1="0" y1={MID} x2={W} y2={MID} stroke="#1c1c1c" strokeWidth="0.5" />
+      {/* Fill under wave */}
+      <path d={fillPath} fill="url(#qwfill)" />
+      {/* Wave line */}
+      <path d={linePath} fill="none"
+        stroke="rgba(255,255,255,0.65)" strokeWidth="1"
+        strokeLinecap="round" strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke" />
+      {/* Node dots */}
+      {pts.map(([x, y], i) => {
+        const active = i < activeCount;
+        const abs = Math.abs(chips[i]);
+        return (
+          <circle key={i} cx={x} cy={y}
+            r={active ? 1.2 + abs * 0.6 : 0.8}
+            fill={active ? 'white' : '#2a2a2a'}
+            opacity={active ? 0.5 + abs * 0.5 : 1}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 export function ComputingPanel({ snap: s }: Props) {
   if (!s.compFlag) return null;
 
@@ -146,26 +209,8 @@ export function ComputingPanel({ snap: s }: Props) {
             })}
           </div>
 
-          {/* Waveform readout */}
-          <svg width="100%" height="28" style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
-            {s.qChips.map((v, i) => {
-              const x = (i / (s.qChips.length - 1)) * 100;
-              const y = 14 - v * 11;
-              const active = i < s.nextQchip;
-              const abs = Math.abs(v);
-              return (
-                <g key={i}>
-                  <line x1={`${x}%`} y1="14" x2={`${x}%`} y2={y}
-                    stroke={active ? `rgba(255,255,255,${0.4 + abs * 0.5})` : '#1e1e1e'}
-                    strokeWidth={active ? 1 + abs : 0.8} strokeLinecap="round" />
-                  <circle cx={`${x}%`} cy={y} r={active ? 1.5 + abs : 0.8}
-                    fill={active ? 'white' : '#252525'}
-                    opacity={active ? 0.5 + abs * 0.5 : 1} />
-                </g>
-              );
-            })}
-            <line x1="0" y1="14" x2="100%" y2="14" stroke="#1a1a1a" strokeWidth="0.5" />
-          </svg>
+          {/* Sine waveform */}
+          <QWave chips={s.qChips} activeCount={s.nextQchip} />
 
           <Btn onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
             Quantum Compute
