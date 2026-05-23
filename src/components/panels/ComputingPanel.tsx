@@ -92,39 +92,86 @@ export function ComputingPanel({ snap: s }: Props) {
             {s.qChips.map((v, i) => {
               const active = i < s.nextQchip;
               const abs = Math.abs(v);
-              const hue = v >= 0 ? 185 : 270;
+              // Streak angles rotate with the oscillation, giving a scrambled look
+              const streaks = [0, 51, 103, 154, 206, 257].map(base => (base + v * 90 + i * 17) % 360);
               return (
-                <div key={i} style={{
-                  aspectRatio: '1',
-                  borderRadius: '50%',
-                  background: active ? `hsl(${hue}, 70%, ${12 + abs * 18}%)` : '#141414',
-                  border: `1px solid ${active ? `hsl(${hue}, 60%, ${25 + abs * 20}%)` : '#222'}`,
-                  boxShadow: active ? `0 0 ${3 + abs * 7}px hsl(${hue}, 90%, 55%), inset 0 0 ${2 + abs * 4}px hsl(${hue}, 80%, 40%)` : 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.1s',
-                }}>
-                  <span style={{ fontSize: 7, color: active ? `hsl(${hue}, 70%, 65%)` : '#333', fontFamily: 'monospace', userSelect: 'none' }}>
-                    q{i}
-                  </span>
+                <div key={i} className={active ? 'qchip-active' : ''}
+                  style={{
+                    aspectRatio: '1',
+                    borderRadius: '50%',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: active ? `rgba(255,255,255,${0.04 + abs * 0.08})` : '#111',
+                    border: `1px solid ${active ? `rgba(255,255,255,${0.3 + abs * 0.5})` : '#1e1e1e'}`,
+                  }}>
+                  {active && (
+                    <svg width="100%" height="100%" viewBox="0 0 32 32"
+                      style={{ position: 'absolute', inset: 0 }}>
+                      {/* Radiating streaks */}
+                      {streaks.map((angle, j) => {
+                        const rad = (angle * Math.PI) / 180;
+                        const len = 6 + abs * 10;
+                        return (
+                          <line key={j}
+                            x1={16} y1={16}
+                            x2={16 + Math.cos(rad) * len}
+                            y2={16 + Math.sin(rad) * len}
+                            stroke="white"
+                            strokeWidth={0.4 + abs * 0.6}
+                            strokeOpacity={0.2 + abs * 0.55}
+                            strokeLinecap="round"
+                          />
+                        );
+                      })}
+                      {/* Scramble marks — small off-center sparks */}
+                      {[1, 3, 5].map(j => {
+                        const a = ((i * 73 + j * 120 + v * 180) * Math.PI) / 180;
+                        const r = 4 + abs * 4;
+                        return (
+                          <circle key={j}
+                            cx={16 + Math.cos(a) * r}
+                            cy={16 + Math.sin(a) * r}
+                            r={0.6 + abs * 0.8}
+                            fill="white"
+                            opacity={0.3 + abs * 0.5}
+                          />
+                        );
+                      })}
+                      {/* Core */}
+                      <circle cx={16} cy={16} r={1.5 + abs * 2} fill="white" opacity={0.6 + abs * 0.4} />
+                    </svg>
+                  )}
+                  <span style={{
+                    position: 'relative', fontSize: 6,
+                    color: active ? `rgba(255,255,255,${0.4 + abs * 0.4})` : '#2a2a2a',
+                    fontFamily: 'monospace', userSelect: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    height: '100%',
+                  }}>q{i}</span>
                 </div>
               );
             })}
           </div>
 
           {/* Waveform readout */}
-          <svg width="100%" height="28" style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: '#0e0e0e', border: '1px solid #1e1e1e' }}>
+          <svg width="100%" height="28" style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
             {s.qChips.map((v, i) => {
               const x = (i / (s.qChips.length - 1)) * 100;
               const y = 14 - v * 11;
               const active = i < s.nextQchip;
+              const abs = Math.abs(v);
               return (
                 <g key={i}>
-                  <line x1={`${x}%`} y1="14" x2={`${x}%`} y2={y} stroke={active ? (v >= 0 ? '#2dd4bf' : '#a78bfa') : '#222'} strokeWidth="1.5" strokeLinecap="round" />
-                  <circle cx={`${x}%`} cy={y} r={active ? 1.8 : 1} fill={active ? (v >= 0 ? '#2dd4bf' : '#a78bfa') : '#333'} />
+                  <line x1={`${x}%`} y1="14" x2={`${x}%`} y2={y}
+                    stroke={active ? `rgba(255,255,255,${0.4 + abs * 0.5})` : '#1e1e1e'}
+                    strokeWidth={active ? 1 + abs : 0.8} strokeLinecap="round" />
+                  <circle cx={`${x}%`} cy={y} r={active ? 1.5 + abs : 0.8}
+                    fill={active ? 'white' : '#252525'}
+                    opacity={active ? 0.5 + abs * 0.5 : 1} />
                 </g>
               );
             })}
-            <line x1="0" y1="14" x2="100%" y2="14" stroke="#1e1e1e" strokeWidth="0.5" />
+            <line x1="0" y1="14" x2="100%" y2="14" stroke="#1a1a1a" strokeWidth="0.5" />
           </svg>
 
           <Btn onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
