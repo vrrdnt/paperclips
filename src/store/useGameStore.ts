@@ -11,6 +11,7 @@ export interface Histories {
   funds:         number[];
   wire:          number[];
   clipmakerRate: number[];
+  portfolio:     number[];
 }
 
 function append(arr: number[], val: number): number[] {
@@ -19,7 +20,7 @@ function append(arr: number[], val: number): number[] {
 }
 
 const emptyHistories = (): Histories => ({
-  clipRate: [], avgRev: [], funds: [], wire: [], clipmakerRate: [],
+  clipRate: [], avgRev: [], funds: [], wire: [], clipmakerRate: [], portfolio: [],
 });
 
 interface GameStore {
@@ -39,6 +40,7 @@ export const useGameStore = create<GameStore>(set => ({
       funds:         append(prev.histories.funds,         s.funds),
       wire:          append(prev.histories.wire,          s.wire),
       clipmakerRate: append(prev.histories.clipmakerRate, s.clipmakerRate),
+      portfolio:     append(prev.histories.portfolio,     s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0)),
     },
   })),
 }));
