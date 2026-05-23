@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Paperclip, RotateCcw, Save } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
-import { tick } from './game/loop';
+import { tickBatch } from './game/loop';
 import { loadGame, saveGame, resetGame } from './game/save';
 import { Btn } from './components/ui/Btn';
 import { Console } from './components/Console';
@@ -29,8 +29,9 @@ export default function App() {
     Object.assign(G, saved);
     setSnap(G);
 
-    // Game tick: 10ms
-    const gameTimer = setInterval(() => { tick(G); }, 10);
+    // Drive the game with timestamp-based batching so ticks accumulate
+    // correctly even when the browser throttles this interval in background tabs.
+    const gameTimer = setInterval(() => { tickBatch(G); }, 50);
     // Display sync: 100ms
     const displayTimer = setInterval(() => { setSnap(G); }, 100);
 
