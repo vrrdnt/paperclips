@@ -25,7 +25,6 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
       background: flash === id ? '#3a3a3a' : '#1c1c1c',
       transition: 'background 0.04s',
       borderRadius: 2,
-      minWidth: 42,
       border: '1px solid #2a2a2a',
     }}>
       <div style={{ fontSize: 12, fontWeight: 600, color: '#ccc', fontVariantNumeric: 'tabular-nums' }}>{hVal}</div>
@@ -40,7 +39,12 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
   };
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 3, marginTop: 4 }}>
+    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 3, marginTop: 4 }}>
+      <colgroup>
+        <col style={{ width: '28%' }} />
+        <col style={{ width: '36%' }} />
+        <col style={{ width: '36%' }} />
+      </colgroup>
       <thead>
         <tr>
           <td />
