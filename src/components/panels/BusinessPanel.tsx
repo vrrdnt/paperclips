@@ -69,8 +69,8 @@ export function BusinessPanel({ snap: s }: Props) {
           <Btn onClick={() => { raisePrice(G); }}>+</Btn>
         </div>
         <div className="stat-row" style={{ marginTop: 2 }}>
-          <span className="stat-label">Demand</span>
-          <span className="stat-value dim">{s.demand.toFixed(2)}</span>
+          <span className="stat-label">Buy chance</span>
+          <span className="stat-value dim">{Math.min(s.demand, 100).toFixed(0)}%</span>
         </div>
 
         <hr className="divider" />
