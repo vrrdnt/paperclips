@@ -114,6 +114,11 @@ export default function App() {
           {' '}by Frank Lantz &amp; NYU Game Center.
           All game design and mechanics are their work.
           This is a non-commercial fan reskin — not affiliated with or endorsed by the original creators.
+          {' '}·{' '}
+          <a href="https://github.com/vrrdnt/paperclips" target="_blank" rel="noopener noreferrer"
+            style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+            GitHub
+          </a>
         </footer>
       </div>
     </div>
