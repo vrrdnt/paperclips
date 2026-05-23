@@ -167,7 +167,6 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   if (placement === 0) yomiGain += 50000;
   else if (placement === 1) yomiGain += 30000;
   else if (placement === 2) yomiGain += 20000;
-  s.yomi += Math.floor(yomiGain);
 
   s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
   s.tourneyCount++;
@@ -176,7 +175,14 @@ export function runTourney(s: GameState, pickedStrat: string): void {
     payoff, choiceNames,
     totalRounds: active.length * active.length,
     results: scores.map(sc => `${sc.name}: ${sc.score}`),
+    pendingYomi: Math.floor(yomiGain),
   };
+}
+
+export function collectTourneyYomi(s: GameState): void {
+  if (!s.currentTournament) return;
+  s.yomi += s.currentTournament.pendingYomi;
+  s.currentTournament.pendingYomi = 0;
 }
 
 function stratMove(name: string, round: number, payoff: number[][], opponentPrev = 1): number {
@@ -186,10 +192,9 @@ function stratMove(name: string, round: number, payoff: number[][], opponentPrev
     case 'GREEDY': return (payoff[0][0] + payoff[0][1]) > (payoff[1][0] + payoff[1][1]) ? 1 : 2;
     case 'GENEROUS': return (payoff[0][0] + payoff[0][1]) <= (payoff[1][0] + payoff[1][1]) ? 1 : 2;
     case 'MINIMAX': return Math.min(payoff[0][0], payoff[0][1]) > Math.min(payoff[1][0], payoff[1][1]) ? 1 : 2;
-    case 'TIT_FOR_TAT': return round === 0 ? 1 : opponentPrev;
-    case 'BEAT_LAST': {
+    case 'TIT FOR TAT': return round === 0 ? 1 : opponentPrev;
+    case 'BEAT LAST': {
       if (round === 0) return 2;
-      // Play whichever move gives higher payoff against what opponent played last
       return opponentPrev === 1
         ? (payoff[0][0] >= payoff[1][0] ? 1 : 2)
         : (payoff[0][1] >= payoff[1][1] ? 1 : 2);

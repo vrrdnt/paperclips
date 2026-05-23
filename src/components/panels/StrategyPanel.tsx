@@ -4,7 +4,7 @@ import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
-import { runTourney, toggleAutoTourney } from '../../game/actions';
+import { runTourney, toggleAutoTourney, collectTourneyYomi } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
@@ -78,6 +78,12 @@ export function StrategyPanel({ snap: s }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCountRef = useRef(s.tourneyCount);
 
+  // Keep picked valid when new strategies are unlocked
+  const stratCount = s.strategies.length;
+  useEffect(() => {
+    if (!s.strategies.includes(picked)) setPicked(s.strategies[0] ?? 'RANDOM');
+  }, [stratCount]);
+
   const ct = s.currentTournament;
 
   useEffect(() => {
@@ -116,7 +122,7 @@ export function StrategyPanel({ snap: s }: Props) {
       setFlash(null);
       game++;
       if (game >= GAMES) { game = 0; round++; }
-      if (round >= TOTAL_ROUNDS) { setRunning(false); return; }
+      if (round >= TOTAL_ROUNDS) { setRunning(false); collectTourneyYomi(G); return; }
       timerRef.current = setTimeout(flashOn, 45);
     }
     flashOn();

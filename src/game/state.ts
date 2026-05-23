@@ -122,6 +122,7 @@ export interface GameState {
     choiceNames: [string, string];
     totalRounds: number;
     results: string[];
+    pendingYomi: number;
   } | null;
   // ── Flags ─────────────────────────────────────────────────────────────────
   compFlag: number;
