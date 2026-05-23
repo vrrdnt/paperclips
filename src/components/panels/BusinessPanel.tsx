@@ -1,8 +1,9 @@
 import React from 'react';
 import { DollarSign, TrendingUp, Zap } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
+import { Sparkline } from '../ui/Sparkline';
 import { Btn } from '../ui/Btn';
-import { DisplaySnapshot } from '../../store/useGameStore';
+import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import { clipClick, buyWire, lowerPrice, raisePrice, buyAds, toggleWireBuyer } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
@@ -10,6 +11,7 @@ import { spellf, formatWithCommas } from '../../game/format';
 interface Props { snap: DisplaySnapshot; }
 
 export function BusinessPanel({ snap: s }: Props) {
+  const h = useGameStore(st => st.histories);
   const price = s.margin.toFixed(2);
   const wireTrendUp = s.wireCost > s.wireBasePrice;
   const wireTrendDown = s.wireCost < s.wireBasePrice;
@@ -26,11 +28,17 @@ export function BusinessPanel({ snap: s }: Props) {
         </div>
         <div className="stat-row">
           <span className="stat-label">Unsold</span>
-          <span className="stat-value">{spellf(s.unsoldClips)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkline data={h.unsoldClips} />
+            <span className="stat-value">{spellf(s.unsoldClips)}</span>
+          </div>
         </div>
         <div className="stat-row">
           <span className="stat-label">Rate</span>
-          <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkline data={h.clipRate} />
+            <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
+          </div>
         </div>
         <div style={{ marginTop: 8 }}>
           <Btn variant="primary" full onClick={() => { clipClick(G); }}>
@@ -43,12 +51,18 @@ export function BusinessPanel({ snap: s }: Props) {
       <SectionCard title="Business" icon={<DollarSign size={14} />}>
         <div className="stat-row">
           <span className="stat-label">Funds</span>
-          <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkline data={h.funds} />
+            <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
+          </div>
         </div>
         {s.revPerSecFlag === 1 && (
           <div className="stat-row">
             <span className="stat-label">Revenue/s</span>
-            <span className="stat-value">${formatWithCommas(s.avgRev, 2)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Sparkline data={h.avgRev} />
+              <span className="stat-value">${formatWithCommas(s.avgRev, 2)}</span>
+            </div>
           </div>
         )}
 
@@ -78,7 +92,10 @@ export function BusinessPanel({ snap: s }: Props) {
         {/* Wire */}
         <div className="stat-row">
           <span className="stat-label">Wire</span>
-          <span className="stat-value">{spellf(s.wire)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkline data={h.wire} />
+            <span className="stat-value">{spellf(s.wire)}</span>
+          </div>
         </div>
         <div className="stat-row">
           <span className="stat-label">Wire cost</span>
