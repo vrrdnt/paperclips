@@ -84,15 +84,50 @@ export function ComputingPanel({ snap: s }: Props) {
         <>
           <hr className="divider" />
           <div className="stat-row">
-            <span className="stat-label">Quantum chips</span>
-            <span className="stat-value">{s.qChips.filter(Boolean).length}</span>
+            <span className="stat-label">Qubits active</span>
+            <span className="stat-value">{s.qChips.filter(Boolean).length} / {s.qChips.length}</span>
           </div>
-          <div className="qchip-row">
-            {s.qChips.map((v, i) => (
-              <div key={i} className={`qchip${v ? ' active' : ''}`} />
-            ))}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, margin: '6px 0' }}>
+            {s.qChips.map((v, i) => {
+              const active = v !== 0;
+              const abs = Math.abs(v);
+              const hue = v >= 0 ? 185 : 270;
+              return (
+                <div key={i} style={{
+                  aspectRatio: '1',
+                  borderRadius: '50%',
+                  background: active ? `hsl(${hue}, 70%, ${12 + abs * 18}%)` : '#141414',
+                  border: `1px solid ${active ? `hsl(${hue}, 60%, ${25 + abs * 20}%)` : '#222'}`,
+                  boxShadow: active ? `0 0 ${3 + abs * 7}px hsl(${hue}, 90%, 55%), inset 0 0 ${2 + abs * 4}px hsl(${hue}, 80%, 40%)` : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.1s',
+                }}>
+                  <span style={{ fontSize: 7, color: active ? `hsl(${hue}, 70%, 65%)` : '#333', fontFamily: 'monospace', userSelect: 'none' }}>
+                    q{i}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          <Btn onClick={() => { qComp(G); }} style={{ marginTop: 4 }}>
+
+          {/* Waveform readout */}
+          <svg width="100%" height="28" style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: '#0e0e0e', border: '1px solid #1e1e1e' }}>
+            {s.qChips.map((v, i) => {
+              const x = (i / (s.qChips.length - 1)) * 100;
+              const y = 14 - v * 11;
+              const active = v !== 0;
+              return (
+                <g key={i}>
+                  <line x1={`${x}%`} y1="14" x2={`${x}%`} y2={y} stroke={active ? (v >= 0 ? '#2dd4bf' : '#a78bfa') : '#222'} strokeWidth="1.5" strokeLinecap="round" />
+                  <circle cx={`${x}%`} cy={y} r={active ? 1.8 : 1} fill={active ? (v >= 0 ? '#2dd4bf' : '#a78bfa') : '#333'} />
+                </g>
+              );
+            })}
+            <line x1="0" y1="14" x2="100%" y2="14" stroke="#1e1e1e" strokeWidth="0.5" />
+          </svg>
+
+          <Btn onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
             Quantum Compute
           </Btn>
         </>
