@@ -119,9 +119,6 @@ function tickAutoWireBuyer(s: GameState): void {
 // ── Clip production ───────────────────────────────────────────────────────
 function tickProduction(s: GameState): void {
   // Business-phase clippers — mirrors original exactly.
-  // Original main loop runs at 10ms (same as ours) and calls:
-  //   clipClick(clipperBoost * (clipmakerLevel / 100))   per tick
-  //   clipClick(megaClipperBoost * (megaClipperLevel * 5)) per tick
   if (s.humanFlag) {
     const ratePerTick = s.clipperBoost * (s.clipmakerLevel / 100)
                       + s.megaClipperBoost * s.megaClipperLevel * 5;
@@ -133,6 +130,8 @@ function tickProduction(s: GameState): void {
       s.unsoldClips += made;
       s.wire -= made;
     }
+  } else {
+    s.clipmakerRate = 0;
   }
 
   // Space-phase factory production (uses power modifier)

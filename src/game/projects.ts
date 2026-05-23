@@ -1,10 +1,11 @@
 import { GameState } from './state';
 import { displayMessage } from './loop';
+import { formatWithCommas } from './format';
 
 export interface Project {
   id: number;
   title: string;
-  priceTag: string;
+  priceTag: string | ((s: GameState) => string);
   description: string;
   trigger: (s: GameState) => boolean;
   cost: (s: GameState) => boolean;
@@ -726,7 +727,7 @@ export const ALL_PROJECTS: Project[] = [
     // project40b — id 1002
     id: 1002,
     title: 'Another Token of Goodwill... ',
-    priceTag: '($1,000,000)',
+    priceTag: (s) => `($${formatWithCommas(s.bribe)})`,
     description: 'Another small gift to the supervisors. (+1 Trust)',
     trigger: (s) => s.projectFlags[40] === 1 && s.trust < 100,
     cost: (s) => s.funds >= s.bribe,

@@ -277,23 +277,29 @@ body { background: var(--bg); min-height: 100vh; }
   padding: 6px 9px;
   text-align: left;
   width: 100%;
+  white-space: normal;
 }
 
 .project-btn-title {
   font-size: 12px;
   font-weight: 600;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .project-btn-desc {
   font-size: 10px;
   color: var(--text-muted);
   font-weight: 400;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .project-btn-price {
   font-size: 10px;
   color: var(--accent);
   font-weight: 400;
+  white-space: normal;
 }
 
 /* ── Progress bar (ops) ─────────────────────────────────────────── */
@@ -396,6 +402,25 @@ body { background: var(--bg); min-height: 100vh; }
   border-radius: 50%;
   background: rgba(220, 240, 255, 0.85);
   animation: q-stray-anim 0.38s ease-in-out infinite;
+}
+
+/* ── Hypno-drone phase transition ───────────────────────────────── */
+@keyframes hypno-overlay {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes hypno-flash {
+  0%   { opacity: 0.6; }
+  12%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes hypno-text {
+  0%   { opacity: 0; transform: scale(1.15) translateY(-6px); }
+  20%  { opacity: 1; transform: scale(1) translateY(0); }
+  75%  { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.95) translateY(4px); }
 }
 
 /* ── Investment stock table ─────────────────────────────────────── */

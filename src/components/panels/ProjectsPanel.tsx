@@ -19,6 +19,7 @@ export function ProjectsPanel({ snap: s }: Props) {
       <div className="project-list">
         {activeProjects.map((p: Project) => {
           const canAfford = p.cost(s);
+          const priceTag = typeof p.priceTag === 'function' ? p.priceTag(s) : p.priceTag;
           return (
             <Btn
               key={p.id}
@@ -27,7 +28,7 @@ export function ProjectsPanel({ snap: s }: Props) {
               onClick={() => { p.effect(G); }}
             >
               <span className="project-btn-title">{p.title}</span>
-              <span className="project-btn-price">{p.priceTag}</span>
+              <span className="project-btn-price">{priceTag}</span>
               <span className="project-btn-desc">{p.description}</span>
             </Btn>
           );

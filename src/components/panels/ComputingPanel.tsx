@@ -92,10 +92,12 @@ export function ComputingPanel({ snap: s }: Props) {
       <hr className="divider" />
 
       {/* Processors + Memory */}
-      <div className="stat-row">
-        <span className="stat-label">Trust available</span>
-        <span className="stat-value">{available}</span>
-      </div>
+      {s.humanFlag === 1 && (
+        <div className="stat-row">
+          <span className="stat-label">Trust available</span>
+          <span className="stat-value">{available}</span>
+        </div>
+      )}
 
       <div className="row" style={{ marginTop: 4 }}>
         <div style={{ flex: 1 }}>
@@ -103,33 +105,41 @@ export function ComputingPanel({ snap: s }: Props) {
             <span className="stat-label"><Cpu size={10} /> Processors</span>
             <span className="stat-value">{s.processors}</span>
           </div>
-          <Btn onClick={() => { addProc(G); }} disabled={available < 1 && s.swarmGifts <= 0}
-            style={{ marginTop: 4, width: '100%' }}>
-            +
-          </Btn>
+          {s.humanFlag === 1 && (
+            <Btn onClick={() => { addProc(G); }} disabled={available < 1 && s.swarmGifts <= 0}
+              style={{ marginTop: 4, width: '100%' }}>
+              +
+            </Btn>
+          )}
         </div>
         <div style={{ flex: 1 }}>
           <div className="stat-row">
             <span className="stat-label"><Brain size={10} /> Memory</span>
             <span className="stat-value">{s.memory}</span>
           </div>
-          <Btn onClick={() => { addMem(G); }} disabled={available < 1 && s.swarmGifts <= 0}
-            style={{ marginTop: 4, width: '100%' }}>
-            +
-          </Btn>
+          {s.humanFlag === 1 && (
+            <Btn onClick={() => { addMem(G); }} disabled={available < 1 && s.swarmGifts <= 0}
+              style={{ marginTop: 4, width: '100%' }}>
+              +
+            </Btn>
+          )}
         </div>
       </div>
 
-      {/* Trust */}
-      <hr className="divider" />
-      <div className="stat-row">
-        <span className="stat-label">Trust</span>
-        <span className="stat-value">{s.trust}</span>
-      </div>
-      <div className="stat-row">
-        <span className="stat-label">Next trust at</span>
-        <span className="stat-value dim">{formatWithCommas(s.nextTrust)} clips</span>
-      </div>
+      {/* Trust — human phase only */}
+      {s.humanFlag === 1 && (
+        <>
+          <hr className="divider" />
+          <div className="stat-row">
+            <span className="stat-label">Trust</span>
+            <span className="stat-value">{s.trust}</span>
+          </div>
+          <div className="stat-row">
+            <span className="stat-label">Next trust at</span>
+            <span className="stat-value dim">{formatWithCommas(s.nextTrust)} clips</span>
+          </div>
+        </>
+      )}
 
       {/* Creativity */}
       {s.creativityOn && (
