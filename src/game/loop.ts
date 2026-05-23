@@ -55,17 +55,32 @@ export function tick(s: GameState): void {
 
 // ── Operations ────────────────────────────────────────────────────────────
 function tickOps(s: GameState): void {
-  const gain = s.processors / 100;
-  s.standardOps = Math.min(s.standardOps + gain, s.memory * 1000);
-
-  // Temp-ops fade
-  if (s.opFade > 0) {
+  // Temp-ops fade (quantum computing bonus bleeds off over time)
+  if (s.tempOps > 0) {
     s.opFadeTimer++;
     if (s.opFadeTimer > s.opFadeDelay) {
-      s.tempOps = Math.max(0, s.tempOps - Math.pow(3, 3.5) / 1000);
+      s.opFade += Math.pow(3, 3.5) / 1000;
     }
+    s.tempOps = Math.max(0, Math.round(s.tempOps - s.opFade));
+  } else {
+    s.tempOps = 0;
   }
-  s.operations = Math.floor(s.standardOps + s.tempOps);
+
+  // Drain remaining tempOps into standardOps if capacity allows
+  if (s.tempOps + s.standardOps < s.memory * 1000) {
+    s.standardOps += s.tempOps;
+    s.tempOps = 0;
+  }
+
+  s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
+
+  // Accumulate ops from processors (original: processors/10 per 10ms tick)
+  if (s.operations < s.memory * 1000) {
+    const opCycle = Math.min(s.processors / 10, s.memory * 1000 - s.operations);
+    s.standardOps += opCycle;
+  }
+
+  if (s.standardOps > s.memory * 1000) s.standardOps = s.memory * 1000;
 }
 
 // ── Trust (Fibonacci milestones) ──────────────────────────────────────────
