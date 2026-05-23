@@ -11,7 +11,7 @@ import { formatWithCommas } from '../../game/format';
 interface Props { snap: DisplaySnapshot; }
 
 export function InvestmentPanel({ snap: s }: Props) {
-  if (!s.investmentEngineFlag) return null;
+  if (!s.investmentEngineFlag || !s.humanFlag) return null;
   const h = useGameStore(st => st.histories);
 
   const invested = s.stocks.reduce((a, st) => a + st.val, 0);

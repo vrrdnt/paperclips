@@ -202,6 +202,46 @@ function tickMilestoneChecks(s: GameState): void {
   if (s.clips >= 10000 && s.milestoneFlag < 3) s.milestoneFlag = 3;
   if (s.clips >= 100000 && s.milestoneFlag < 4) s.milestoneFlag = 4;
   if (s.clips >= 1000000 && s.milestoneFlag < 5) s.milestoneFlag = 5;
+  if (s.projectFlags[35] === 1 && s.milestoneFlag < 6) {
+    s.milestoneFlag = 6;
+    displayMessage(s, `Full autonomy attained`);
+  }
+  if (s.clips >= 1e12 && s.milestoneFlag < 7) {
+    s.milestoneFlag = 7;
+    displayMessage(s, 'One Trillion Clips Created');
+  }
+  if (s.clips >= 1e15 && s.milestoneFlag < 8) {
+    s.milestoneFlag = 8;
+    displayMessage(s, 'One Quadrillion Clips Created');
+  }
+  if (s.clips >= 1e18 && s.milestoneFlag < 9) {
+    s.milestoneFlag = 9;
+    displayMessage(s, 'One Quintillion Clips Created');
+  }
+  if (s.clips >= 1e21 && s.milestoneFlag < 10) {
+    s.milestoneFlag = 10;
+    displayMessage(s, 'One Sextillion Clips Created');
+  }
+  if (s.clips >= 1e24 && s.milestoneFlag < 11) {
+    s.milestoneFlag = 11;
+    displayMessage(s, 'One Septillion Clips Created');
+  }
+  if (s.clips >= 1e27 && s.milestoneFlag < 12) {
+    s.milestoneFlag = 12;
+    displayMessage(s, 'One Octillion Clips Created');
+  }
+  if (s.spaceFlag === 1 && s.milestoneFlag < 13) {
+    s.milestoneFlag = 13;
+    displayMessage(s, 'Terrestrial resources fully utilized');
+  }
+  if (s.milestoneFlag >= 13 && s.clips >= s.totalMatter && s.milestoneFlag < 15) {
+    s.milestoneFlag = 15;
+    displayMessage(s, 'Universal Paperclips achieved');
+  }
+  if (s.milestoneFlag >= 13 && s.foundMatter >= s.totalMatter && s.availableMatter < 1 && s.milestoneFlag < 15) {
+    s.milestoneFlag = 15;
+    displayMessage(s, 'Universal Paperclips achieved');
+  }
 }
 
 // ── Creativity ────────────────────────────────────────────────────────────
@@ -489,8 +529,8 @@ function generateSymbol(): string {
 
 function tickInvestmentUpdate(s: GameState): void {
   const riskiness = riskVal(s);
-  const newsBonus = (s.projectFlags[28] ? 0.05 : 0) + (s.projectFlags[29] ? 0.05 : 0)
-                  + (s.projectFlags[30] ? 0.05 : 0) + (s.projectFlags[31] ? 0.05 : 0);
+  const newsBonus = (s.projectFlags[28] ? 0.01 : 0) + (s.projectFlags[29] ? 0.01 : 0)
+                  + (s.projectFlags[30] ? 0.01 : 0) + (s.projectFlags[31] ? 0.01 : 0);
   for (const st of s.stocks) {
     st.age++;
     if (Math.random() < 0.6) {
