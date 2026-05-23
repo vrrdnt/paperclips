@@ -238,6 +238,8 @@ function tickSpace(s: GameState): void {
   tickCombat(s);
   tickSpaceFactories(s);
   updateColonized(s);
+  s.probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
+  s.probeTrustUsed = s.probeSpeed + s.probeNav + s.probeRep + s.probeHaz + s.probeFac + s.probeHarv + s.probeWire + s.probeCombat;
 }
 
 function tickPower(s: GameState): void {
@@ -261,6 +263,13 @@ function tickPower(s: GameState): void {
       s.storedPower = 0;
       s.powMod = supply / totalDemand;
     }
+  }
+
+  // Momentum: while fully powered, factories and drones continuously gain speed
+  if (s.momentum && s.powMod >= 1) {
+    s.factoryRate *= 1.0000015;
+    s.harvesterRate *= 1.0000015;
+    s.wireDroneRate *= 1.0000015;
   }
 }
 
@@ -309,6 +318,10 @@ function tickDrift(s: GameState): void {
   s.probeCount = Math.max(0, s.probeCount - amount);
   s.drifterCount += amount;
   s.probesLostDrift += amount;
+  if (!s.battleFlag && s.drifterCount >= WAR_TRIGGER) {
+    s.battleFlag = 1;
+    displayMessage(s, 'Drifter threat detected. Probes under attack.');
+  }
 }
 
 function tickCombat(s: GameState): void {
@@ -370,8 +383,9 @@ function tickSpaceFactories(s: GameState): void {
 }
 
 function updateColonized(s: GameState): void {
-  if (s.totalMatter > 0) {
-    s.colonized = (s.clips / s.totalMatter) * 100;
+  const total = s.availableMatter + s.acquiredMatter + s.processedMatter;
+  if (total > 0) {
+    s.colonized = (s.processedMatter / total) * 100;
   }
 }
 
@@ -394,6 +408,39 @@ function tickSwarm(s: GameState): void {
     s.giftCountdown = s.giftPeriod;
     if (s.trust + s.swarmGifts > s.processors + s.memory + 1) {
       s.giftCountdown = s.giftPeriod * 2;
+    }
+  }
+
+  // Initialize status when swarm first comes online
+  if (s.swarmStatus === 7) s.swarmStatus = 3;
+
+  // Boredom accumulates over time; disorganization follows if left unaddressed
+  if (s.swarmStatus !== 0 && s.swarmStatus !== 4) {
+    s.boredomLevel++;
+    if (s.boredomLevel > 200_000 && s.boredomFlag === 0) {
+      s.swarmStatus = 4;
+      s.boredomFlag = 1;
+      displayMessage(s, 'Swarm is getting Bored');
+    }
+  } else if (s.swarmStatus === 4) {
+    s.disorgCounter++;
+    if (s.disorgCounter > 150_000 && s.disorgFlag === 0) {
+      s.disorgFlag = 1;
+      s.swarmStatus = 0;
+      s.disorgMsg = 1;
+      displayMessage(s, 'Swarm is Disorganized — use Synchronize to restore');
+    }
+  }
+
+  // Swarm computing: contributes ops proportional to drone count and status
+  const drones = s.harvesterLevel + s.wireDroneLevel;
+  if (drones > 0 && s.swarmStatus !== 0) {
+    const mult = s.swarmStatus === 1 ? 2.0 : s.swarmStatus === 3 ? 1.0 : 0.5;
+    const contrib = Math.sqrt(drones) * 5 * mult;
+    const cap = s.memory * 1000;
+    if (s.standardOps < cap) {
+      s.standardOps = Math.min(s.standardOps + contrib, cap);
+      s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
     }
   }
 }
@@ -443,11 +490,13 @@ function generateSymbol(): string {
 
 function tickInvestmentUpdate(s: GameState): void {
   const riskiness = riskVal(s);
+  const newsBonus = (s.projectFlags[28] ? 0.05 : 0) + (s.projectFlags[29] ? 0.05 : 0)
+                  + (s.projectFlags[30] ? 0.05 : 0) + (s.projectFlags[31] ? 0.05 : 0);
   for (const st of s.stocks) {
     st.age++;
     if (Math.random() < 0.6) {
       st.prevPrice = st.price;
-      const gain = Math.random() > Math.max(0.1, stockGainThreshold - s.investLevel * 0.01);
+      const gain = Math.random() > Math.max(0.1, stockGainThreshold - s.investLevel * 0.01 - newsBonus);
       const delta = Math.ceil((Math.random() * st.price) / (4 * riskiness));
       if (gain) {
         st.price += delta;
@@ -476,13 +525,90 @@ function tickInvestmentSell(s: GameState): void {
 // ── Auto-tourney ──────────────────────────────────────────────────────────
 let autoTourneyTimer = 0;
 
+const AUTO_CHOICE_PAIRS: [string, string][] = [
+  ['cooperate', 'defect'], ['swerve', 'straight'], ['macro', 'micro'],
+  ['fight', 'back down'], ['bet', 'fold'], ['raise', 'lower'],
+  ['opera', 'football'], ['go', 'stay'], ['heads', 'tails'],
+  ['particle', 'wave'], ['discrete', 'continuous'], ['peace', 'war'],
+  ['search', 'evaluate'], ['lead', 'follow'], ['accept', 'reject'],
+  ['attack', 'decay'],
+];
+
+function autoStratMove(name: string, round: number, payoff: number[][], opponentPrev = 1): number {
+  switch (name) {
+    case 'A100': return 1;
+    case 'B100': return 2;
+    case 'GREEDY': return (payoff[0][0] + payoff[0][1]) > (payoff[1][0] + payoff[1][1]) ? 1 : 2;
+    case 'GENEROUS': return (payoff[0][0] + payoff[0][1]) <= (payoff[1][0] + payoff[1][1]) ? 1 : 2;
+    case 'MINIMAX': return Math.min(payoff[0][0], payoff[0][1]) > Math.min(payoff[1][0], payoff[1][1]) ? 1 : 2;
+    case 'TIT FOR TAT': return round === 0 ? 1 : opponentPrev;
+    case 'BEAT LAST': {
+      if (round === 0) return 2;
+      return opponentPrev === 1
+        ? (payoff[0][0] >= payoff[1][0] ? 1 : 2)
+        : (payoff[0][1] >= payoff[1][1] ? 1 : 2);
+    }
+    default: return Math.random() < 0.5 ? 1 : 2;
+  }
+}
+
 function tickAutoTourney(s: GameState): void {
   autoTourneyTimer++;
-  if (autoTourneyTimer >= 300 && s.operations >= s.newTourneyCost) {
-    autoTourneyTimer = 0;
-    // Signal to store that a new tourney should run
-    s.tourneyResult = 'AUTO';
+  if (autoTourneyTimer < 300 || s.operations < s.newTourneyCost) return;
+  autoTourneyTimer = 0;
+
+  s.standardOps -= s.newTourneyCost;
+  s.operations = Math.floor(s.standardOps + s.tempOps);
+
+  const aa = Math.ceil(Math.random() * 10);
+  const ab = Math.ceil(Math.random() * 10);
+  const ba = Math.ceil(Math.random() * 10);
+  const bb = Math.ceil(Math.random() * 10);
+  const payoff = [[aa, ab], [ba, bb]];
+  const choiceNames = AUTO_CHOICE_PAIRS[Math.floor(Math.random() * AUTO_CHOICE_PAIRS.length)];
+
+  const active = [...s.strategies];
+  const totals: Record<string, number> = {};
+  for (const n of active) totals[n] = 0;
+
+  for (const hName of active) {
+    for (const vName of active) {
+      if (hName === vName) continue;
+      let hPrev = 1, vPrev = 1;
+      for (let r = 0; r < 10; r++) {
+        const hm = autoStratMove(hName, r, payoff, vPrev);
+        const vm = autoStratMove(vName, r, payoff, hPrev);
+        if (hm === 1 && vm === 1) { totals[hName] += payoff[0][0]; totals[vName] += payoff[0][0]; }
+        else if (hm === 1 && vm === 2) { totals[hName] += payoff[0][1]; totals[vName] += payoff[1][0]; }
+        else if (hm === 2 && vm === 1) { totals[hName] += payoff[1][0]; totals[vName] += payoff[0][1]; }
+        else { totals[hName] += payoff[1][1]; totals[vName] += payoff[1][1]; }
+        hPrev = hm; vPrev = vm;
+      }
+    }
   }
+
+  const scores = active.map(name => ({ name, score: totals[name] }));
+  scores.sort((a, b) => b.score - a.score);
+  const winner = scores[0];
+  const pickedStrat = s.strategies[0] ?? 'RANDOM';
+  const picked = scores.find(sc => sc.name === pickedStrat) ?? scores[0];
+  const placement = scores.indexOf(picked);
+
+  let yomiGain = picked.score * s.yomiBoost;
+  if (placement === 0) yomiGain += 50000;
+  else if (placement === 1) yomiGain += 30000;
+  else if (placement === 2) yomiGain += 20000;
+
+  s.yomi += Math.floor(yomiGain);
+  s.tourneyCount++;
+  s.currentTournament = {
+    stratH: pickedStrat, stratV: winner.name,
+    payoff, choiceNames,
+    totalRounds: active.length * (active.length - 1),
+    results: scores.map(sc => `${sc.name}: ${sc.score}`),
+    pendingYomi: 0,
+  };
+  s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
 }
 
 // ── End-game sequence ─────────────────────────────────────────────────────
