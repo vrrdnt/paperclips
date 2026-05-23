@@ -9,6 +9,22 @@ const PROBE_DRIFT_RATE = 0.00000001;
 const WAR_TRIGGER = 1_000_000;
 const MAX_BATTLES = 3;
 
+// ── Timestamp-based batch driver ─────────────────────────────────────────
+// Tracks real wall-clock time so ticks run at the right rate even when the
+// browser throttles setInterval in background tabs. Capped at 30 s to avoid
+// a freeze if the tab was suspended for a very long time.
+let lastTickTime = 0;
+
+export function tickBatch(s: GameState, now = Date.now()): void {
+  if (lastTickTime === 0) { lastTickTime = now; return; }
+  const elapsed = Math.min(now - lastTickTime, 30_000);
+  const count = Math.floor(elapsed / 10);
+  if (count > 0) {
+    lastTickTime += count * 10;
+    for (let i = 0; i < count; i++) tick(s);
+  }
+}
+
 // ── Main tick (called every 10 ms) ────────────────────────────────────────
 export function tick(s: GameState): void {
   s.ticks++;
