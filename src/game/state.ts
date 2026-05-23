@@ -325,7 +325,7 @@ export function makeInitialState(): GameState {
     dismantle: 0, endTimer1: 0, endTimer2: 0, endTimer3: 0,
     endTimer4: 0, endTimer5: 0, endTimer6: 0, finalClips: 0,
 
-    readouts: ['Welcome to Universal Paperclips', '', '', '', ''],
+    readouts: ['Welcome to Universal Paperclips'],
     projectFlags: {}, activeProjectIds: [],
     transaction: 1, blinkCounter: 0, testFlag: 0, clipCountCrunched: 0,
   };
