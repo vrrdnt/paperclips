@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Paperclip, RotateCcw, Save } from 'lucide-react';
+import { Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
 import { tickBatch } from './game/loop';
@@ -54,6 +54,28 @@ export default function App() {
     saveGame(G);
   }
 
+  function handleExport() {
+    saveGame(G);
+    const encoded = btoa(JSON.stringify(G));
+    navigator.clipboard.writeText(encoded)
+      .then(() => alert('Save copied to clipboard.'))
+      .catch(() => prompt('Copy this save string:', encoded));
+  }
+
+  function handleImport() {
+    const input = prompt('Paste save string:');
+    if (!input) return;
+    try {
+      const loaded = JSON.parse(atob(input.trim()));
+      const merged = { ...G, ...loaded };
+      Object.assign(G, merged);
+      setSnap(G);
+      saveGame(G);
+    } catch {
+      alert('Invalid save string.');
+    }
+  }
+
   return (
     <div id="root">
       {/* Header */}
@@ -68,6 +90,12 @@ export default function App() {
           </span>
           <Btn onClick={handleSave} title="Save game">
             <Save size={13} />
+          </Btn>
+          <Btn onClick={handleExport} title="Export save to clipboard">
+            <Download size={13} />
+          </Btn>
+          <Btn onClick={handleImport} title="Import save from clipboard">
+            <Upload size={13} />
           </Btn>
           <Btn variant="danger" onClick={handleReset} title="Reset game">
             <RotateCcw size={13} />
