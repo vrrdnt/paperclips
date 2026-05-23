@@ -27,7 +27,9 @@ export default function App() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
   const [exportCopied, setExportCopied] = useState(false);
+  const [showHypnoTransition, setShowHypnoTransition] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const prevHumanFlag = useRef<number | null>(null);
 
   useEffect(() => {
     const saved = loadGame();
@@ -42,6 +44,16 @@ export default function App() {
       clearInterval(displayTimer);
     };
   }, []);
+
+  // Detect humanFlag transition 1→0 for phase transition effect
+  useEffect(() => {
+    if (!snap) return;
+    if (prevHumanFlag.current === 1 && snap.humanFlag === 0) {
+      setShowHypnoTransition(true);
+      setTimeout(() => setShowHypnoTransition(false), 3500);
+    }
+    prevHumanFlag.current = snap.humanFlag;
+  }, [snap?.humanFlag]);
 
   // Focus textarea when modal opens
   useEffect(() => {
@@ -161,6 +173,39 @@ export default function App() {
           </a>
         </footer>
       </div>
+
+      {/* HypnoDrone phase transition overlay */}
+      {showHypnoTransition && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 300,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+          animation: 'hypno-overlay 3.5s ease-in-out forwards',
+          background: 'rgba(0,0,0,0.88)',
+        }}>
+          {/* Initial white flash */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(255,255,255,0.5)',
+            animation: 'hypno-flash 3.5s ease-out forwards',
+          }} />
+          <div style={{
+            position: 'relative', textAlign: 'center',
+            animation: 'hypno-text 3.5s ease-in-out forwards',
+          }}>
+            <div style={{
+              fontSize: 22, fontWeight: 700, letterSpacing: '0.12em',
+              color: '#e0e0e0', textTransform: 'uppercase', marginBottom: 10,
+            }}>
+              HypnoDrones Released
+            </div>
+            <div style={{ fontSize: 13, color: '#888', letterSpacing: '0.04em' }}>
+              All resources now available for clip production
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Import modal */}
       {showImport && (

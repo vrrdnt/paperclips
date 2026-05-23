@@ -11,7 +11,7 @@ import { formatWithCommas } from '../../game/format';
 interface Props { snap: DisplaySnapshot; }
 
 export function ManufacturingPanel({ snap: s }: Props) {
-  if (!s.autoClipperFlag) return null;
+  if (!s.autoClipperFlag || !s.humanFlag) return null;
 
   const h = useGameStore(st => st.histories);
   const graphs = s.revPerSecFlag === 1;
