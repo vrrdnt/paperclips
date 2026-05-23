@@ -119,9 +119,9 @@ body { background: var(--bg); min-height: 100vh; }
   .app-body { grid-template-columns: 220px 1fr 1fr; }
 }
 
-.col-left   { display: flex; flex-direction: column; gap: 10px; }
-.col-center { display: flex; flex-direction: column; gap: 10px; }
-.col-right  { display: flex; flex-direction: column; gap: 10px; }
+.col-left   { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: hidden; }
+.col-center { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: hidden; }
+.col-right  { display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow: hidden; }
 
 /* ── Section Card ───────────────────────────────────────────────── */
 .section-card {
@@ -423,10 +423,15 @@ body { background: var(--bg); min-height: 100vh; }
   border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--text);
-  padding: 3px 6px;
-  font-size: 12px;
+  padding: 8px 10px;
+  font-size: 13px;
   font-family: inherit;
   width: 100%;
+  min-height: 40px;
+}
+
+@media (min-width: 900px) {
+  .strat-select { padding: 3px 6px; font-size: 12px; min-height: unset; }
 }
 
 /* ── Space / probe sliders ──────────────────────────────────────── */
