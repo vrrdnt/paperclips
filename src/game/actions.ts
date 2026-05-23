@@ -141,9 +141,10 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   const totals: Record<string, number> = {};
   for (const n of active) totals[n] = 0;
 
-  // Round-robin: every strategy plays every other strategy (and itself), 10 games each
+  // Round-robin: every strategy plays every other strategy (not itself), 10 games each
   for (const hName of active) {
     for (const vName of active) {
+      if (hName === vName) continue;
       let hPrev = 1, vPrev = 1;
       for (let r = 0; r < 10; r++) {
         const hm = stratMove(hName, r, payoff, vPrev);
@@ -173,7 +174,7 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   s.currentTournament = {
     stratH: pickedStrat, stratV: winner.name,
     payoff, choiceNames,
-    totalRounds: active.length * active.length,
+    totalRounds: active.length * (active.length - 1),
     results: scores.map(sc => `${sc.name}: ${sc.score}`),
     pendingYomi: Math.floor(yomiGain),
   };
