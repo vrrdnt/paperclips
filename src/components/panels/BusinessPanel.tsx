@@ -12,7 +12,6 @@ interface Props { snap: DisplaySnapshot; }
 
 export function BusinessPanel({ snap: s }: Props) {
   const h = useGameStore(st => st.histories);
-  const m = useGameStore(st => st.maxima);
   const price = s.margin.toFixed(2);
   const wireTrendUp = s.wireCost > s.wireBasePrice;
   const wireTrendDown = s.wireCost < s.wireBasePrice;
@@ -37,7 +36,7 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
           </div>
           <div style={{ marginTop: 3 }}>
-            <Sparkline data={h.clipRate} yMax={m.clipRate} />
+            <Sparkline data={h.clipRate} />
           </div>
         </div>
         <div style={{ marginTop: 2 }}>
@@ -55,7 +54,7 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
           </div>
           <div style={{ marginTop: 3 }}>
-            <Sparkline data={h.funds} yMax={m.funds} />
+            <Sparkline data={h.funds} />
           </div>
         </div>
         {s.revPerSecFlag === 1 && (
@@ -65,7 +64,7 @@ export function BusinessPanel({ snap: s }: Props) {
               <span className="stat-value">${formatWithCommas(s.avgRev, 2)}</span>
             </div>
             <div style={{ marginTop: 3 }}>
-              <Sparkline data={h.avgRev} yMax={m.avgRev} />
+              <Sparkline data={h.avgRev} />
             </div>
           </div>
         )}
@@ -100,7 +99,7 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value">{spellf(s.wire)}</span>
           </div>
           <div style={{ marginTop: 3 }}>
-            <Sparkline data={h.wire} yMax={m.wire} />
+            <Sparkline data={h.wire} />
           </div>
         </div>
         <div className="stat-row">
