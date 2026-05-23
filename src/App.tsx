@@ -56,24 +56,37 @@ export default function App() {
 
   function handleExport() {
     saveGame(G);
-    const encoded = btoa(JSON.stringify(G));
-    navigator.clipboard.writeText(encoded)
-      .then(() => alert('Save copied to clipboard.'))
-      .catch(() => prompt('Copy this save string:', encoded));
+    const blob = new Blob([JSON.stringify(G)], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'paperclips.paperclip';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function handleImport() {
-    const input = prompt('Paste save string:');
-    if (!input) return;
-    try {
-      const loaded = JSON.parse(atob(input.trim()));
-      const merged = { ...G, ...loaded };
-      Object.assign(G, merged);
-      setSnap(G);
-      saveGame(G);
-    } catch {
-      alert('Invalid save string.');
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.paperclip';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const loaded = JSON.parse(reader.result as string);
+          const merged = { ...G, ...loaded };
+          Object.assign(G, merged);
+          setSnap(G);
+          saveGame(G);
+        } catch {
+          alert('Invalid save file.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   return (
