@@ -3,94 +3,114 @@ import { BarChart2 } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Sparkline } from '../ui/Sparkline';
 import { Btn } from '../ui/Btn';
-import { DisplaySnapshot } from '../../store/useGameStore';
+import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
 import { G } from '../../game/state';
-import { Stock } from '../../game/state';
 import { investDeposit, investWithdraw, investUpgrade } from '../../game/actions';
-import { formatWithCommas, spellf } from '../../game/format';
+import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
-function StockRow({ st, graphs }: { st: Stock; graphs: boolean }) {
-  const up = st.price >= (st.prevPrice ?? st.price);
-  const profitColor = st.profit >= 0 ? '#50b050' : '#c05050';
-  const priceColor  = up ? '#50b050' : '#c05050';
-
-  return (
-    <div style={{ padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8, marginBottom: graphs ? 4 : 0 }}>
-        {/* Symbol + price */}
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{st.symbol}</div>
-          <div style={{ fontSize: 10, color: priceColor, fontVariantNumeric: 'tabular-nums' }}>
-            ${formatWithCommas(st.price, 2)}
-            <span style={{ marginLeft: 2, fontSize: 9 }}>{up ? '▲' : '▼'}</span>
-          </div>
-        </div>
-
-        {/* Profit + held */}
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 10, color: profitColor, fontVariantNumeric: 'tabular-nums' }}>
-            {st.profit >= 0 ? '+' : ''}${formatWithCommas(Math.abs(st.profit), 2)}
-          </div>
-          <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{formatWithCommas(st.amount)} shares</div>
-        </div>
-      </div>
-      {graphs && <Sparkline data={st.priceHistory ?? [st.price]} height={22} />}
-    </div>
-  );
-}
-
 export function InvestmentPanel({ snap: s }: Props) {
   if (!s.investmentEngineFlag) return null;
-  const graphs = s.revPerSecFlag === 1;
+  const h = useGameStore(st => st.histories);
+
+  const invested = s.stocks.reduce((a, st) => a + st.val, 0);
+  const portfolio = s.bankroll + invested;
+  const totalPnl = s.stocks.reduce((a, st) => a + st.profit, 0);
+  const pnlColor = totalPnl >= 0 ? '#50b050' : '#c05050';
 
   return (
     <SectionCard title="Investments" icon={<BarChart2 size={14} />}>
+      {/* Portfolio total */}
       <div className="stat-row">
-        <span className="stat-label">Bankroll</span>
-        <span className="stat-value-lg">${spellf(s.bankroll)}</span>
+        <span className="stat-label">Portfolio</span>
+        <span className="stat-value-lg">${formatWithCommas(portfolio, 2)}</span>
       </div>
-      <div className="stat-row">
-        <span className="stat-label">Engine level</span>
-        <span className="stat-value">{s.investLevel}</span>
-      </div>
+      {h.portfolio.length >= 2 && (
+        <div style={{ marginTop: 4, marginBottom: 4 }}>
+          <Sparkline data={h.portfolio} height={32} />
+        </div>
+      )}
 
-      <div className="stat-row" style={{ marginTop: 4 }}>
-        <span className="stat-label">Risk</span>
-        <select
-          className="strat-select"
-          value={s.investRisk}
-          onChange={e => { G.investRisk = e.target.value as 'low' | 'med' | 'hi'; }}
+      <hr className="divider" />
+
+      <div className="stat-row">
+        <span className="stat-label">Cash</span>
+        <span className="stat-value">${formatWithCommas(s.bankroll, 2)}</span>
+      </div>
+      {invested > 0 && (
+        <div className="stat-row">
+          <span className="stat-label">Invested</span>
+          <span className="stat-value">${formatWithCommas(invested, 2)}</span>
+        </div>
+      )}
+      {totalPnl !== 0 && (
+        <div className="stat-row">
+          <span className="stat-label">P&amp;L</span>
+          <span className="stat-value" style={{ color: pnlColor }}>
+            {totalPnl >= 0 ? '+' : '−'}${formatWithCommas(Math.abs(totalPnl), 2)}
+          </span>
+        </div>
+      )}
+
+      <hr className="divider" />
+
+      {/* Engine level + upgrade */}
+      <div className="stat-row" style={{ alignItems: 'center' }}>
+        <span className="stat-label">Engine level {s.investLevel}</span>
+        <Btn
+          onClick={() => { investUpgrade(G); }}
+          disabled={s.yomi < s.investUpgradeCost}
+          style={{ fontSize: 10, padding: '3px 8px', minHeight: 'unset' }}
         >
-          <option value="low">Low</option>
-          <option value="med">Med</option>
-          <option value="hi">High</option>
-        </select>
-      </div>
-
-      <div className="row" style={{ marginTop: 6 }}>
-        <Btn onClick={() => { investDeposit(G); }} disabled={s.funds <= 0}>
-          Deposit
-        </Btn>
-        <Btn onClick={() => { investWithdraw(G); }} disabled={s.bankroll <= 0}>
-          Withdraw
-        </Btn>
-        <Btn onClick={() => { investUpgrade(G); }} disabled={s.yomi < s.investUpgradeCost}>
           Upgrade ({formatWithCommas(s.investUpgradeCost)} yomi)
         </Btn>
       </div>
 
+      {/* Risk toggle */}
+      <div className="row" style={{ marginTop: 6 }}>
+        {(['low', 'med', 'hi'] as const).map(r => (
+          <Btn
+            key={r}
+            style={{ flex: 1 }}
+            variant={s.investRisk === r ? 'primary' : 'default'}
+            onClick={() => { G.investRisk = r; }}
+          >
+            {r === 'low' ? 'Low' : r === 'med' ? 'Med' : 'High'}
+          </Btn>
+        ))}
+      </div>
+
+      {/* Deposit / Withdraw */}
+      <div className="row" style={{ marginTop: 6 }}>
+        <Btn style={{ flex: 1 }} onClick={() => { investDeposit(G); }} disabled={s.funds <= 0}>
+          Deposit All
+        </Btn>
+        <Btn style={{ flex: 1 }} onClick={() => { investWithdraw(G); }} disabled={s.bankroll <= 0}>
+          Withdraw
+        </Btn>
+      </div>
+
+      {/* Compact stock list */}
       {s.stocks.length > 0 && (
         <>
           <hr className="divider" />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-muted)', marginBottom: 2, padding: '0 0 2px' }}>
-            <span>SYMBOL / PRICE</span>
-            <span>P&amp;L / HELD</span>
-          </div>
-          {s.stocks.map(st => (
-            <StockRow key={st.symbol} st={st} graphs={graphs} />
-          ))}
+          {s.stocks.map(st => {
+            const up = st.price >= (st.prevPrice ?? st.price);
+            const profitColor = st.profit >= 0 ? '#50b050' : '#c05050';
+            return (
+              <div key={st.symbol} className="stat-row" style={{ padding: '2px 0' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-dim)' }}>
+                  {st.symbol}&nbsp;
+                  <span style={{ color: up ? '#50b050' : '#c05050', fontSize: 9 }}>{up ? '▲' : '▼'}</span>
+                  &nbsp;${formatWithCommas(st.price, 2)}
+                </span>
+                <span style={{ fontSize: 10, color: profitColor, fontVariantNumeric: 'tabular-nums' }}>
+                  {st.profit >= 0 ? '+' : '−'}${formatWithCommas(Math.abs(st.profit), 2)}
+                </span>
+              </div>
+            );
+          })}
         </>
       )}
     </SectionCard>
