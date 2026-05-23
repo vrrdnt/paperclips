@@ -119,17 +119,19 @@ function tickAutoWireBuyer(s: GameState): void {
 // ── Clip production ───────────────────────────────────────────────────────
 function tickProduction(s: GameState): void {
   // Business-phase clippers
+  // Rate formula matches original (clips/second). MegaClipper * 500 / 100 = * 5 (already
+  // scaled for 100 ticks/s). AutoClipper / 100 / 100 = / 10000 (was missing the /100 scale).
   if (s.humanFlag) {
-    let rate = 0;
-    rate += s.clipperBoost * (s.clipmakerLevel / 100);
-    rate += s.megaClipperBoost * s.megaClipperLevel * 5;
+    const ratePerSec = s.clipperBoost * (s.clipmakerLevel / 100)
+                     + s.megaClipperBoost * s.megaClipperLevel * 500;
+    s.clipmakerRate = ratePerSec;
     if (s.wire > 0) {
-      const made = Math.min(rate, s.wire);
+      const perTick = ratePerSec / 100;
+      const made = Math.min(perTick, s.wire);
       s.clips += made;
       s.unusedClips += made;
       s.unsoldClips += made;
       s.wire -= made;
-      s.clipmakerRate = rate;
     }
   }
 
