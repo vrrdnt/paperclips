@@ -13,7 +13,7 @@ export function ManufacturingPanel({ snap: s }: Props) {
   if (!s.autoClipperFlag) return null;
 
   return (
-    <SectionCard title="Manufacturing" icon={<Settings size={11} />}>
+    <SectionCard title="Manufacturing" icon={<Settings size={14} />}>
       {/* AutoClippers */}
       <div className="stat-row">
         <span className="stat-label">AutoClippers</span>

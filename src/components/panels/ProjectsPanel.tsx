@@ -15,7 +15,7 @@ export function ProjectsPanel({ snap: s }: Props) {
   if (activeProjects.length === 0) return null;
 
   return (
-    <SectionCard title="Projects" icon={<FlaskConical size={11} />}>
+    <SectionCard title="Projects" icon={<FlaskConical size={14} />}>
       <div className="project-list">
         {activeProjects.map((p: Project) => {
           const canAfford = p.cost(s);

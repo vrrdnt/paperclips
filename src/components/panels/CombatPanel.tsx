@@ -12,7 +12,7 @@ export function CombatPanel({ snap: s }: Props) {
   const recentBattles = s.battles.slice(0, 5);
 
   return (
-    <SectionCard title="Combat" icon={<Shield size={11} />}>
+    <SectionCard title="Combat" icon={<Shield size={14} />}>
       <div className="stat-row">
         <span className="stat-label">Probes</span>
         <span className="stat-value">{spellf(s.probeCount)}</span>

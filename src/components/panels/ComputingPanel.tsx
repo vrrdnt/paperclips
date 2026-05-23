@@ -16,7 +16,7 @@ export function ComputingPanel({ snap: s }: Props) {
   const available = s.trust + s.swarmGifts - (s.processors + s.memory);
 
   return (
-    <SectionCard title="Computing" icon={<Cpu size={11} />}>
+    <SectionCard title="Computing" icon={<Cpu size={14} />}>
       {/* Ops */}
       <div className="stat-row">
         <span className="stat-label">Operations</span>
