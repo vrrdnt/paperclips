@@ -91,9 +91,8 @@ export function ComputingPanel({ snap: s }: Props) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, margin: '6px 0' }}>
             {s.qChips.map((v, i) => {
               const active = i < s.nextQchip;
-              const abs = Math.abs(v);
-              // Streak angles rotate with the oscillation, giving a scrambled look
-              const streaks = [0, 51, 103, 154, 206, 257].map(base => (base + v * 90 + i * 17) % 360);
+              const delay = `${i * 0.048}s`;
+              const axis = `rotate(${i * 37}deg)`;
               return (
                 <div key={i} className={active ? 'qchip-active' : ''}
                   style={{
@@ -101,52 +100,26 @@ export function ComputingPanel({ snap: s }: Props) {
                     borderRadius: '50%',
                     position: 'relative',
                     overflow: 'hidden',
-                    background: active ? `rgba(255,255,255,${0.04 + abs * 0.08})` : '#111',
-                    border: `1px solid ${active ? `rgba(255,255,255,${0.3 + abs * 0.5})` : '#1e1e1e'}`,
+                    background: active ? 'rgba(255,255,255,0.04)' : '#111',
+                    border: `1px solid ${active ? 'rgba(255,255,255,0.25)' : '#1e1e1e'}`,
                   }}>
                   {active && (
-                    <svg width="100%" height="100%" viewBox="0 0 32 32"
-                      style={{ position: 'absolute', inset: 0 }}>
-                      {/* Radiating streaks */}
-                      {streaks.map((angle, j) => {
-                        const rad = (angle * Math.PI) / 180;
-                        const len = 6 + abs * 10;
-                        return (
-                          <line key={j}
-                            x1={16} y1={16}
-                            x2={16 + Math.cos(rad) * len}
-                            y2={16 + Math.sin(rad) * len}
-                            stroke="white"
-                            strokeWidth={0.4 + abs * 0.6}
-                            strokeOpacity={0.2 + abs * 0.55}
-                            strokeLinecap="round"
-                          />
-                        );
-                      })}
-                      {/* Scramble marks — small off-center sparks */}
-                      {[1, 3, 5].map(j => {
-                        const a = ((i * 73 + j * 120 + v * 180) * Math.PI) / 180;
-                        const r = 4 + abs * 4;
-                        return (
-                          <circle key={j}
-                            cx={16 + Math.cos(a) * r}
-                            cy={16 + Math.sin(a) * r}
-                            r={0.6 + abs * 0.8}
-                            fill="white"
-                            opacity={0.3 + abs * 0.5}
-                          />
-                        );
-                      })}
-                      {/* Core */}
-                      <circle cx={16} cy={16} r={1.5 + abs * 2} fill="white" opacity={0.6 + abs * 0.4} />
-                    </svg>
+                    <>
+                      {/* Collision track rotated per chip */}
+                      <div style={{ position: 'absolute', inset: 0, transform: axis }}>
+                        <div className="q-pa" style={{ animationDelay: delay }} />
+                        <div className="q-pb" style={{ animationDelay: delay }} />
+                      </div>
+                      <div className="q-flash" style={{ animationDelay: delay }} />
+                      <div className="q-ring"  style={{ animationDelay: delay }} />
+                    </>
                   )}
                   <span style={{
-                    position: 'relative', fontSize: 6,
-                    color: active ? `rgba(255,255,255,${0.4 + abs * 0.4})` : '#2a2a2a',
+                    position: 'absolute', inset: 0,
+                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                    paddingBottom: 2, fontSize: 6,
+                    color: active ? 'rgba(255,255,255,0.2)' : '#222',
                     fontFamily: 'monospace', userSelect: 'none',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    height: '100%',
                   }}>q{i}</span>
                 </div>
               );
