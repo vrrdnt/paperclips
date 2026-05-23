@@ -105,11 +105,11 @@ export default function App() {
           </Btn>
           <Btn onClick={handleExport} title="Copy save to clipboard"
             style={{ minWidth: 28, fontSize: 10, gap: 4 }}>
-            <Download size={13} />
+            <Upload size={13} />
             {exportCopied && <span style={{ fontSize: 9, color: 'var(--success)' }}>copied</span>}
           </Btn>
           <Btn onClick={() => setShowImport(true)} title="Import save from clipboard">
-            <Upload size={13} />
+            <Download size={13} />
           </Btn>
           <Btn variant="danger" onClick={handleReset} title="Reset game">
             <RotateCcw size={13} />
