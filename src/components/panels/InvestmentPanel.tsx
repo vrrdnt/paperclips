@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart2 } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
+import { Sparkline } from '../ui/Sparkline';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
@@ -10,29 +11,8 @@ import { formatWithCommas, spellf } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
-function Sparkline({ history, up }: { history: number[]; up: boolean }) {
-  if (history.length < 2) return null;
-  const w = 60;
-  const h = 22;
-  const min = Math.min(...history);
-  const max = Math.max(...history);
-  const range = max - min || 1;
-  const pts = history.map((v, i) => {
-    const x = (i / (history.length - 1)) * w;
-    const y = h - ((v - min) / range) * h;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-  const color = up ? '#50b050' : '#c05050';
-  return (
-    <svg width={w} height={h} style={{ display: 'block', flexShrink: 0 }}>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function StockRow({ st }: { st: Stock }) {
   const up = st.price >= (st.prevPrice ?? st.price);
-  const priceDelta = st.price - (st.prevPrice ?? st.price);
   const profitColor = st.profit >= 0 ? '#50b050' : '#c05050';
   const priceColor  = up ? '#50b050' : '#c05050';
 
@@ -56,7 +36,7 @@ function StockRow({ st }: { st: Stock }) {
       </div>
 
       {/* Sparkline */}
-      <Sparkline history={st.priceHistory ?? [st.price]} up={up} />
+      <Sparkline data={st.priceHistory ?? [st.price]} width={60} height={22} />
     </div>
   );
 }
