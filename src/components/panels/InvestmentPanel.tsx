@@ -11,14 +11,14 @@ import { formatWithCommas, spellf } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
-function StockRow({ st }: { st: Stock }) {
+function StockRow({ st, graphs }: { st: Stock; graphs: boolean }) {
   const up = st.price >= (st.prevPrice ?? st.price);
   const profitColor = st.profit >= 0 ? '#50b050' : '#c05050';
   const priceColor  = up ? '#50b050' : '#c05050';
 
   return (
     <div style={{ padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2.5rem 1fr', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2.5rem 1fr', alignItems: 'center', gap: 8, marginBottom: graphs ? 4 : 0 }}>
         {/* Symbol + price */}
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{st.symbol}</div>
@@ -36,13 +36,14 @@ function StockRow({ st }: { st: Stock }) {
           <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{formatWithCommas(st.amount)} shares</div>
         </div>
       </div>
-      <Sparkline data={st.priceHistory ?? [st.price]} height={22} />
+      {graphs && <Sparkline data={st.priceHistory ?? [st.price]} height={22} />}
     </div>
   );
 }
 
 export function InvestmentPanel({ snap: s }: Props) {
   if (!s.investmentEngineFlag) return null;
+  const graphs = s.revPerSecFlag === 1;
 
   return (
     <SectionCard title="Investments" icon={<BarChart2 size={14} />}>
@@ -75,7 +76,7 @@ export function InvestmentPanel({ snap: s }: Props) {
             <span>P&amp;L / HELD</span>
           </div>
           {s.stocks.map(st => (
-            <StockRow key={st.symbol} st={st} />
+            <StockRow key={st.symbol} st={st} graphs={graphs} />
           ))}
         </>
       )}
