@@ -91,16 +91,20 @@ export function ComputingPanel({ snap: s }: Props) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, margin: '6px 0' }}>
             {s.qChips.map((v, i) => {
               const active = i < s.nextQchip;
+              // Mirror original: opacity = chip value (clamped 0–1).
+              // Near 1 = bright & fast = good time to click Quantum Compute.
+              const opacity = active ? Math.max(0, v) : 1;
+              const abs = Math.abs(v);
+              // Animation speed scales with value: fast when bright, slow when dim.
+              const dur = `${Math.max(0.12, 0.55 - abs * 0.4)}s`;
               const base = i * 37;
-              // 4 collision tracks per chip at different angles, each offset in time
               const tracks = [0, 52, 103, 155].map((offset, j) => ({
                 angle: base + offset,
                 delay: `${(i * 0.048 + j * 0.09) % 0.48}s`,
               }));
-              // 4 stray particles at fixed off-center positions per chip
               const strays = [0, 1, 2, 3].map(j => ({
-                top:   `${25 + ((i * 31 + j * 71) % 50)}%`,
-                left:  `${20 + ((i * 53 + j * 43) % 60)}%`,
+                top:  `${25 + ((i * 31 + j * 71) % 50)}%`,
+                left: `${20 + ((i * 53 + j * 43) % 60)}%`,
                 delay: `${(i * 0.06 + j * 0.11) % 0.48}s`,
               }));
               return (
@@ -110,21 +114,23 @@ export function ComputingPanel({ snap: s }: Props) {
                     borderRadius: '50%',
                     position: 'relative',
                     overflow: 'hidden',
+                    opacity,
                     background: active ? 'rgba(255,255,255,0.04)' : '#111',
                     border: `1px solid ${active ? 'rgba(255,255,255,0.25)' : '#1e1e1e'}`,
+                    animationDuration: dur,
                   }}>
                   {active && (
                     <>
                       {tracks.map((t, j) => (
                         <div key={j} style={{ position: 'absolute', inset: 0, transform: `rotate(${t.angle}deg)` }}>
-                          <div className="q-pa" style={{ animationDelay: t.delay }} />
-                          <div className="q-pb" style={{ animationDelay: t.delay }} />
+                          <div className="q-pa" style={{ animationDelay: t.delay, animationDuration: dur }} />
+                          <div className="q-pb" style={{ animationDelay: t.delay, animationDuration: dur }} />
                         </div>
                       ))}
-                      <div className="q-flash" style={{ animationDelay: tracks[0].delay }} />
-                      <div className="q-ring"  style={{ animationDelay: tracks[0].delay }} />
+                      <div className="q-flash" style={{ animationDelay: tracks[0].delay, animationDuration: dur }} />
+                      <div className="q-ring"  style={{ animationDelay: tracks[0].delay, animationDuration: dur }} />
                       {strays.map((st, j) => (
-                        <div key={j} className="q-stray" style={{ top: st.top, left: st.left, animationDelay: st.delay }} />
+                        <div key={j} className="q-stray" style={{ top: st.top, left: st.left, animationDelay: st.delay, animationDuration: dur }} />
                       ))}
                     </>
                   )}
