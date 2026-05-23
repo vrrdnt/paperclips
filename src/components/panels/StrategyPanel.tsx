@@ -74,6 +74,7 @@ export function StrategyPanel({ snap: s }: Props) {
   const [picked, setPicked] = useState(s.strategies[0] || 'RANDOM');
   const [flash, setFlash] = useState<Cell | null>(null);
   const [animRound, setAnimRound] = useState(0);
+  const [animMatchup, setAnimMatchup] = useState<[string, string] | null>(null);
   const [running, setRunning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCountRef = useRef(s.tourneyCount);
@@ -89,16 +90,17 @@ export function StrategyPanel({ snap: s }: Props) {
   useEffect(() => {
     if (s.tourneyCount !== prevCountRef.current && ct) {
       prevCountRef.current = s.tourneyCount;
-      startAnimation(ct.payoff, ct.totalRounds);
+      startAnimation(ct.payoff, ct.totalRounds, [...s.strategies]);
     }
   }, [s.tourneyCount]);
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
-  function startAnimation(payoff: number[][], totalRounds: number) {
+  function startAnimation(payoff: number[][], totalRounds: number, strategies: string[]) {
     if (timerRef.current) clearTimeout(timerRef.current);
     setRunning(true);
     setAnimRound(0);
+    setAnimMatchup(null);
 
     const weights = [payoff[0][0], payoff[0][1], payoff[1][0], payoff[1][1]];
     const totalW = weights.reduce((a, b) => a + b, 0) || 4;
@@ -108,7 +110,11 @@ export function StrategyPanel({ snap: s }: Props) {
       return CELLS[3];
     }
 
-    const TOTAL_ROUNDS = Math.min(totalRounds, 20);
+    // Build ordered pair list (no self-matches) to cycle through during animation
+    const pairs: [string, string][] = [];
+    for (const h of strategies) for (const v of strategies) if (h !== v) pairs.push([h, v]);
+
+    const TOTAL_ROUNDS = Math.min(totalRounds, pairs.length || 1);
     const GAMES = Math.max(3, Math.ceil(60 / TOTAL_ROUNDS));
     let round = 0;
     let game = 0;
@@ -116,13 +122,14 @@ export function StrategyPanel({ snap: s }: Props) {
     function flashOn() {
       setFlash(pickCell());
       setAnimRound(round + 1);
+      if (game === 0 && pairs.length > 0) setAnimMatchup(pairs[round % pairs.length]);
       timerRef.current = setTimeout(flashOff, 80);
     }
     function flashOff() {
       setFlash(null);
       game++;
       if (game >= GAMES) { game = 0; round++; }
-      if (round >= TOTAL_ROUNDS) { setRunning(false); collectTourneyYomi(G); return; }
+      if (round >= TOTAL_ROUNDS) { setRunning(false); setAnimMatchup(null); collectTourneyYomi(G); return; }
       timerRef.current = setTimeout(flashOn, 45);
     }
     flashOn();
@@ -165,8 +172,8 @@ export function StrategyPanel({ snap: s }: Props) {
 
             <div style={{ fontSize: 9, color: 'var(--text-muted)', textAlign: 'center', marginTop: 2 }}>
               {running
-                ? `Round ${animRound} / ${ct.totalRounds} — ${ct.stratH} vs ${ct.stratV}`
-                : `${ct.stratH} vs ${ct.stratV} · ${ct.totalRounds} matchups`}
+                ? `Round ${animRound} / ${ct.totalRounds} — ${animMatchup ? `${animMatchup[0]} vs ${animMatchup[1]}` : '…'}`
+                : `Winner: ${ct.stratV} · ${ct.totalRounds} matchups`}
             </div>
 
             {!running && (

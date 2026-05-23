@@ -427,7 +427,7 @@ function createStock(s: GameState, dollars: number, riskiness: number): void {
 
   if (price > dollars) price = Math.ceil(dollars * roll) || 1;
 
-  const amount = Math.min(1_000_000, Math.floor(dollars / price));
+  const amount = Math.min(1_000_000, Math.floor(Math.min(dollars, s.bankroll) / price));
   if (amount < 1) return;
 
   const sym = generateSymbol();
