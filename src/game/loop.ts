@@ -447,7 +447,7 @@ function tickInvestmentUpdate(s: GameState): void {
     st.age++;
     if (Math.random() < 0.6) {
       st.prevPrice = st.price;
-      const gain = Math.random() > stockGainThreshold + s.investLevel * 0.01;
+      const gain = Math.random() > Math.max(0.1, stockGainThreshold - s.investLevel * 0.01);
       const delta = Math.ceil((Math.random() * st.price) / (4 * riskiness));
       if (gain) {
         st.price += delta;
