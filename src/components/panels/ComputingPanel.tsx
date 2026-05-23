@@ -1,9 +1,8 @@
 import React from 'react';
 import { Cpu, Brain, Lightbulb } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
-import { Sparkline } from '../ui/Sparkline';
 import { Btn } from '../ui/Btn';
-import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
+import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import { addProc, addMem, qComp } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
@@ -13,7 +12,6 @@ interface Props { snap: DisplaySnapshot; }
 export function ComputingPanel({ snap: s }: Props) {
   if (!s.compFlag) return null;
 
-  const h = useGameStore(st => st.histories);
   const opsPct = s.memory > 0 ? Math.min(100, (s.operations / (s.memory * 1000)) * 100) : 0;
   const available = s.trust + s.swarmGifts - (s.processors + s.memory);
 
@@ -22,10 +20,7 @@ export function ComputingPanel({ snap: s }: Props) {
       {/* Ops */}
       <div className="stat-row">
         <span className="stat-label">Operations</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Sparkline data={h.operations} />
-          <span className="stat-value">{formatWithCommas(s.operations)} / {formatWithCommas(s.memory * 1000)}</span>
-        </div>
+        <span className="stat-value">{formatWithCommas(s.operations)} / {formatWithCommas(s.memory * 1000)}</span>
       </div>
       <div className="progress-bar">
         <div className="progress-fill" style={{ width: `${opsPct}%` }} />
@@ -79,10 +74,7 @@ export function ComputingPanel({ snap: s }: Props) {
           <hr className="divider" />
           <div className="stat-row">
             <span className="stat-label"><Lightbulb size={10} /> Creativity</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Sparkline data={h.creativity} />
-              <span className="stat-value">{formatWithCommas(Math.floor(s.creativity))}</span>
-            </div>
+            <span className="stat-value">{formatWithCommas(Math.floor(s.creativity))}</span>
           </div>
         </>
       )}

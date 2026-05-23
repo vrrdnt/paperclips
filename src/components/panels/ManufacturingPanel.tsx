@@ -14,6 +14,7 @@ export function ManufacturingPanel({ snap: s }: Props) {
   if (!s.autoClipperFlag) return null;
 
   const h = useGameStore(st => st.histories);
+  const m = useGameStore(st => st.maxima);
 
   return (
     <SectionCard title="Manufacturing" icon={<Settings size={14} />}>
@@ -25,8 +26,8 @@ export function ManufacturingPanel({ snap: s }: Props) {
       <div className="stat-row">
         <span className="stat-label">Rate</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Sparkline data={h.clipmakerRate} />
-          <span className="stat-value">{formatWithCommas(s.clipmakerRate, 1)}/s</span>
+          <Sparkline data={h.clipmakerRate} yMax={m.clipmakerRate} />
+          <span className="stat-value" style={{ minWidth: 60 }}>{formatWithCommas(s.clipmakerRate, 1)}/s</span>
         </div>
       </div>
       <div style={{ marginTop: 6 }}>
