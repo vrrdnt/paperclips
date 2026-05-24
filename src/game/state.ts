@@ -103,6 +103,8 @@ export interface GameState {
   investUpgradeCost: number;
   portfolioSize: number;
   investRisk: 'low' | 'med' | 'hi';
+  stockGainThreshold: number;
+  sellDelay: number;
   // ── Yomi / Honor / Trust ──────────────────────────────────────────────────
   yomi: number;
   honor: number;
@@ -176,7 +178,7 @@ export interface GameState {
   drifterCount: number;
   driftersKilled: number;
   colonized: number;
-  // Probe design sliders
+  // Probe design sliders (all start at 0 per original)
   probeSpeed: number;
   probeNav: number;
   probeRep: number;
@@ -189,6 +191,9 @@ export interface GameState {
   probeTrustUsed: number;
   probeTrustCost: number;
   sliderPos: number;
+  // Probe partial-accumulator state
+  partialProbeSpawn: number;
+  partialProbeHaz: number;
   // ── Power ─────────────────────────────────────────────────────────────────
   farmLevel: number;
   batteryLevel: number;
@@ -209,6 +214,8 @@ export interface GameState {
   nextGift: number;
   giftPeriod: number;
   giftCountdown: number;
+  giftBits: number;
+  giftBitGenerationRate: number;
   elapsedTime: number;
   disorgCounter: number;
   disorgFlag: number;
@@ -281,6 +288,7 @@ export function makeInitialState(): GameState {
 
     bankroll: 0, stocks: [], investLevel: 0, investUpgradeCost: 100,
     portfolioSize: 5, investRisk: 'med',
+    stockGainThreshold: 0.5, sellDelay: 0,
 
     yomi: 0, honor: 0, maxTrust: 20, maxTrustCost: 91117.99,
 
@@ -304,9 +312,10 @@ export function makeInitialState(): GameState {
     probeCount: 0, probesLaunched: 0, probesBorn: 0,
     probesLostHazards: 0, probesLostDrift: 0, probesLostCombat: 0,
     drifterCount: 0, driftersKilled: 0, colonized: 0,
-    probeSpeed: 1, probeNav: 1, probeRep: 1, probeHaz: 1,
-    probeFac: 1, probeHarv: 1, probeWire: 1, probeCombat: 1,
-    probeTrust: 0, probeTrustUsed: 0, probeTrustCost: 0, sliderPos: 100,
+    probeSpeed: 0, probeNav: 0, probeRep: 0, probeHaz: 0,
+    probeFac: 0, probeHarv: 0, probeWire: 0, probeCombat: 0,
+    probeTrust: 0, probeTrustUsed: 0, probeTrustCost: 0, sliderPos: 0,
+    partialProbeSpawn: 0, partialProbeHaz: 0,
 
     farmLevel: 0, batteryLevel: 0,
     farmCost: 10_000_000, batteryCost: 1_000_000,
@@ -315,7 +324,8 @@ export function makeInitialState(): GameState {
     farmBill: 0, batteryBill: 0,
 
     swarmStatus: 7, swarmGifts: 0, nextGift: 0,
-    giftPeriod: 125_000, giftCountdown: 125_000, elapsedTime: 0,
+    giftPeriod: 125_000, giftCountdown: 125_000, giftBits: 0, giftBitGenerationRate: 0,
+    elapsedTime: 0,
     disorgCounter: 0, disorgFlag: 0, disorgMsg: 0,
     synchCost: 5000, threnodyCost: 50_000,
     entertainCost: 10_000, boredomLevel: 0, boredomFlag: 0, boredomMsg: 0,

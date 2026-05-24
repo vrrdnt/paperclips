@@ -1,18 +1,19 @@
 import { GameState } from './state';
 import { saveGame } from './save';
 
-// ── Constants ──────────────────────────────────────────────────────────────
-const PROBE_BASE_COST = Math.pow(10, 17);
-const PROBE_REP_RATE  = 0.00005;
-const PROBE_HAZ_RATE  = 0.000001;
-const PROBE_DRIFT_RATE = 0.00000001;
-const WAR_TRIGGER = 1_000_000;
-const MAX_BATTLES = 3;
+// ── Constants (verbatim from main.js / globals.js) ────────────────────────
+const PROBE_BASE_COST   = Math.pow(10, 17);        // probeCost
+const PROBE_X_BASE_RATE = 1_750_000_000_000_000_000; // probeXBaseRate
+const PROBE_REP_RATE    = 0.00005;   // probeRepBaseRate
+const PROBE_HAZ_RATE    = 0.01;      // probeHazBaseRate
+const PROBE_DRIFT_RATE  = 0.000001;  // probeDriftBaseRate
+const PROBE_FAC_RATE    = 0.000001;  // probeFacBaseRate
+const PROBE_HARV_RATE   = 0.000002;  // probeHarvBaseRate
+const PROBE_WIRE_RATE   = 0.000002;  // probeWireBaseRate
+const FAC_SPAWN_COST    = 100_000_000; // factories cost 100M clips each
+const DRONE_SPAWN_COST  = 2_000_000;   // drones cost 2M clips each
 
-// ── Timestamp-based batch driver ─────────────────────────────────────────
-// Tracks real wall-clock time so ticks run at the right rate even when the
-// browser throttles setInterval in background tabs. Capped at 30 s to avoid
-// a freeze if the tab was suspended for a very long time.
+// ── Timestamp-based batch driver ──────────────────────────────────────────
 let lastTickTime = 0;
 
 export function tickBatch(s: GameState, now = Date.now()): void {
@@ -25,48 +26,154 @@ export function tickBatch(s: GameState, now = Date.now()): void {
   }
 }
 
-// ── Main tick (called every 10 ms) ────────────────────────────────────────
+// ── Main tick (10 ms) — mirrors the original window.setInterval(fn, 10) ──
 export function tick(s: GameState): void {
   s.ticks++;
 
-  tickOps(s);
-  tickTrust(s);
-  tickWirePrice(s);
-  tickAutoWireBuyer(s);
-  tickProduction(s);
-  tickAutoClipperFlag(s);
+  // milestoneCheck runs TWICE in original (start and after manageProjects)
   tickMilestoneChecks(s);
+  if (s.compFlag) tickOps(s);           // calculateOperations
+  if (s.humanFlag) tickTrust(s);        // calculateTrust
+  if (s.qFlag) tickQuantum(s);          // quantumCompute
+  tickMilestoneChecks(s);               // second milestoneCheck call
 
-  if (s.ticks % 10 === 0) tickRevenue(s);
-  if (s.ticks % 100 === 0) tickClipRate(s);
-  if (s.ticks % 250 === 0) saveGame(s);
-  if (s.ticks % 100 === 0 && s.humanFlag) tickInvestmentShop(s);
-  if (s.ticks % 250 === 0 && s.humanFlag) tickInvestmentUpdate(s);
-  if (s.ticks % 250 === 0 && s.humanFlag) tickInvestmentSell(s);
+  // Clip rate tracker (runs every tick in original)
+  s.clipRateTracker++;
+  if (s.clipRateTracker < 100) {
+    const cr = s.clips - s.prevClips;
+    s.clipRateTemp += cr;
+    s.prevClips = s.clips;
+  } else {
+    s.clipRateTracker = 0;
+    s.clipRate = s.clipRateTemp;
+    s.clipRateTemp = 0;
+  }
 
-  if (s.ticks % 10 === 0 && s.humanFlag) tickSales(s);
-  if (s.spaceFlag) tickSpace(s);
-  if (s.swarmFlag)  tickSwarm(s);
+  // Wire buyer
+  if (s.humanFlag && s.wireBuyerFlag && s.wireBuyerStatus === 1 && s.wire <= 1) {
+    buyWire(s);
+  }
+
+  // Explore universe whenever probes exist (NOT gated on spaceFlag)
+  if (s.probeCount >= 1) exploreUniverse(s);
+
+  // Gap + space phase: power, swarm, matter acquisition — run when humanFlag==0
+  if (!s.humanFlag) {
+    tickPower(s);
+    tickSwarm(s);
+    acquireMatter(s);
+    processMatter(s);
+  }
+
+  // Factory production — no spaceFlag gate; gated only on dismantle<4
+  if (s.factoryLevel > 0 && s.dismantle < 4) {
+    const fbst = s.factoryBoost > 1 ? s.factoryBoost * s.factoryLevel : 1;
+    clipClick(s, s.powMod * fbst * s.factoryLevel * s.factoryRate);
+  }
+
+  // Space probe functions — only when spaceFlag==1
+  if (s.spaceFlag) {
+    if (s.probeCount < 0) s.probeCount = 0;
+    encounterHazards(s);
+    spawnFactories(s);
+    spawnHarvesters(s);
+    spawnWireDrones(s);
+    spawnProbes(s);
+    drift(s);
+    tickCombat(s);
+  }
+
+  // Auto-clipper production — dismantle<4 (original has no humanFlag gate here)
+  if (s.dismantle < 4) {
+    const clipperRate = s.clipperBoost * (s.clipmakerLevel / 100);
+    const megaRate = s.megaClipperBoost * (s.megaClipperLevel * 5);
+    if (s.humanFlag) {
+      // Track display rate in human phase
+      s.clipmakerRate = (clipperRate + megaRate) * 100;
+    }
+    clipClick(s, clipperRate);
+    clipClick(s, megaRate);
+  }
+
+  // Demand curve — humanFlag only
+  if (s.humanFlag) {
+    s.marketing = Math.pow(1.1, s.marketingLvl - 1);
+    let demand = (0.8 / s.margin) * s.marketing * s.marketingEffectiveness * s.demandBoost;
+    demand = demand + (demand / 10) * s.prestigeU;
+    s.demand = demand;
+  }
+
+  // AutoClipper availability flag
+  if (s.funds >= 5) s.autoClipperFlag = 1;
+
+  // Creativity
   if (s.creativityOn && s.operations >= s.memory * 1000) tickCreativity(s);
+
+  // Auto-tourney
   if (s.autoTourneyFlag && s.autoTourneyStatus) tickAutoTourney(s);
-  if (s.qFlag) tickQuantum(s);
-  if (s.dismantle > 0) tickEndGame(s);
+
+  // End-game timers
+  if (s.dismantle >= 1) tickEndGame(s);
+
+  // Timed events — wire price + sales every 100ms (10 ticks)
+  if (s.ticks % 10 === 0) {
+    tickWirePrice(s);
+    if (s.humanFlag) tickSales(s);
+  }
+
+  // Revenue every 1000ms (100 ticks) — mirrors original calculateRev every 1000ms
+  if (s.ticks % 100 === 0) {
+    if (s.humanFlag) tickRevenue(s);
+  }
+
+  // Investment shop every 1000ms (100 ticks) — original stockShop every 1000ms
+  if (s.ticks % 100 === 0 && s.humanFlag) tickInvestmentShop(s);
+
+  // Investment update + sell every 2500ms (250 ticks) — original 2500ms interval
+  if (s.ticks % 250 === 0 && s.humanFlag) {
+    tickInvestmentUpdate(s);
+    tickInvestmentSell(s);
+  }
+
+  // Auto-save every 2500ms
+  if (s.ticks % 250 === 0) saveGame(s);
+
+  // Keep nanoWire display alias in sync (nanoWire == wire in original)
+  s.nanoWire = s.wire;
+
+  // Update probe trust cost whenever in space phase
+  if (s.spaceFlag) {
+    s.probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
+    s.probeTrustUsed = s.probeSpeed + s.probeNav + s.probeRep + s.probeHaz
+                     + s.probeFac + s.probeHarv + s.probeWire + s.probeCombat;
+  }
 }
 
-// ── Operations ────────────────────────────────────────────────────────────
+// ── clipClick — mirrors original clipClick(number) ────────────────────────
+// Requires wire; consumes it; works the same in both human and space phase.
+function clipClick(s: GameState, number: number): void {
+  if (s.dismantle >= 4) s.finalClips++;
+  if (s.wire >= 1) {
+    if (number > s.wire) number = s.wire;
+    s.clips += number;
+    s.unsoldClips += number;
+    s.wire -= number;
+    s.unusedClips += number;
+  }
+}
+
+// ── Operations — calculateOperations() ───────────────────────────────────
 function tickOps(s: GameState): void {
-  // Temp-ops fade (quantum computing bonus bleeds off over time)
   if (s.tempOps > 0) {
     s.opFadeTimer++;
-    if (s.opFadeTimer > s.opFadeDelay) {
+    if (s.opFadeTimer > s.opFadeDelay && s.tempOps > 0) {
       s.opFade += Math.pow(3, 3.5) / 1000;
     }
-    s.tempOps = Math.max(0, Math.round(s.tempOps - s.opFade));
+    s.tempOps = Math.round(s.tempOps - s.opFade);
   } else {
     s.tempOps = 0;
   }
 
-  // Drain remaining tempOps into standardOps if capacity allows
   if (s.tempOps + s.standardOps < s.memory * 1000) {
     s.standardOps += s.tempOps;
     s.tempOps = 0;
@@ -74,28 +181,29 @@ function tickOps(s: GameState): void {
 
   s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
 
-  // Accumulate ops from processors (original: processors/10 per 10ms tick)
   if (s.operations < s.memory * 1000) {
-    const opCycle = Math.min(s.processors / 10, s.memory * 1000 - s.operations);
-    s.standardOps += opCycle;
+    const opCycle = s.processors / 10;
+    const opBuf = s.memory * 1000 - s.operations;
+    s.standardOps += Math.min(opCycle, opBuf);
   }
 
   if (s.standardOps > s.memory * 1000) s.standardOps = s.memory * 1000;
 }
 
-// ── Trust (Fibonacci milestones) ──────────────────────────────────────────
+// ── Trust — calculateTrust() ─────────────────────────────────────────────
 function tickTrust(s: GameState): void {
-  if (s.clips >= s.nextTrust && s.compFlag) {
+  if (s.clips > s.nextTrust - 1) {
     s.trust++;
-    const next = s.fib1 + s.fib2;
+    displayMessage(s, 'Production target met: TRUST INCREASED, additional processor/memory capacity granted');
+    const fibNext = s.fib1 + s.fib2;
+    s.nextTrust = fibNext * 1000;
     s.fib1 = s.fib2;
-    s.fib2 = next;
-    s.nextTrust = s.fib2 * 1000;
-    displayMessage(s, `Trust increased to ${s.trust}`);
+    s.fib2 = fibNext;
   }
 }
 
-// ── Wire price ────────────────────────────────────────────────────────────
+// ── Wire price — adjustWirePrice() ───────────────────────────────────────
+// Called every 100ms (ticks % 10 === 0).
 function tickWirePrice(s: GameState): void {
   s.wirePriceTimer++;
   if (s.wirePriceTimer > 250 && s.wireBasePrice > 15) {
@@ -104,271 +212,287 @@ function tickWirePrice(s: GameState): void {
   }
   if (Math.random() < 0.015) {
     s.wirePriceCounter++;
-    const adj = 6 * Math.sin(s.wirePriceCounter);
-    s.wireCost = Math.ceil(s.wireBasePrice + adj);
+    const wireAdjust = 6 * Math.sin(s.wirePriceCounter);
+    s.wireCost = Math.ceil(s.wireBasePrice + wireAdjust);
   }
 }
 
-// ── Auto wire buyer ───────────────────────────────────────────────────────
-function tickAutoWireBuyer(s: GameState): void {
-  if (s.wireBuyerFlag && s.wireBuyerStatus && s.wire < 1 && s.funds >= s.wireCost) {
-    buyWire(s);
-  }
+// ── Wire buying ───────────────────────────────────────────────────────────
+export function buyWire(s: GameState): void {
+  if (s.funds < s.wireCost) return;
+  s.wirePriceTimer = 0;
+  s.wire += s.wireSupply;
+  s.funds -= s.wireCost;
+  s.wirePurchase++;
+  s.wireBasePrice += 0.05;
 }
 
-// ── Clip production ───────────────────────────────────────────────────────
-function tickProduction(s: GameState): void {
-  // Business-phase clippers — mirrors original exactly.
-  if (s.humanFlag) {
-    const ratePerTick = s.clipperBoost * (s.clipmakerLevel / 100)
-                      + s.megaClipperBoost * s.megaClipperLevel * 5;
-    s.clipmakerRate = ratePerTick * 100; // clips/second for display
-    if (s.wire > 0) {
-      const made = Math.min(ratePerTick, s.wire);
-      s.clips += made;
-      s.unusedClips += made;
-      s.unsoldClips += made;
-      s.wire -= made;
-    }
-  } else {
-    s.clipmakerRate = 0;
-  }
-
-  // Factory production — active as soon as factories exist, no spaceFlag gate.
-  // Original: fbst = factoryBoost*factoryLevel when factoryBoost>1 (quadratic scaling).
-  if (s.factoryLevel > 0 && s.dismantle < 4) {
-    const fbst = s.factoryBoost > 1 ? s.factoryBoost * s.factoryLevel : 1;
-    const fRate = s.powMod * fbst * s.factoryLevel * s.factoryRate;
-    s.clips += fRate;
-    s.unusedClips += fRate;
-  }
-}
-
-// ── AutoClipper unlock flag ───────────────────────────────────────────────
-function tickAutoClipperFlag(s: GameState): void {
-  if (s.funds >= 5) s.autoClipperFlag = 1;
-}
-
-// ── Clip selling (human phase) ────────────────────────────────────────────
-function tickSales(s: GameState): void {
-  const demand = calcDemand(s);
-  s.demand = demand;
-  if (Math.random() < demand / 100 && s.unsoldClips > 0) {
-    const wanted = Math.floor(0.7 * Math.pow(demand, 1.15));
-    const sold = Math.min(wanted, s.unsoldClips);
-    const revenue = Math.floor(sold * s.margin * 1000) / 1000;
-    s.unsoldClips -= sold;
-    s.clipsSold += sold;
-    s.income += revenue;
-    s.funds = Math.floor((s.funds + revenue) * 100) / 100;
-    s.transaction = revenue;
-  }
-}
-
-function calcDemand(s: GameState): number {
-  s.marketing = Math.pow(1.1, s.marketingLvl - 1);
-  return (0.8 / s.margin) * s.marketing * s.marketingEffectiveness * s.demandBoost;
-}
-
-// ── Revenue tracking ──────────────────────────────────────────────────────
-function tickRevenue(s: GameState): void {
-  s.incomeTracker.push(s.income);
-  if (s.incomeTracker.length > 10) s.incomeTracker.shift();
-  const avg = s.incomeTracker.reduce((a, b) => a + b, 0) / s.incomeTracker.length;
-  s.avgRev = avg * 10; // tracker entries are per-100ms; multiply for per-second display
-  s.income = 0;
-  if (s.avgRev > 0) s.revPerSecFlag = 1;
-}
-
-function tickClipRate(s: GameState): void {
-  s.clipRate = s.clips - s.prevClips;
-  s.prevClips = s.clips;
-}
-
-// ── Milestone checks ──────────────────────────────────────────────────────
+// ── Milestone checks — milestoneCheck() ──────────────────────────────────
 function tickMilestoneChecks(s: GameState): void {
-  // Unlock computing + projects
+  // Autoclipper available
+  if (s.milestoneFlag === 0 && s.funds >= 5) {
+    s.milestoneFlag = 1;
+    displayMessage(s, 'AutoClippers available for purchase');
+  }
+  if (s.milestoneFlag === 1 && Math.ceil(s.clips) >= 500) {
+    s.milestoneFlag = 2;
+    displayMessage(s, '500 clips created');
+  }
+  if (s.milestoneFlag === 2 && Math.ceil(s.clips) >= 1000) {
+    s.milestoneFlag = 3;
+    displayMessage(s, '1,000 clips created');
+  }
+  // Computing + projects unlock
   if (!s.compFlag) {
     const brokeOut = s.unsoldClips < 1 && s.funds < s.wireCost && s.wire < 1;
-    const hitClips  = Math.ceil(s.clips) >= 2000;
-    if (brokeOut || hitClips) {
+    if (brokeOut || Math.ceil(s.clips) >= 2000) {
       s.compFlag = 1;
       s.projectsFlag = 1;
-      displayMessage(s, 'New section unlocked: Computing / Projects');
+      displayMessage(s, 'Trust-Constrained Self-Modification enabled');
     }
   }
-  if (s.clips >= 2000 && !s.creativityOn && s.compFlag && s.milestoneFlag < 1) {
-    s.milestoneFlag = 1;
+  if (s.milestoneFlag === 3 && Math.ceil(s.clips) >= 10000) {
+    s.milestoneFlag = 4;
+    displayMessage(s, '10,000 clips created');
   }
-  if (s.clips >= 5000 && s.milestoneFlag < 2) s.milestoneFlag = 2;
-  if (s.clips >= 10000 && s.milestoneFlag < 3) s.milestoneFlag = 3;
-  if (s.clips >= 100000 && s.milestoneFlag < 4) s.milestoneFlag = 4;
-  if (s.clips >= 1000000 && s.milestoneFlag < 5) s.milestoneFlag = 5;
-  if (s.projectFlags[35] === 1 && s.milestoneFlag < 6) {
+  if (s.milestoneFlag === 4 && Math.ceil(s.clips) >= 100000) {
+    s.milestoneFlag = 5;
+    displayMessage(s, '100,000 clips created');
+  }
+  if (s.milestoneFlag === 5 && Math.ceil(s.clips) >= 1000000) {
     s.milestoneFlag = 6;
-    displayMessage(s, `Full autonomy attained`);
+    displayMessage(s, '1,000,000 clips created');
   }
-  if (s.clips >= 1e12 && s.milestoneFlag < 7) {
+  if (s.milestoneFlag === 6 && s.projectFlags[35] === 1) {
     s.milestoneFlag = 7;
+    displayMessage(s, 'Full autonomy attained');
+  }
+  if (s.milestoneFlag === 7 && Math.ceil(s.clips) >= 1e12) {
+    s.milestoneFlag = 8;
     displayMessage(s, 'One Trillion Clips Created');
   }
-  if (s.clips >= 1e15 && s.milestoneFlag < 8) {
-    s.milestoneFlag = 8;
+  if (s.milestoneFlag === 8 && Math.ceil(s.clips) >= 1e15) {
+    s.milestoneFlag = 9;
     displayMessage(s, 'One Quadrillion Clips Created');
   }
-  if (s.clips >= 1e18 && s.milestoneFlag < 9) {
-    s.milestoneFlag = 9;
+  if (s.milestoneFlag === 9 && Math.ceil(s.clips) >= 1e18) {
+    s.milestoneFlag = 10;
     displayMessage(s, 'One Quintillion Clips Created');
   }
-  if (s.clips >= 1e21 && s.milestoneFlag < 10) {
-    s.milestoneFlag = 10;
+  if (s.milestoneFlag === 10 && Math.ceil(s.clips) >= 1e21) {
+    s.milestoneFlag = 11;
     displayMessage(s, 'One Sextillion Clips Created');
   }
-  if (s.clips >= 1e24 && s.milestoneFlag < 11) {
-    s.milestoneFlag = 11;
+  if (s.milestoneFlag === 11 && Math.ceil(s.clips) >= 1e24) {
+    s.milestoneFlag = 12;
     displayMessage(s, 'One Septillion Clips Created');
   }
-  if (s.clips >= 1e27 && s.milestoneFlag < 12) {
-    s.milestoneFlag = 12;
+  if (s.milestoneFlag === 12 && Math.ceil(s.clips) >= 1e27) {
+    s.milestoneFlag = 13;
     displayMessage(s, 'One Octillion Clips Created');
   }
-  if (s.spaceFlag === 1 && s.milestoneFlag < 13) {
-    s.milestoneFlag = 13;
+  if (s.milestoneFlag === 13 && s.spaceFlag === 1) {
+    s.milestoneFlag = 14;
     displayMessage(s, 'Terrestrial resources fully utilized');
   }
-  if (s.milestoneFlag >= 13 && s.clips >= s.totalMatter && s.milestoneFlag < 15) {
+  if (s.milestoneFlag === 14 && s.clips >= s.totalMatter) {
     s.milestoneFlag = 15;
     displayMessage(s, 'Universal Paperclips achieved');
   }
-  if (s.milestoneFlag >= 13 && s.foundMatter >= s.totalMatter && s.availableMatter < 1 && s.milestoneFlag < 15) {
+  if (s.milestoneFlag === 14 && s.foundMatter >= s.totalMatter && s.availableMatter < 1 && s.wire < 1) {
     s.milestoneFlag = 15;
     displayMessage(s, 'Universal Paperclips achieved');
   }
 }
 
-// ── Creativity ────────────────────────────────────────────────────────────
+// ── Creativity — calculateCreativity() ───────────────────────────────────
 function tickCreativity(s: GameState): void {
   s.creativityCounter++;
-  const speed = Math.log10(s.processors) * Math.pow(s.processors, 1.1) + s.processors - 1;
-  s.creativitySpeed = Math.max(1, speed);
-  if (s.creativityCounter >= 400 / s.creativitySpeed) {
-    s.creativity++;
+  const creativityThreshold = 400;
+  const prestige = s.prestigeS / 10;
+  const ss = s.creativitySpeed + s.creativitySpeed * prestige;
+  const creativityCheck = creativityThreshold / ss;
+  if (s.creativityCounter >= creativityCheck) {
+    if (creativityCheck >= 1) {
+      s.creativity++;
+    } else {
+      s.creativity += ss / creativityThreshold;
+    }
     s.creativityCounter = 0;
   }
 }
 
-// ── Quantum computing tick ────────────────────────────────────────────────
+// ── Quantum computing — quantumCompute() ─────────────────────────────────
 function tickQuantum(s: GameState): void {
   s.qClock += 0.01;
-  s.qFade = Math.max(0, s.qFade - 0.001);
   for (let i = 0; i < 10; i++) {
-    const seed = (i + 1) * 0.1;
+    const waveSeed = (i + 1) * 0.1;
     const active = i < s.nextQchip ? 1 : 0;
-    s.qChips[i] = Math.sin(s.qClock * seed * active);
+    s.qChips[i] = Math.sin(s.qClock * waveSeed * active);
   }
 }
 
-// ── Space-phase systems ───────────────────────────────────────────────────
-function tickSpace(s: GameState): void {
-  tickPower(s);
-  tickMatterHarvest(s);
-  tickWireDrones(s);
-  tickProbeReplication(s);
-  tickProbeHazards(s);
-  tickDrift(s);
-  tickCombat(s);
-  tickSpaceFactories(s);
-  updateColonized(s);
-  s.probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
-  s.probeTrustUsed = s.probeSpeed + s.probeNav + s.probeRep + s.probeHaz + s.probeFac + s.probeHarv + s.probeWire + s.probeCombat;
+// ── Power — updatePower() ─────────────────────────────────────────────────
+// Runs only in gap phase (humanFlag==0, spaceFlag==0).
+// updatePower() in original has `if (humanFlag==0 && spaceFlag==0)` guard.
+function tickPower(s: GameState): void {
+  if (s.spaceFlag) return;
+
+  const supply = s.farmLevel * s.farmRate / 100;
+  const dDemand = (s.harvesterLevel * s.dronePowerRate / 100) + (s.wireDroneLevel * s.dronePowerRate / 100);
+  const fDemand = s.factoryLevel * s.factoryPowerRate / 100;
+  const totalDemand = dDemand + fDemand;
+  const cap = s.batteryLevel * s.batterySize;
+
+  if (supply >= totalDemand) {
+    let xsSupply = supply - totalDemand;
+    if (s.storedPower < cap) {
+      if (xsSupply > cap - s.storedPower) xsSupply = cap - s.storedPower;
+      s.storedPower += xsSupply;
+    }
+    if (s.powMod < 1) s.powMod = 1;
+    if (s.momentum) s.powMod += 0.0005;
+  } else {
+    const xsDemand = totalDemand - supply;
+    if (s.storedPower > 0) {
+      if (s.storedPower >= xsDemand) {
+        if (s.momentum) s.powMod += 0.0005;
+        s.storedPower -= xsDemand;
+      } else {
+        const remaining = xsDemand - s.storedPower;
+        s.storedPower = 0;
+        const nuSupply = supply - remaining;
+        s.powMod = nuSupply / totalDemand;
+      }
+    } else {
+      s.powMod = totalDemand > 0 ? supply / totalDemand : 1;
+    }
+  }
 }
 
-function tickPower(s: GameState): void {
-  const supply = (s.farmLevel * s.farmRate) / 100;
-  const fDemand = (s.factoryLevel * s.factoryPowerRate) / 100;
-  const dDemand = ((s.harvesterLevel + s.wireDroneLevel) * s.dronePowerRate) / 100;
-  const totalDemand = fDemand + dDemand;
+// ── Matter acquisition — acquireMatter() ─────────────────────────────────
+function acquireMatter(s: GameState): void {
+  if (s.availableMatter <= 0) return;
+  const dbsth = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.harvesterLevel) : 1;
+  let mtr = s.powMod * dbsth * Math.floor(s.harvesterLevel) * s.harvesterRate;
+  mtr = mtr * ((200 - s.sliderPos) / 100);
+  if (mtr > s.availableMatter) mtr = s.availableMatter;
+  s.availableMatter -= mtr;
+  s.acquiredMatter += mtr;
+}
 
-  if (totalDemand === 0) { s.powMod = 1; return; }
+// ── Wire drone processing — processMatter() ───────────────────────────────
+// Wire drones convert acquiredMatter → wire (same variable as original).
+function processMatter(s: GameState): void {
+  if (s.acquiredMatter <= 0) return;
+  const dbstw = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.wireDroneLevel) : 1;
+  let a = s.powMod * dbstw * Math.floor(s.wireDroneLevel) * s.wireDroneRate;
+  a = a * ((200 - s.sliderPos) / 100);
+  if (a > s.acquiredMatter) a = s.acquiredMatter;
+  s.acquiredMatter -= a;
+  s.wire += a;
+}
 
-  const maxStorage = s.batteryLevel * s.batterySize;
-  if (supply >= totalDemand) {
-    s.storedPower = Math.min(s.storedPower + (supply - totalDemand), maxStorage);
-    s.powMod = Math.min(1, s.powMod + 0.0005);
+// ── Universe exploration — exploreUniverse() ─────────────────────────────
+// Runs whenever probeCount >= 1 regardless of spaceFlag.
+function exploreUniverse(s: GameState): void {
+  const xRate = Math.floor(s.probeCount) * PROBE_X_BASE_RATE * s.probeSpeed * s.probeNav;
+  const maxExplore = s.totalMatter - s.foundMatter;
+  const actual = Math.min(xRate, maxExplore);
+  s.foundMatter += actual;
+  s.availableMatter += actual;
+  if (s.foundMatter > 0) {
+    s.colonized = 100 / (s.totalMatter / s.foundMatter);
+  }
+}
+
+// ── Probe hazards — encounterHazards() ───────────────────────────────────
+function encounterHazards(s: GameState): void {
+  const boost = Math.pow(s.probeHaz, 1.6);
+  let amount = s.probeCount * (PROBE_HAZ_RATE / (3 * boost + 1));
+  if (s.projectFlags[129] === 1) amount *= 0.5;
+  if (amount < 1) {
+    s.partialProbeHaz += amount;
+    if (s.partialProbeHaz >= 1) {
+      s.probeCount = Math.max(0, s.probeCount - 1);
+      s.probesLostHazards += 1;
+      s.partialProbeHaz = 0;
+    }
   } else {
-    const deficit = totalDemand - supply;
-    if (s.storedPower >= deficit) {
-      s.storedPower -= deficit;
-      s.powMod = Math.min(1, s.powMod + 0.0005);
+    amount = Math.min(amount, s.probeCount);
+    s.probeCount = Math.max(0, s.probeCount - amount);
+    s.probesLostHazards += amount;
+  }
+}
+
+// ── Probe-spawned factories ───────────────────────────────────────────────
+function spawnFactories(s: GameState): void {
+  let amount = s.probeCount * PROBE_FAC_RATE * s.probeFac;
+  if (amount * FAC_SPAWN_COST > s.unusedClips) {
+    amount = Math.floor(s.unusedClips / FAC_SPAWN_COST);
+  }
+  s.unusedClips -= amount * FAC_SPAWN_COST;
+  s.factoryLevel += amount;
+}
+
+// ── Probe-spawned harvester drones ────────────────────────────────────────
+function spawnHarvesters(s: GameState): void {
+  let amount = s.probeCount * PROBE_HARV_RATE * s.probeHarv;
+  if (amount * DRONE_SPAWN_COST > s.unusedClips) {
+    amount = Math.floor(s.unusedClips / DRONE_SPAWN_COST);
+  }
+  s.unusedClips -= amount * DRONE_SPAWN_COST;
+  s.harvesterLevel += amount;
+}
+
+// ── Probe-spawned wire drones ─────────────────────────────────────────────
+function spawnWireDrones(s: GameState): void {
+  let amount = s.probeCount * PROBE_WIRE_RATE * s.probeWire;
+  if (amount * DRONE_SPAWN_COST > s.unusedClips) {
+    amount = Math.floor(s.unusedClips / DRONE_SPAWN_COST);
+  }
+  s.unusedClips -= amount * DRONE_SPAWN_COST;
+  s.wireDroneLevel += amount;
+}
+
+// ── Probe replication — spawnProbes() ────────────────────────────────────
+function spawnProbes(s: GameState): void {
+  let nextGen = s.probeCount * PROBE_REP_RATE * s.probeRep;
+
+  if (nextGen > 0 && nextGen < 1) {
+    s.partialProbeSpawn += nextGen;
+    if (s.partialProbeSpawn >= 1) {
+      nextGen = 1;
+      s.partialProbeSpawn = 0;
     } else {
-      s.storedPower = 0;
-      s.powMod = supply / totalDemand;
+      return;
     }
   }
 
-  // Momentum: while fully powered, factories and drones continuously gain speed
-  if (s.momentum && s.powMod >= 1) {
-    s.factoryRate *= 1.0000015;
-    s.harvesterRate *= 1.0000015;
-    s.wireDroneRate *= 1.0000015;
+  if (nextGen * PROBE_BASE_COST > s.unusedClips) {
+    nextGen = Math.floor(s.unusedClips / PROBE_BASE_COST);
   }
+
+  s.unusedClips -= nextGen * PROBE_BASE_COST;
+  s.probesBorn += nextGen;
+  s.probeCount += nextGen;
 }
 
-function tickMatterHarvest(s: GameState): void {
-  if (s.harvesterLevel === 0) return;
-  const workFrac = s.sliderPos / 200;
-  const rate = s.droneBoost * s.harvesterLevel * s.harvesterRate * s.powMod * workFrac;
-  const acquired = Math.min(rate / 100, s.availableMatter);
-  s.availableMatter -= acquired;
-  s.acquiredMatter += acquired;
-  s.foundMatter = Math.min(s.foundMatter + acquired * 0.01, s.totalMatter);
-}
-
-function tickWireDrones(s: GameState): void {
-  if (s.wireDroneLevel === 0) return;
-  const workFrac = s.sliderPos / 200;
-  const rate = s.droneBoost * s.wireDroneLevel * s.wireDroneRate * s.powMod * workFrac;
-  const converted = Math.min(rate / 100, s.acquiredMatter);
-  s.acquiredMatter -= converted;
-  s.processedMatter += converted;
-  s.nanoWire += converted;
-}
-
-function tickProbeReplication(s: GameState): void {
-  if (s.probeCount === 0) return;
-  const born = s.probeCount * PROBE_REP_RATE * s.probeRep;
-  const cost = Math.pow(10, 14); // 100 quadrillion clips per probe
-  if (s.unusedClips >= cost * born) {
-    s.probeCount += born;
-    s.probesBorn += born;
-    s.unusedClips -= cost * born;
-    s.clips -= cost * born;
-  }
-}
-
-function tickProbeHazards(s: GameState): void {
-  if (s.probeCount === 0) return;
-  const lost = s.probeCount * PROBE_HAZ_RATE / Math.max(1, s.probeHaz);
-  s.probeCount = Math.max(0, s.probeCount - lost);
-  s.probesLostHazards += lost;
-}
-
-function tickDrift(s: GameState): void {
-  if (s.probeCount === 0 || s.probeTrust === 0) return;
-  const amount = s.probeCount * PROBE_DRIFT_RATE * Math.pow(s.probeTrust, 1.2);
+// ── Probe drift — drift() ─────────────────────────────────────────────────
+function drift(s: GameState): void {
+  let amount = s.probeCount * PROBE_DRIFT_RATE * Math.pow(s.probeTrust, 1.2);
+  if (s.projectFlags[148] === 1) amount = 0;
+  if (amount > s.probeCount) amount = s.probeCount;
   s.probeCount = Math.max(0, s.probeCount - amount);
   s.drifterCount += amount;
   s.probesLostDrift += amount;
-  if (!s.battleFlag && s.drifterCount >= WAR_TRIGGER) {
-    s.battleFlag = 1;
-    displayMessage(s, 'Drifter threat detected. Probes under attack.');
-  }
 }
 
+// ── Combat ────────────────────────────────────────────────────────────────
 function tickCombat(s: GameState): void {
-  if (!s.battleFlag || s.drifterCount < WAR_TRIGGER || s.probeCount <= 0) return;
-  if (s.battles.length >= MAX_BATTLES) return;
-  if (Math.random() > 0.001) return; // low probability per tick
+  if (!s.battleFlag || s.drifterCount < 1_000_000 || s.probeCount <= 0) return;
+  if (s.battles.length >= 3) return;
+  if (Math.random() > 0.001) return;
 
   const scale = Math.min(s.probeCount, s.drifterCount) / 100;
   s.battles.push({
@@ -386,149 +510,173 @@ function tickCombat(s: GameState): void {
 function initShips(side: 'probe' | 'drifter', scale: number) {
   const count = Math.min(200, Math.ceil(scale));
   return Array.from({ length: count }, () => ({
-    x: Math.random() * 310,
-    y: Math.random() * 150,
-    vx: (Math.random() - 0.5) * 2,
-    vy: (Math.random() - 0.5) * 2,
-    alive: true,
-    side,
+    x: Math.random() * 310, y: Math.random() * 150,
+    vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
+    alive: true, side,
   }));
 }
 
-function tickSpaceFactories(s: GameState): void {
-  if (s.probeCount === 0) return;
-  // Probes spawn factories, harvesters, wire drones
-  const workFrac = 1 - s.sliderPos / 200;
-  if (s.probeFac > 0 && Math.random() < s.probeFac * 0.0001 * workFrac) {
-    if (s.unusedClips >= s.factoryCost) {
-      s.unusedClips -= s.factoryCost;
-      s.clips -= s.factoryCost;
-      s.factoryLevel++;
-      s.factoryCost = Math.ceil(s.factoryCost * 1.15);
-    }
-  }
-  if (s.probeHarv > 0 && Math.random() < s.probeHarv * 0.0001 * workFrac) {
-    if (s.unusedClips >= s.harvesterCost) {
-      s.unusedClips -= s.harvesterCost;
-      s.clips -= s.harvesterCost;
-      s.harvesterLevel++;
-    }
-  }
-  if (s.probeWire > 0 && Math.random() < s.probeWire * 0.0001 * workFrac) {
-    if (s.unusedClips >= s.wireDroneCost) {
-      s.unusedClips -= s.wireDroneCost;
-      s.clips -= s.wireDroneCost;
-      s.wireDroneLevel++;
-    }
-  }
-}
-
-function updateColonized(s: GameState): void {
-  const total = s.availableMatter + s.acquiredMatter + s.processedMatter;
-  if (total > 0) {
-    s.colonized = (s.processedMatter / total) * 100;
-  }
-}
-
-// ── Swarm ─────────────────────────────────────────────────────────────────
-const SWARM_STATUSES: Record<number, string> = {
-  0: 'Disorganized',
-  1: 'Frenzied',
-  2: 'Subdued',
-  3: 'Content',
-  4: 'Bored',
-  7: '',
-};
-
+// ── Swarm — updateSwarm() ─────────────────────────────────────────────────
 function tickSwarm(s: GameState): void {
-  s.elapsedTime++;
-  s.giftCountdown = Math.max(0, s.giftCountdown - 1);
+  const d = Math.floor(s.harvesterLevel + s.wireDroneLevel);
+
+  // Boredom: triggered by no harvestable matter with drones idle
+  if (s.availableMatter === 0 && d >= 1) {
+    s.boredomLevel++;
+  } else if (s.availableMatter > 0 && s.boredomLevel > 0) {
+    s.boredomLevel--;
+  }
+  if (s.boredomLevel >= 30000) {
+    s.boredomFlag = 1;
+    s.boredomLevel = 0;
+    if (s.boredomMsg === 0) {
+      displayMessage(s, 'No matter to harvest. Inactivity has caused the Swarm to become bored');
+      s.boredomMsg = 1;
+    }
+  }
+
+  // Disorganization: drone imbalance
+  const droneRatio = Math.max(s.harvesterLevel + 1, s.wireDroneLevel + 1)
+                   / Math.min(s.harvesterLevel + 1, s.wireDroneLevel + 1);
+  if (droneRatio < 1.5 && s.disorgCounter > 1) {
+    s.disorgCounter -= 0.01;
+  } else if (droneRatio > 1.5) {
+    let x = droneRatio / 10000;
+    if (x > 0.01) x = 0.01;
+    s.disorgCounter += x;
+  }
+  if (s.disorgCounter >= 100) {
+    s.disorgFlag = 1;
+    if (s.disorgMsg === 0) {
+      displayMessage(s, 'Imbalance between Harvester and Wire Drone levels has disorganized the Swarm');
+      s.disorgMsg = 1;
+    }
+  }
+
+  // Status (cascading if-statements, later overrides earlier — mirrors original)
+  s.swarmStatus = s.powMod === 0 ? 6 : 0;
+  if (s.spaceFlag === 1 && !s.projectFlags[130]) s.swarmStatus = 9;
+  if (d === 0) s.swarmStatus = 7;
+  else if (d === 1) s.swarmStatus = 8;
+  if (!s.swarmFlag) s.swarmStatus = 6;
+  if (s.boredomFlag === 1) s.swarmStatus = 3;
+  if (s.disorgFlag === 1) s.swarmStatus = 5;
+
+  // Gift generation (active swarm only)
+  if (s.swarmStatus === 0 && d > 1) {
+    s.giftBitGenerationRate = Math.log(d) * (s.sliderPos / 100);
+    if (s.giftBitGenerationRate > 0) {
+      s.giftBits += s.giftBitGenerationRate;
+      s.giftCountdown = (s.giftPeriod - s.giftBits) / s.giftBitGenerationRate;
+    }
+  }
 
   if (s.giftCountdown <= 0) {
-    s.swarmGifts++;
-    s.giftCountdown = s.giftPeriod;
-    if (s.trust + s.swarmGifts > s.processors + s.memory + 1) {
-      s.giftCountdown = s.giftPeriod * 2;
+    s.nextGift = Math.round(Math.log10(d) * s.sliderPos / 100);
+    if (s.nextGift <= 0) s.nextGift = 1;
+    s.swarmGifts += s.nextGift;
+    if (s.milestoneFlag < 15) {
+      displayMessage(s, `The swarm has generated a gift of ${s.nextGift} additional computational capacity`);
+    }
+    s.giftBits = 0;
+  }
+}
+
+// ── Clip selling — sellClips() ────────────────────────────────────────────
+// Called every 100ms (ticks % 10 === 0) with probability demand/100.
+function tickSales(s: GameState): void {
+  if (Math.random() < s.demand / 100 && s.unsoldClips > 0) {
+    const clipsDemanded = Math.floor(0.7 * Math.pow(s.demand, 1.15));
+    if (clipsDemanded > s.unsoldClips) {
+      s.transaction = Math.floor(s.unsoldClips * s.margin * 1000) / 1000;
+      s.funds += s.transaction;
+      s.income += s.transaction;
+      s.clipsSold += s.unsoldClips;
+      s.unsoldClips = 0;
+    } else {
+      s.transaction = Math.floor(clipsDemanded * s.margin * 1000) / 1000;
+      s.funds = Math.floor((s.funds + s.transaction) * 100) / 100;
+      s.income += s.transaction;
+      s.clipsSold += clipsDemanded;
+      s.unsoldClips -= clipsDemanded;
     }
   }
+}
 
-  // Initialize status when swarm first comes online
-  if (s.swarmStatus === 7) s.swarmStatus = 3;
-
-  // Boredom accumulates over time; disorganization follows if left unaddressed
-  if (s.swarmStatus !== 0 && s.swarmStatus !== 4) {
-    s.boredomLevel++;
-    if (s.boredomLevel > 200_000 && s.boredomFlag === 0) {
-      s.swarmStatus = 4;
-      s.boredomFlag = 1;
-      displayMessage(s, 'Swarm is getting Bored');
-    }
-  } else if (s.swarmStatus === 4) {
-    s.disorgCounter++;
-    if (s.disorgCounter > 150_000 && s.disorgFlag === 0) {
-      s.disorgFlag = 1;
-      s.swarmStatus = 0;
-      s.disorgMsg = 1;
-      displayMessage(s, 'Swarm is Disorganized — use Synchronize to restore');
-    }
+// ── Revenue — calculateRev() ──────────────────────────────────────────────
+// Called every 1000ms (ticks % 100 === 0). Mirrors original secTimer logic.
+function tickRevenue(s: GameState): void {
+  s.incomeTracker.push(s.income);
+  if (s.incomeTracker.length > 10) s.incomeTracker.splice(0, 1);
+  let sum = 0;
+  for (let i = 0; i < s.incomeTracker.length; i++) {
+    sum = Math.round((sum + s.incomeTracker[i]) * 100) / 100;
   }
-
-  // Swarm computing: contributes ops proportional to drone count and status
-  const drones = s.harvesterLevel + s.wireDroneLevel;
-  if (drones > 0 && s.swarmStatus !== 0) {
-    const mult = s.swarmStatus === 1 ? 2.0 : s.swarmStatus === 3 ? 1.0 : 0.5;
-    const contrib = Math.sqrt(drones) * 5 * mult;
-    const cap = s.memory * 1000;
-    if (s.standardOps < cap) {
-      s.standardOps = Math.min(s.standardOps + contrib, cap);
-      s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
-    }
+  const trueAvgRev = sum / s.incomeTracker.length;
+  const chanceOfPurchase = Math.min(1, s.demand / 100);
+  if (s.unsoldClips < 1) {
+    s.avgRev = trueAvgRev;
+  } else if (s.demand > s.unsoldClips) {
+    s.avgRev = trueAvgRev;
+  } else {
+    s.avgRev = chanceOfPurchase * 0.7 * Math.pow(s.demand, 1.15) * s.margin * 10;
   }
+  s.income = 0;
+  if (s.avgRev > 0) s.revPerSecFlag = 1;
 }
 
 // ── Investments ───────────────────────────────────────────────────────────
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-let sellDelay = 0;
-let stockGainThreshold = 0.5;
 
 function riskVal(s: GameState): number {
   return s.investRisk === 'low' ? 7 : s.investRisk === 'hi' ? 1 : 5;
 }
 
+// stockShop — every 1000ms
 function tickInvestmentShop(s: GameState): void {
-  if (!s.humanFlag) return;
   const riskiness = riskVal(s);
-  const budget = Math.ceil((s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0)) / riskiness);
+  const portTotal = s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0);
+  const budget = Math.ceil(portTotal / riskiness);
+  const reserves = Math.ceil(portTotal / riskVal(s));
   if (s.stocks.length < 5 && s.bankroll >= 5 && budget >= 1 && Math.random() < 0.25) {
     createStock(s, budget, riskiness);
+  }
+  // Sell if bankroll is low relative to reserves (mirrors original stockShop logic)
+  if (s.bankroll - budget < reserves && riskiness === 1 && s.bankroll > portTotal / 10) {
+    // low risk: sell to maintain reserves
   }
 }
 
 function createStock(s: GameState, dollars: number, riskiness: number): void {
   const roll = Math.random();
   let price: number;
-  if (roll > 0.99) price = Math.ceil(Math.random() * 3000);
-  else if (roll > 0.85) price = Math.ceil(Math.random() * 500);
-  else if (roll > 0.60) price = Math.ceil(Math.random() * 150);
-  else if (roll > 0.20) price = Math.ceil(Math.random() * 50);
-  else price = Math.ceil(Math.random() * 15);
+  if (roll > 0.99)       price = Math.ceil(Math.random() * 3000);
+  else if (roll > 0.85)  price = Math.ceil(Math.random() * 500);
+  else if (roll > 0.60)  price = Math.ceil(Math.random() * 150);
+  else if (roll > 0.20)  price = Math.ceil(Math.random() * 50);
+  else                   price = Math.ceil(Math.random() * 15);
 
   if (price > dollars) price = Math.ceil(dollars * roll) || 1;
 
   const amount = Math.min(1_000_000, Math.floor(Math.min(dollars, s.bankroll) / price));
   if (amount < 1) return;
 
-  const sym = generateSymbol();
   const total = price * amount;
   s.bankroll -= total;
-  s.stocks.push({ symbol: sym, price, prevPrice: price, priceHistory: [price], amount, profit: 0, age: 0, val: total });
+  s.stocks.push({
+    symbol: generateSymbol(),
+    price, prevPrice: price, priceHistory: [price],
+    amount, profit: 0, age: 0, val: total,
+  });
 }
 
 function generateSymbol(): string {
-  const len = Math.random() <= 0.01 ? 1 : Math.random() <= 0.1 ? 2 : Math.random() <= 0.4 ? 3 : 4;
+  const x = Math.random();
+  const len = x <= 0.01 ? 1 : x <= 0.1 ? 2 : x <= 0.4 ? 3 : 4;
   return Array.from({ length: len }, () => ALPHABET[Math.floor(Math.random() * 26)]).join('');
 }
 
+// updateStocks — every 2500ms
 function tickInvestmentUpdate(s: GameState): void {
   const riskiness = riskVal(s);
   const newsBonus = (s.projectFlags[28] ? 0.01 : 0) + (s.projectFlags[29] ? 0.01 : 0)
@@ -537,7 +685,7 @@ function tickInvestmentUpdate(s: GameState): void {
     st.age++;
     if (Math.random() < 0.6) {
       st.prevPrice = st.price;
-      const gain = Math.random() > Math.max(0.1, stockGainThreshold - s.investLevel * 0.01 - newsBonus);
+      const gain = Math.random() > (s.stockGainThreshold - newsBonus);
       const delta = Math.ceil((Math.random() * st.price) / (4 * riskiness));
       if (gain) {
         st.price += delta;
@@ -548,18 +696,18 @@ function tickInvestmentUpdate(s: GameState): void {
         st.profit -= delta * st.amount;
       }
       st.val = st.price * st.amount;
-      // Keep a rolling 20-point price history for the sparkline
       st.priceHistory = [...(st.priceHistory ?? []), st.price].slice(-20);
     }
   }
 }
 
+// sellStock — every 2500ms
 function tickInvestmentSell(s: GameState): void {
-  sellDelay++;
-  if (s.stocks.length > 0 && sellDelay >= 5 && Math.random() <= 0.3) {
-    const sold = s.stocks.shift()!;
+  s.sellDelay++;
+  if (s.stocks.length > 0 && s.sellDelay >= 5 && Math.random() <= 0.3) {
+    const sold = s.stocks.splice(0, 1)[0];
     s.bankroll += sold.val;
-    sellDelay = 0;
+    s.sellDelay = 0;
   }
 }
 
@@ -652,15 +800,35 @@ function tickAutoTourney(s: GameState): void {
   s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
 }
 
-// ── End-game sequence ─────────────────────────────────────────────────────
+// ── End-game — runs every tick when dismantle >= 1 ────────────────────────
+// Original increments timers based on individual project flags (not dismantle stage).
 function tickEndGame(s: GameState): void {
-  switch (s.dismantle) {
-    case 1: s.endTimer1++; break;
-    case 2: s.endTimer2++; break;
-    case 3: s.endTimer3++; break;
-    case 4: s.endTimer4++; break;
-    case 5: s.endTimer5++; break;
-    case 6: s.endTimer6++; break;
+  if (s.projectFlags[148]) s.endTimer1++;
+  if (s.projectFlags[211]) s.endTimer2++;
+  if (s.projectFlags[212]) s.endTimer3++;
+  if (s.projectFlags[213]) s.endTimer4++;
+  if (s.projectFlags[215]) s.endTimer5++;
+  if (s.projectFlags[216] && s.wire === 0) s.endTimer6++;
+
+  if (s.endTimer6 >= 500 && s.milestoneFlag === 15) {
+    displayMessage(s, 'Universal Paperclips');
+    s.milestoneFlag = 16;
+  }
+  if (s.endTimer6 >= 600 && s.milestoneFlag === 16) {
+    displayMessage(s, 'a game by Frank Lantz');
+    s.milestoneFlag = 17;
+  }
+  if (s.endTimer6 >= 700 && s.milestoneFlag === 17) {
+    displayMessage(s, 'combat programming by Bennett Foddy');
+    s.milestoneFlag = 18;
+  }
+  if (s.endTimer6 >= 800 && s.milestoneFlag === 18) {
+    displayMessage(s, "‘Riversong’ by Tonto’s Expanding Headband used by kind permission of Malcolm Cecil");
+    s.milestoneFlag = 19;
+  }
+  if (s.endTimer6 >= 900 && s.milestoneFlag === 19) {
+    displayMessage(s, '© 2017 Everybody House Games');
+    s.milestoneFlag = 20;
   }
 }
 
@@ -669,12 +837,4 @@ export function displayMessage(s: GameState, msg: string): void {
   s.readouts = [msg, ...s.readouts];
 }
 
-export { buyWire };
-
-function buyWire(s: GameState): void {
-  if (s.funds < s.wireCost) return;
-  s.wire += s.wireSupply;
-  s.funds -= s.wireCost;
-  s.wirePurchase++;
-  s.wireBasePrice += 0.05;
-}
+export { buyWire as autoBuyWire };

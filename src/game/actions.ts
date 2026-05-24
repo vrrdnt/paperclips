@@ -109,8 +109,9 @@ export function investUpgrade(s: GameState): void {
   if (s.yomi < s.investUpgradeCost) return;
   s.yomi -= s.investUpgradeCost;
   s.investLevel++;
+  s.stockGainThreshold += 0.01;
   s.investUpgradeCost = Math.floor(Math.pow(s.investLevel + 1, Math.E) * 100);
-  displayMessage(s, `Investment engine upgraded to level ${s.investLevel}`);
+  displayMessage(s, `Investment engine upgraded, expected profit/loss ratio now ${s.stockGainThreshold}`);
 }
 
 // ── Strategy / Tournament ─────────────────────────────────────────────────
