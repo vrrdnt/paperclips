@@ -3,7 +3,7 @@ import { Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
 import { tickBatch } from './game/loop';
-import { loadGame, saveGame, resetGame } from './game/save';
+import { loadGame, saveGame, resetGame, savePrestige } from './game/save';
 import { makeInitialState } from './game/state';
 import { Btn } from './components/ui/Btn';
 import { Console } from './components/Console';
@@ -37,7 +37,15 @@ export default function App() {
     setSnap(G);
 
     const gameTimer = setInterval(() => { tickBatch(G); }, 50);
-    const displayTimer = setInterval(() => { setSnap(G); }, 100);
+    const displayTimer = setInterval(() => {
+      if (G.resetFlag === 1) {
+        savePrestige(G.prestigeU, G.prestigeS);
+        resetGame();
+        window.location.reload();
+        return;
+      }
+      setSnap(G);
+    }, 100);
 
     return () => {
       clearInterval(gameTimer);
