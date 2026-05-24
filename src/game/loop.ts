@@ -134,9 +134,11 @@ function tickProduction(s: GameState): void {
     s.clipmakerRate = 0;
   }
 
-  // Space-phase factory production (uses power modifier)
-  if (s.spaceFlag && s.factoryLevel > 0) {
-    const fRate = s.factoryBoost * s.factoryLevel * (s.factoryRate / 100) * s.powMod;
+  // Factory production — active as soon as factories exist, no spaceFlag gate.
+  // Original: fbst = factoryBoost*factoryLevel when factoryBoost>1 (quadratic scaling).
+  if (s.factoryLevel > 0 && s.dismantle < 4) {
+    const fbst = s.factoryBoost > 1 ? s.factoryBoost * s.factoryLevel : 1;
+    const fRate = s.powMod * fbst * s.factoryLevel * s.factoryRate;
     s.clips += fRate;
     s.unusedClips += fRate;
   }
