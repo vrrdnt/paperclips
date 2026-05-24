@@ -150,6 +150,20 @@ body { background: var(--bg); min-height: 100vh; }
   min-width: 0;
 }
 
+.section-card.is-reveal-highlighted {
+  animation: reveal-flash 1.15s ease-in-out infinite;
+  border-color: #dceeff;
+  box-shadow:
+    0 0 0 1px rgba(220,238,255,0.35),
+    0 0 18px rgba(160,205,255,0.28),
+    0 2px 8px rgba(0,0,0,.25);
+}
+
+.section-card.is-reveal-highlighted .section-title {
+  color: #eef7ff;
+  border-bottom-color: rgba(220,238,255,0.45);
+}
+
 @media (min-width: 900px) {
   .section-card { padding: 10px 12px; }
 }
@@ -310,6 +324,31 @@ input[type="range"].price-slider::-moz-range-thumb {
 /* ── Projects ───────────────────────────────────────────────────── */
 .project-list { display: flex; flex-direction: column; gap: 6px; }
 
+.project-reveal {
+  display: block;
+  border-radius: 4px;
+}
+
+.project-reveal.is-reveal-highlighted {
+  animation: reveal-flash 1.15s ease-in-out infinite;
+  box-shadow:
+    0 0 0 1px rgba(220,238,255,0.45),
+    0 0 16px rgba(160,205,255,0.30);
+}
+
+.project-reveal.is-reveal-highlighted .project-btn {
+  border-color: #dceeff;
+}
+
+.project-reveal.is-reveal-highlighted .project-btn:disabled {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.project-reveal.is-reveal-highlighted .project-btn-title {
+  color: #eef7ff;
+}
+
 .project-btn {
   display: flex;
   flex-direction: column;
@@ -347,6 +386,30 @@ input[type="range"].price-slider::-moz-range-thumb {
   color: var(--text-muted);
   font-size: 11px;
   padding: 4px 0;
+}
+
+@keyframes reveal-flash {
+  0%, 100% {
+    border-color: #7b8da0;
+    box-shadow:
+      0 0 0 1px rgba(220,238,255,0.22),
+      0 0 8px rgba(160,205,255,0.16),
+      0 2px 8px rgba(0,0,0,.25);
+  }
+  50% {
+    border-color: #f4fbff;
+    box-shadow:
+      0 0 0 1px rgba(244,251,255,0.58),
+      0 0 22px rgba(160,205,255,0.38),
+      0 2px 8px rgba(0,0,0,.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-card.is-reveal-highlighted,
+  .project-reveal.is-reveal-highlighted {
+    animation: none;
+  }
 }
 
 /* ── Progress bar (ops) ─────────────────────────────────────────── */

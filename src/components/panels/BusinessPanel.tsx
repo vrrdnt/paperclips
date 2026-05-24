@@ -120,7 +120,7 @@ export function BusinessPanel({ snap: s }: Props) {
             {s.wireBuyerFlag === 1 && (
               <Btn onClick={() => { toggleWireBuyer(G); }}
                 variant={s.wireBuyerStatus === 1 ? 'success' : 'default'}>
-                Auto {s.wireBuyerStatus === 1 ? 'ON' : 'OFF'}
+                WireBuyer {s.wireBuyerStatus === 1 ? 'ON' : 'OFF'}
               </Btn>
             )}
           </div>
