@@ -18,6 +18,7 @@ import { ProbeDesignPanel } from './components/panels/ProbeDesignPanel';
 import { PowerPanel } from './components/panels/PowerPanel';
 import { SwarmPanel } from './components/panels/SwarmPanel';
 import { CombatPanel } from './components/panels/CombatPanel';
+import { DevMenu } from './components/DevMenu';
 import { spellf } from './game/format';
 
 export default function App() {
@@ -175,6 +176,7 @@ export default function App() {
 
   return (
     <div id="root">
+      <DevMenu />
       {/* Header */}
       <header className="app-header">
         <div className="app-header-title">
