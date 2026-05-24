@@ -23,7 +23,7 @@ export const ALL_PROJECTS: Project[] = [
     cost: (s) => s.operations >= 750,
     effect: (s) => {
       s.projectFlags[1] = 1;
-      displayMessage(s, 'AutoClippper performance boosted by 25%');
+      displayMessage(s, 'AutoClipper performance boosted by 25%');
       s.standardOps -= 750;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clipperBoost += 0.25;
@@ -74,7 +74,7 @@ export const ALL_PROJECTS: Project[] = [
     cost: (s) => s.operations >= 2500,
     effect: (s) => {
       s.projectFlags[4] = 1;
-      displayMessage(s, 'AutoClippper performance boosted by another 50%');
+      displayMessage(s, 'AutoClipper performance boosted by another 50%');
       s.standardOps -= 2500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clipperBoost += 0.5;
@@ -91,7 +91,7 @@ export const ALL_PROJECTS: Project[] = [
     cost: (s) => s.operations >= 5000,
     effect: (s) => {
       s.projectFlags[5] = 1;
-      displayMessage(s, 'AutoClippper performance boosted by another 75%');
+      displayMessage(s, 'AutoClipper performance boosted by another 75%');
       s.standardOps -= 5000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clipperBoost += 0.75;
