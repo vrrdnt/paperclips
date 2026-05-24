@@ -7,6 +7,7 @@ import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import {
   clipClick, buyWire, lowerPrice, raisePrice, setPrice, buyAds, toggleWireBuyer,
+  makeFactory, factoryReboot,
   MIN_CLIP_PRICE, MAX_CLIP_PRICE,
 } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
@@ -46,6 +47,48 @@ export function BusinessPanel({ snap: s }: Props) {
                 Make Paperclip
               </Btn>
             </div>
+          </>
+        )}
+
+        {s.humanFlag === 0 && (
+          <>
+            <div className="stat-row">
+              <span className="stat-label">Clips/sec</span>
+              <span className="stat-value">{spellf(s.clipRate)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Unused clips</span>
+              <span className="stat-value">{spellf(s.unusedClips)}</span>
+            </div>
+            {s.factoryFlag === 1 && (
+              <>
+                <hr className="divider" />
+                {s.factoryLevel < 50 && (
+                  <div className="stat-row">
+                    <span className="stat-label">Next upgrade at</span>
+                    <span className="stat-value dim">
+                      {s.factoryLevel < 10 ? 10 : s.factoryLevel < 20 ? 20 : 50} factories
+                    </span>
+                  </div>
+                )}
+                <div className="stat-row">
+                  <span className="stat-label">Clip Factories</span>
+                  <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
+                </div>
+                <div className="row" style={{ marginTop: 4 }}>
+                  <Btn onClick={() => { makeFactory(G); }}
+                    disabled={s.unusedClips < s.factoryCost}>
+                    Build ({spellf(s.factoryCost)})
+                  </Btn>
+                  {s.factoryLevel > 0 && (
+                    <Btn onClick={() => { factoryReboot(G); }}
+                      title={`+${spellf(s.factoryBill)} clips`}>
+                      Disassemble All
+                    </Btn>
+                  )}
+                </div>
+              </>
+            )}
           </>
         )}
       </SectionCard>

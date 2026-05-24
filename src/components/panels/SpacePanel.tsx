@@ -1,12 +1,12 @@
 import React from 'react';
-import { Globe, Rocket } from 'lucide-react';
+import { Globe, Rocket, Cable } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import {
-  makeProbe, makeFactory, makeHarvester, makeWireDrone,
-  factoryReboot, harvesterReboot, wireDroneReboot,
+  makeProbe, makeHarvester, makeWireDrone,
+  harvesterReboot, wireDroneReboot,
 } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
 
@@ -21,11 +21,9 @@ function droneBulkCost(baseLevel: number, qty: number): number {
 
 export function SpacePanel({ snap: s }: Props) {
   const showUniverse  = s.spaceFlag === 1;
-  const showFactories = !s.humanFlag && s.factoryFlag  === 1;
   const showHarvesters= !s.humanFlag && s.harvesterFlag === 1;
   const showWireDrones= !s.humanFlag && s.wireDroneFlag === 1;
-  const showInfra     = showFactories || showHarvesters || showWireDrones;
-  const infraTitle = showUniverse ? 'Space Infrastructure' : 'Drone Infrastructure';
+  const showInfra     = showHarvesters || showWireDrones;
 
   if (!showUniverse && !showInfra) return null;
 
@@ -51,6 +49,10 @@ export function SpacePanel({ snap: s }: Props) {
             <span className="stat-value">{spellf(s.acquiredMatter)}</span>
           </div>
           <div className="stat-row">
+            <span className="stat-label">Matter/sec</span>
+            <span className="stat-value">{spellf(s.mps)}</span>
+          </div>
+          <div className="stat-row">
             <span className="stat-label">Colonized</span>
             <span className="stat-value">{s.colonized.toFixed(4)}%</span>
           </div>
@@ -70,34 +72,11 @@ export function SpacePanel({ snap: s }: Props) {
         </SectionCard>
       )}
 
-      {/* Space Infrastructure: visible as soon as each subsystem is unlocked */}
+      {/* Wire Production: drones, visible as soon as each subsystem is unlocked */}
       {showInfra && (
-        <SectionCard title={infraTitle} icon={<Globe size={14} />}>
+        <SectionCard title="Wire Production" icon={<Cable size={14} />}>
 
-          {/* Clip Factories */}
-          {showFactories && (
-            <>
-              <div className="stat-row">
-                <span className="stat-label">Clip Factories</span>
-                <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
-              </div>
-              <div className="row" style={{ marginTop: 4 }}>
-                <Btn onClick={() => { makeFactory(G); }}
-                  disabled={s.unusedClips < s.factoryCost}>
-                  Build ({spellf(s.factoryCost)})
-                </Btn>
-                {s.factoryLevel > 0 && (
-                  <Btn onClick={() => { factoryReboot(G); }}
-                    title={`Refund ${spellf(s.factoryBill)} clips`}>
-                    Dismantle
-                  </Btn>
-                )}
-              </div>
-              {showHarvesters && <hr className="divider" />}
-            </>
-          )}
-
-          {/* Harvester Drones */}
+          {/* Harvester Drones — acquire matter */}
           {showHarvesters && (
             <>
               <div className="stat-row">
@@ -123,15 +102,28 @@ export function SpacePanel({ snap: s }: Props) {
                 </Btn>
                 {s.harvesterLevel > 0 && (
                   <Btn onClick={() => { harvesterReboot(G); }}
-                    title={`Refund ${spellf(s.harvesterBill)} clips`}>
-                    Dismantle
+                    title={`+${spellf(s.harvesterBill)} clips`}>
+                    Disassemble All
                   </Btn>
                 )}
               </div>
-              <div className="stat-row" style={{ marginTop: 4 }}>
-                <span className="stat-label">Matter acquired</span>
-                <span className="stat-value">{spellf(s.acquiredMatter)}</span>
-              </div>
+              {/* Matter stats — phase 2 only; the Universe card covers them in space */}
+              {!showUniverse && (
+                <>
+                  <div className="stat-row" style={{ marginTop: 4 }}>
+                    <span className="stat-label">Matter available</span>
+                    <span className="stat-value">{spellf(s.availableMatter)}</span>
+                  </div>
+                  <div className="stat-row">
+                    <span className="stat-label">Matter acquired</span>
+                    <span className="stat-value">{spellf(s.acquiredMatter)}</span>
+                  </div>
+                  <div className="stat-row">
+                    <span className="stat-label">Matter/sec</span>
+                    <span className="stat-value">{spellf(s.mps)}</span>
+                  </div>
+                </>
+              )}
               {showWireDrones && <hr className="divider" />}
             </>
           )}
@@ -162,30 +154,21 @@ export function SpacePanel({ snap: s }: Props) {
                 </Btn>
                 {s.wireDroneLevel > 0 && (
                   <Btn onClick={() => { wireDroneReboot(G); }}
-                    title={`Refund ${spellf(s.wireDroneBill)} clips`}>
-                    Dismantle
+                    title={`+${spellf(s.wireDroneBill)} clips`}>
+                    Disassemble All
                   </Btn>
                 )}
               </div>
-            </>
-          )}
-
-          {/* Wire production stats — shown when wire production is unlocked */}
-          {showWireDrones && s.wireProductionFlag === 1 && (
-            <div className="stat-row" style={{ marginTop: 4 }}>
-              <span className="stat-label">Wire/sec</span>
-              <span className="stat-value">{spellf(s.wpps)}</span>
-            </div>
-          )}
-
-          {/* Nano wire — shown whenever wire drones or harvesters exist */}
-          {(showWireDrones || showHarvesters) && (
-            <>
-              <hr className="divider" />
-              <div className="stat-row">
-                <span className="stat-label">Wire (nano)</span>
+              <div className="stat-row" style={{ marginTop: 4 }}>
+                <span className="stat-label">Wire</span>
                 <span className="stat-value">{spellf(s.nanoWire)}</span>
               </div>
+              {s.wireProductionFlag === 1 && (
+                <div className="stat-row">
+                  <span className="stat-label">Wire/sec</span>
+                  <span className="stat-value">{spellf(s.wpps)}</span>
+                </div>
+              )}
             </>
           )}
         </SectionCard>
