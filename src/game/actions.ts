@@ -115,8 +115,6 @@ export function investUpgrade(s: GameState): void {
 }
 
 // ── Strategy / Tournament ─────────────────────────────────────────────────
-const STRAT_NAMES = ['RANDOM', 'A100', 'B100', 'GREEDY', 'GENEROUS', 'MINIMAX', 'TIT_FOR_TAT', 'BEAT_LAST'];
-
 const CHOICE_PAIRS: [string, string][] = [
   ['cooperate', 'defect'], ['swerve', 'straight'], ['macro', 'micro'],
   ['fight', 'back down'], ['bet', 'fold'], ['raise', 'lower'],
