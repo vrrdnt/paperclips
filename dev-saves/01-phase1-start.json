@@ -43,13 +43,13 @@
   "creativitySpeed": 1,
   "creativityCounter": 0,
 
-  "clipperBoost": 1,
+  "clipperBoost": 1.25,
   "megaClipperBoost": 1,
   "marketingEffectiveness": 1,
   "demandBoost": 1,
   "factoryBoost": 1,
   "droneBoost": 1,
-  "boostLvl": 0,
+  "boostLvl": 1,
 
   "megaClipperLevel": 0,
   "megaClipperCost": 500,
@@ -88,7 +88,7 @@
   "projectsFlag": 1,
   "autoClipperFlag": 1,
   "megaClipperFlag": 0,
-  "revPerSecFlag": 0,
+  "revPerSecFlag": 1,
   "strategyEngineFlag": 0,
   "investmentEngineFlag": 0,
   "humanFlag": 1,
@@ -211,7 +211,7 @@
     "500 clips created"
   ],
 
-  "projectFlags": {},
+  "projectFlags": {"1": 1, "42": 1},
   "activeProjectIds": [],
 
   "transaction": 0.07,
