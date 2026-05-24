@@ -706,13 +706,11 @@ function generateSymbol(): string {
 // updateStocks — every 2500ms
 function tickInvestmentUpdate(s: GameState): void {
   const riskiness = riskVal(s);
-  const newsBonus = (s.projectFlags[28] ? 0.01 : 0) + (s.projectFlags[29] ? 0.01 : 0)
-                  + (s.projectFlags[30] ? 0.01 : 0) + (s.projectFlags[31] ? 0.01 : 0);
   for (const st of s.stocks) {
     st.age++;
     if (Math.random() < 0.6) {
       st.prevPrice = st.price;
-      const gain = Math.random() > (s.stockGainThreshold - newsBonus);
+      const gain = Math.random() <= s.stockGainThreshold;
       const delta = Math.ceil((Math.random() * st.price) / (4 * riskiness));
       if (gain) {
         st.price += delta;
