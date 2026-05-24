@@ -109,9 +109,30 @@ body { background: var(--bg); min-height: 100vh; }
 }
 
 /* Tablet: 2 columns */
-@media (min-width: 640px) {
+@media (min-width: 600px) {
   .app-wrap { padding: 12px 12px 32px; }
   .app-body { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 600px) and (max-width: 999px) {
+  .app-body-human {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .app-body-human .col-left {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .app-body-human .col-center {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .app-body-human .col-right {
+    grid-column: 2;
+    grid-row: 2;
+  }
 }
 
 /* Desktop: 3 columns */
@@ -127,7 +148,7 @@ body { background: var(--bg); min-height: 100vh; }
   align-items: start;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 600px) {
   .app-body-post-human { grid-template-columns: 1fr 1fr; }
 }
 
@@ -345,7 +366,7 @@ input[type="range"].price-slider::-moz-range-thumb {
   pointer-events: none;
 }
 
-.project-reveal.is-reveal-highlighted .project-btn-title {
+.project-reveal.is-reveal-highlighted .project-btn:not(:disabled) .project-btn-title {
   color: #eef7ff;
 }
 
@@ -662,6 +683,11 @@ input[type="range"].price-slider::-moz-range-thumb {
 
 @media (min-width: 900px) {
   .strat-select { padding: 3px 6px; font-size: 12px; min-height: unset; }
+}
+
+.investment-risk-select {
+  width: min(100%, 150px);
+  flex: 0 1 150px;
 }
 
 /* ── Space / probe sliders ──────────────────────────────────────── */

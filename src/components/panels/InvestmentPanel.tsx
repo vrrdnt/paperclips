@@ -10,6 +10,12 @@ import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
+const RISK_OPTIONS = [
+  { value: 'low', label: 'Low Risk' },
+  { value: 'med', label: 'Medium Risk' },
+  { value: 'hi', label: 'High Risk' },
+] as const;
+
 export function InvestmentPanel({ snap: s }: Props) {
   if (!s.investmentEngineFlag || !s.humanFlag) return null;
   const h = useGameStore(st => st.histories);
@@ -67,18 +73,19 @@ export function InvestmentPanel({ snap: s }: Props) {
         </Btn>
       </div>
 
-      {/* Risk toggle */}
-      <div className="row" style={{ marginTop: 6 }}>
-        {(['low', 'med', 'hi'] as const).map(r => (
-          <Btn
-            key={r}
-            style={{ flex: 1 }}
-            variant={s.investRisk === r ? 'primary' : 'default'}
-            onClick={() => { G.investRisk = r; }}
-          >
-            {r === 'low' ? 'Low' : r === 'med' ? 'Med' : 'High'}
-          </Btn>
-        ))}
+      {/* Risk level */}
+      <div className="stat-row" style={{ alignItems: 'center', marginTop: 6 }}>
+        <label className="stat-label" htmlFor="investment-risk">Risk</label>
+        <select
+          id="investment-risk"
+          className="strat-select investment-risk-select"
+          value={s.investRisk}
+          onChange={e => { G.investRisk = e.target.value as typeof s.investRisk; }}
+        >
+          {RISK_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Deposit / Withdraw */}
