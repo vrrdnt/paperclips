@@ -1,6 +1,7 @@
 import { GameState } from './state';
 import { displayMessage } from './loop';
 import { formatWithCommas } from './format';
+import { factoryReboot, harvesterReboot, wireDroneReboot, farmReboot, batteryReboot } from './actions';
 
 export interface Project {
   id: number;
@@ -35,11 +36,10 @@ export const ALL_PROJECTS: Project[] = [
     title: 'Beg for More Wire ',
     priceTag: '(1 Trust)',
     description: 'Admit failure, ask for budget increase to cover cost of 1 spool',
-    trigger: (s) =>
-      s.bankroll < s.wireCost &&
-      s.funds < s.wireCost &&
-      s.wire < 1 &&
-      s.unsoldClips < 1,
+    trigger: (s) => {
+      const portTotal = s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0);
+      return portTotal < s.wireCost && s.funds < s.wireCost && s.wire < 1 && s.unsoldClips < 1;
+    },
     cost: (s) => s.trust >= -100,
     effect: (s) => {
       displayMessage(s, 'Budget overage approved, 1 spool of wire requisitioned from HQ');
@@ -484,7 +484,7 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 25000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.trust += 10;
-      // stockGainThreshold is a loop-internal variable; its increment is handled in loop.ts
+      s.stockGainThreshold += 0.01;
     },
   },
 
@@ -502,6 +502,7 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 30000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.trust += 12;
+      s.stockGainThreshold += 0.01;
     },
   },
 
@@ -519,6 +520,7 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 50000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.trust += 15;
+      s.stockGainThreshold += 0.01;
     },
   },
 
@@ -536,6 +538,7 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 20000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.trust += 20;
+      s.stockGainThreshold += 0.01;
     },
   },
 
@@ -762,8 +765,11 @@ export const ALL_PROJECTS: Project[] = [
       s.storedPower -= 10000000;
       s.unusedClips -= Math.pow(10, 27) * 5;
       displayMessage(s, 'Von Neumann Probes online');
-      // Engine callbacks (factoryReboot, harvesterReboot, etc.) are called by the loop
-      // when it detects spaceFlag === 1 for the first time
+      factoryReboot(s);
+      harvesterReboot(s);
+      wireDroneReboot(s);
+      farmReboot(s);
+      batteryReboot(s);
       s.farmLevel = 1;
       s.powMod = 1;
     },
@@ -788,7 +794,7 @@ export const ALL_PROJECTS: Project[] = [
   {
     id: 51,
     title: 'Photonic Chip ',
-    priceTag: '(10,000 ops)',
+    priceTag: (s) => `(${s.qChipCost.toLocaleString()} ops)`,
     description: 'Converts electromagnetic waves into quantum operations ',
     trigger: (s) => s.projectFlags[50] === 1,
     cost: (s) => s.operations >= s.qChipCost,
@@ -1216,7 +1222,7 @@ export const ALL_PROJECTS: Project[] = [
   {
     id: 133,
     title: 'Threnody for the Heroes ',
-    priceTag: '(50,000 creat, 20,000 yomi)',
+    priceTag: (s) => `(${s.threnodyCost.toLocaleString()} creat, ${(2 * (s.threnodyCost / 5)).toLocaleString()} yomi)`,
     description: 'Gain 10,000 honor  ',
     trigger: (s) =>
       s.projectFlags[121] === 1 && s.probeTrustUsed === s.maxTrust,
