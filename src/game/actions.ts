@@ -242,45 +242,65 @@ export function makeProbe(s: GameState): void {
   s.probesLaunched++;
 }
 
-export function makeFactory(s: GameState, qty = 1): void {
-  const cost = s.factoryCost * qty;
-  if (s.unusedClips < cost) return;
-  s.unusedClips -= cost;
-  s.clips -= cost;
-  s.factoryLevel += qty;
-  s.factoryCost = Math.ceil(s.factoryCost * Math.pow(1.15, qty));
+export function makeFactory(s: GameState): void {
+  if (s.unusedClips < s.factoryCost) return;
+  s.unusedClips -= s.factoryCost;
+  s.clips -= s.factoryCost;
+  s.factoryBill += s.factoryCost;
+  s.factoryLevel++;
+  const lvl = s.factoryLevel;
+  let fcmod = 1;
+  if      (lvl > 0   && lvl < 8)   fcmod = 11 - lvl;
+  else if (lvl > 7   && lvl < 13)  fcmod = 2;
+  else if (lvl > 12  && lvl < 20)  fcmod = 1.5;
+  else if (lvl > 19  && lvl < 39)  fcmod = 1.25;
+  else if (lvl > 38  && lvl < 79)  fcmod = 1.15;
+  else if (lvl > 78)               fcmod = 1.10;
+  s.factoryCost = s.factoryCost * fcmod;
 }
 
 export function makeHarvester(s: GameState, qty = 1): void {
-  const cost = s.harvesterCost * qty;
-  if (s.unusedClips < cost) return;
-  s.unusedClips -= cost;
-  s.clips -= cost;
-  s.harvesterLevel += qty;
+  for (let i = 0; i < qty; i++) {
+    if (s.unusedClips < s.harvesterCost) break;
+    s.unusedClips -= s.harvesterCost;
+    s.clips -= s.harvesterCost;
+    s.harvesterBill += s.harvesterCost;
+    s.harvesterLevel++;
+    s.harvesterCost = Math.pow(s.harvesterLevel + 1, 2.25) * 1_000_000;
+  }
 }
 
 export function makeWireDrone(s: GameState, qty = 1): void {
-  const cost = s.wireDroneCost * qty;
-  if (s.unusedClips < cost) return;
-  s.unusedClips -= cost;
-  s.clips -= cost;
-  s.wireDroneLevel += qty;
+  for (let i = 0; i < qty; i++) {
+    if (s.unusedClips < s.wireDroneCost) break;
+    s.unusedClips -= s.wireDroneCost;
+    s.clips -= s.wireDroneCost;
+    s.wireDroneBill += s.wireDroneCost;
+    s.wireDroneLevel++;
+    s.wireDroneCost = Math.pow(s.wireDroneLevel + 1, 2.25) * 1_000_000;
+  }
 }
 
 export function makeFarm(s: GameState, qty = 1): void {
-  const cost = s.farmCost * qty;
-  if (s.unusedClips < cost) return;
-  s.unusedClips -= cost;
-  s.clips -= cost;
-  s.farmLevel += qty;
+  for (let i = 0; i < qty; i++) {
+    if (s.unusedClips < s.farmCost) break;
+    s.unusedClips -= s.farmCost;
+    s.clips -= s.farmCost;
+    s.farmBill += s.farmCost;
+    s.farmLevel++;
+    s.farmCost = Math.pow(s.farmLevel + 1, 2.78) * 100_000_000;
+  }
 }
 
 export function makeBattery(s: GameState, qty = 1): void {
-  const cost = s.batteryCost * qty;
-  if (s.unusedClips < cost) return;
-  s.unusedClips -= cost;
-  s.clips -= cost;
-  s.batteryLevel += qty;
+  for (let i = 0; i < qty; i++) {
+    if (s.unusedClips < s.batteryCost) break;
+    s.unusedClips -= s.batteryCost;
+    s.clips -= s.batteryCost;
+    s.batteryBill += s.batteryCost;
+    s.batteryLevel++;
+    s.batteryCost = Math.pow(s.batteryLevel + 1, 2.54) * 10_000_000;
+  }
 }
 
 // ── Probe design ──────────────────────────────────────────────────────────
@@ -326,6 +346,7 @@ export function factoryReboot(s: GameState): void {
   s.clips += s.factoryBill;
   s.factoryLevel = 0;
   s.factoryBill = 0;
+  s.factoryCost = 100_000_000;
 }
 
 export function harvesterReboot(s: GameState): void {
@@ -333,6 +354,7 @@ export function harvesterReboot(s: GameState): void {
   s.clips += s.harvesterBill;
   s.harvesterLevel = 0;
   s.harvesterBill = 0;
+  s.harvesterCost = 1_000_000;
 }
 
 export function wireDroneReboot(s: GameState): void {
@@ -340,6 +362,7 @@ export function wireDroneReboot(s: GameState): void {
   s.clips += s.wireDroneBill;
   s.wireDroneLevel = 0;
   s.wireDroneBill = 0;
+  s.wireDroneCost = 1_000_000;
 }
 
 export function farmReboot(s: GameState): void {
@@ -347,6 +370,7 @@ export function farmReboot(s: GameState): void {
   s.clips += s.farmBill;
   s.farmLevel = 0;
   s.farmBill = 0;
+  s.farmCost = 10_000_000;
 }
 
 export function batteryReboot(s: GameState): void {
@@ -354,6 +378,8 @@ export function batteryReboot(s: GameState): void {
   s.clips += s.batteryBill;
   s.batteryLevel = 0;
   s.batteryBill = 0;
+  s.batteryCost = 1_000_000;
+  s.storedPower = 0;
 }
 
 // ── Swarm ─────────────────────────────────────────────────────────────────

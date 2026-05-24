@@ -12,6 +12,12 @@ import { spellf, formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
+function droneBulkCost(baseLevel: number, qty: number): number {
+  let total = 0;
+  for (let i = 0; i < qty; i++) total += Math.pow(baseLevel + 1 + i, 2.25) * 1_000_000;
+  return total;
+}
+
 export function SpacePanel({ snap: s }: Props) {
   const showUniverse  = s.spaceFlag === 1;
   const showFactories = !s.humanFlag && s.factoryFlag  === 1;
@@ -78,14 +84,6 @@ export function SpacePanel({ snap: s }: Props) {
                   disabled={s.unusedClips < s.factoryCost}>
                   Build ({spellf(s.factoryCost)})
                 </Btn>
-                <Btn onClick={() => { makeFactory(G, 10); }}
-                  disabled={s.unusedClips < s.factoryCost * 10}>
-                  ×10
-                </Btn>
-                <Btn onClick={() => { makeFactory(G, 100); }}
-                  disabled={s.unusedClips < s.factoryCost * 100}>
-                  ×100
-                </Btn>
                 {s.factoryLevel > 0 && (
                   <Btn onClick={() => { factoryReboot(G); }}
                     title={`Refund ${spellf(s.factoryBill)} clips`}>
@@ -110,12 +108,16 @@ export function SpacePanel({ snap: s }: Props) {
                   Build ({spellf(s.harvesterCost)})
                 </Btn>
                 <Btn onClick={() => { makeHarvester(G, 10); }}
-                  disabled={s.unusedClips < s.harvesterCost * 10}>
+                  disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 10)}>
                   ×10
                 </Btn>
                 <Btn onClick={() => { makeHarvester(G, 100); }}
-                  disabled={s.unusedClips < s.harvesterCost * 100}>
+                  disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 100)}>
                   ×100
+                </Btn>
+                <Btn onClick={() => { makeHarvester(G, 1000); }}
+                  disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 1000)}>
+                  ×1000
                 </Btn>
                 {s.harvesterLevel > 0 && (
                   <Btn onClick={() => { harvesterReboot(G); }}
@@ -141,12 +143,16 @@ export function SpacePanel({ snap: s }: Props) {
                   Build ({spellf(s.wireDroneCost)})
                 </Btn>
                 <Btn onClick={() => { makeWireDrone(G, 10); }}
-                  disabled={s.unusedClips < s.wireDroneCost * 10}>
+                  disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 10)}>
                   ×10
                 </Btn>
                 <Btn onClick={() => { makeWireDrone(G, 100); }}
-                  disabled={s.unusedClips < s.wireDroneCost * 100}>
+                  disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 100)}>
                   ×100
+                </Btn>
+                <Btn onClick={() => { makeWireDrone(G, 1000); }}
+                  disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 1000)}>
+                  ×1000
                 </Btn>
                 {s.wireDroneLevel > 0 && (
                   <Btn onClick={() => { wireDroneReboot(G); }}
