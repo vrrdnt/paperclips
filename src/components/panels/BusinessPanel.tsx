@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, TrendingUp, Zap } from 'lucide-react';
+import { DollarSign, TrendingUp, Paperclip } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Sparkline } from '../ui/Sparkline';
 import { Btn } from '../ui/Btn';
@@ -26,19 +26,19 @@ export function BusinessPanel({ snap: s }: Props) {
   return (
     <>
       {/* Clip maker */}
-      <SectionCard title="Paperclips" icon={<Zap size={14} />}>
+      <SectionCard title="Paperclips" icon={<Paperclip size={14} />}>
         <div className="stat-row">
-          <span className="stat-label">Clips made</span>
+          <span className="stat-label">Clips produced</span>
           <span className="stat-value-lg">{spellf(s.clips)}</span>
         </div>
         {s.humanFlag === 1 && (
           <>
             <div className="stat-row">
-              <span className="stat-label">Unsold</span>
+              <span className="stat-label">Unsold clips</span>
               <span className="stat-value">{spellf(s.unsoldClips)}</span>
             </div>
             <div className="stat-row">
-              <span className="stat-label">Rate</span>
+              <span className="stat-label">Production rate</span>
               <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
             </div>
             <div style={{ marginTop: 8 }}>
@@ -60,8 +60,8 @@ export function BusinessPanel({ snap: s }: Props) {
           {hasRevTracker && (
             <div className="stat-with-graph">
               <div className="stat-row">
-                <span className="stat-label">Revenue/s</span>
-                <span className="stat-value">${formatWithCommas(s.avgRev, 2)}</span>
+                <span className="stat-label">Revenue rate</span>
+                <span className="stat-value">${formatWithCommas(s.avgRev, 2)}/s</span>
               </div>
               <div style={{ marginTop: 3 }}><Sparkline data={h.avgRev} /></div>
             </div>
@@ -70,7 +70,7 @@ export function BusinessPanel({ snap: s }: Props) {
           <hr className="divider" />
 
           <div className="stat-row" style={{ marginBottom: 4 }}>
-            <span className="stat-label">Price / clip</span>
+            <span className="stat-label">Price per clip</span>
             <span className="stat-value">${price}</span>
           </div>
           <div className="row">
@@ -93,7 +93,7 @@ export function BusinessPanel({ snap: s }: Props) {
             <Btn onClick={() => { raisePrice(G); }} disabled={s.margin >= MAX_CLIP_PRICE}>+</Btn>
           </div>
           <div className="stat-row" style={{ marginTop: 2 }}>
-            <span className="stat-label">Buy chance</span>
+            <span className="stat-label">Buy chance per tick</span>
             <span className="stat-value dim">{Math.min(s.demand, 100).toFixed(0)}%</span>
           </div>
 
@@ -140,7 +140,7 @@ export function BusinessPanel({ snap: s }: Props) {
           </div>
           <div style={{ marginTop: 6 }}>
             <Btn onClick={() => { buyAds(G); }} disabled={s.funds < s.adCost}>
-              Advertise (${formatWithCommas(s.adCost)})
+              Advertize (${formatWithCommas(s.adCost)})
             </Btn>
           </div>
         </SectionCard>
