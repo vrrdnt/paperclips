@@ -1,11 +1,17 @@
 import { GameState, makeInitialState } from './state';
+import { reconstructReadoutsFromProjectFlags } from './projectReadouts';
 
 const KEY = 'upc_v2';
 const PRESTIGE_KEY = 'upc_v2_prestige';
 
+export function toSaveableState(s: GameState): Omit<GameState, 'currentTournament' | 'readouts' | 'tourneyResult'> {
+  const { currentTournament, readouts, tourneyResult, ...saveable } = s;
+  return saveable;
+}
+
 export function saveGame(s: GameState): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(s));
+    localStorage.setItem(KEY, JSON.stringify(toSaveableState(s)));
   } catch { /* storage full */ }
 }
 
@@ -28,19 +34,16 @@ function normalizeWholeLevel(s: GameState, levelKey: WholeLevelKey, partialKey: 
 }
 
 export function hydrateGameState(loaded: Partial<GameState>): GameState {
-  const merged = { ...makeInitialState(), ...loaded };
+  const initial = makeInitialState();
+  const merged = { ...initial, ...loaded };
 
   normalizeWholeLevel(merged, 'factoryLevel', 'partialFactorySpawn');
   normalizeWholeLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
   normalizeWholeLevel(merged, 'wireDroneLevel', 'partialWireDroneSpawn');
 
-  // Drop stale tournament objects that predate required fields
-  if (merged.currentTournament && (
-    !merged.currentTournament.choiceNames ||
-    typeof merged.currentTournament.pendingYomi !== 'number'
-  )) {
-    merged.currentTournament = null;
-  }
+  merged.currentTournament = null;
+  merged.tourneyResult = initial.tourneyResult;
+  merged.readouts = reconstructReadoutsFromProjectFlags(merged);
 
   return merged;
 }
