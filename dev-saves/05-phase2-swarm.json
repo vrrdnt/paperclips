@@ -206,18 +206,6 @@
   "endTimer6": 0,
   "finalClips": 0,
 
-  "readouts": [
-    "Swarm computing online.",
-    "Wire Drone facilities online",
-    "Harvester Drone facilities online",
-    "Clip factory assembly facilities online",
-    "Now capable of manipulating matter at the molecular scale to produce wire",
-    "Power grid online.",
-    "New capability: build machinery out of clips",
-    "All of the resources of Earth are now available for clip production",
-    "Releasing the HypnoDrones"
-  ],
-
   "projectFlags": {
     "1": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1, "9": 1, "10": 1,
     "11": 1, "12": 1, "13": 1, "14": 1, "15": 1, "16": 1, "17": 1, "18": 1, "19": 1,
