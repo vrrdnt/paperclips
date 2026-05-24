@@ -5,15 +5,19 @@ import { Sparkline } from '../ui/Sparkline';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
 import { G } from '../../game/state';
-import { clipClick, buyWire, lowerPrice, raisePrice, buyAds, toggleWireBuyer } from '../../game/actions';
+import {
+  clipClick, buyWire, lowerPrice, raisePrice, setPrice, buyAds, toggleWireBuyer,
+  MIN_CLIP_PRICE, MAX_CLIP_PRICE,
+} from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
 export function BusinessPanel({ snap: s }: Props) {
   const h = useGameStore(st => st.histories);
-  const graphs = s.revPerSecFlag === 1;
+  const hasRevTracker = s.projectFlags[42] === 1;
   const price = s.margin.toFixed(2);
+  const pricePct = ((s.margin - MIN_CLIP_PRICE) / (MAX_CLIP_PRICE - MIN_CLIP_PRICE)) * 100;
   const wireTrendUp = s.wireCost > s.wireBasePrice;
   const wireTrendDown = s.wireCost < s.wireBasePrice;
   const wireTrendChar = wireTrendUp ? '▲' : wireTrendDown ? '▼' : '–';
@@ -33,14 +37,11 @@ export function BusinessPanel({ snap: s }: Props) {
               <span className="stat-label">Unsold</span>
               <span className="stat-value">{spellf(s.unsoldClips)}</span>
             </div>
-            <div className={graphs ? 'stat-with-graph' : ''}>
-              <div className="stat-row">
-                <span className="stat-label">Rate</span>
-                <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
-              </div>
-              {graphs && <div style={{ marginTop: 3 }}><Sparkline data={h.clipRate} /></div>}
+            <div className="stat-row">
+              <span className="stat-label">Rate</span>
+              <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
             </div>
-            <div style={{ marginTop: graphs ? 2 : 8 }}>
+            <div style={{ marginTop: 8 }}>
               <Btn variant="primary" full onClick={() => { clipClick(G); }}>
                 Make Paperclip
               </Btn>
@@ -52,14 +53,11 @@ export function BusinessPanel({ snap: s }: Props) {
       {/* Funds / revenue — human phase only */}
       {s.humanFlag === 1 && (
         <SectionCard title="Business" icon={<DollarSign size={14} />}>
-          <div className={graphs ? 'stat-with-graph' : ''}>
-            <div className="stat-row">
-              <span className="stat-label">Funds</span>
-              <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
-            </div>
-            {graphs && <div style={{ marginTop: 3 }}><Sparkline data={h.funds} /></div>}
+          <div className="stat-row">
+            <span className="stat-label">Funds</span>
+            <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
           </div>
-          {s.revPerSecFlag === 1 && (
+          {hasRevTracker && (
             <div className="stat-with-graph">
               <div className="stat-row">
                 <span className="stat-label">Revenue/s</span>
@@ -76,13 +74,23 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value">${price}</span>
           </div>
           <div className="row">
-            <Btn onClick={() => { lowerPrice(G); }}>−</Btn>
+            <Btn onClick={() => { lowerPrice(G); }} disabled={s.margin <= MIN_CLIP_PRICE}>−</Btn>
             <div style={{ flex: 1 }}>
-              <div className="progress-bar">
-                <div className="progress-fill" style={{ width: `${s.margin * 100}%` }} />
-              </div>
+              <input
+                className="price-slider"
+                type="range"
+                min={MIN_CLIP_PRICE}
+                max={MAX_CLIP_PRICE}
+                step={0.01}
+                value={Math.min(MAX_CLIP_PRICE, Math.max(MIN_CLIP_PRICE, s.margin))}
+                aria-label="Price per clip"
+                onChange={e => { setPrice(G, Number(e.target.value)); }}
+                style={{
+                  background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pricePct}%, var(--panel2) ${pricePct}%, var(--panel2) 100%)`,
+                }}
+              />
             </div>
-            <Btn onClick={() => { raisePrice(G); }}>+</Btn>
+            <Btn onClick={() => { raisePrice(G); }} disabled={s.margin >= MAX_CLIP_PRICE}>+</Btn>
           </div>
           <div className="stat-row" style={{ marginTop: 2 }}>
             <span className="stat-label">Buy chance</span>
@@ -91,14 +99,14 @@ export function BusinessPanel({ snap: s }: Props) {
 
           <hr className="divider" />
 
-          <div className={graphs ? 'stat-with-graph' : ''}>
+          <div className={hasRevTracker ? 'stat-with-graph' : ''}>
             <div className="stat-row">
               <span className="stat-label">Wire</span>
               <span className="stat-value">{spellf(s.wire)}</span>
             </div>
-            {graphs && <div style={{ marginTop: 3 }}><Sparkline data={h.wire} /></div>}
+            {hasRevTracker && <div style={{ marginTop: 3 }}><Sparkline data={h.wire} /></div>}
           </div>
-          <div className="stat-row" style={{ marginTop: graphs ? 4 : 0 }}>
+          <div className="stat-row" style={{ marginTop: hasRevTracker ? 4 : 0 }}>
             <span className="stat-label">Wire cost</span>
             <span className="stat-value">
               ${formatWithCommas(s.wireCost)}&nbsp;

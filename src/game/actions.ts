@@ -2,6 +2,9 @@
 import { GameState } from './state';
 import { displayMessage, buyWire as autoBuyWire } from './loop';
 
+export const MIN_CLIP_PRICE = 0.01;
+export const MAX_CLIP_PRICE = 3.00;
+
 // ── Clips ─────────────────────────────────────────────────────────────────
 export function clipClick(s: GameState, n = 1): void {
   if (s.wire < n) return;
@@ -38,13 +41,18 @@ export function makeMegaClipper(s: GameState): void {
 
 // ── Marketing ─────────────────────────────────────────────────────────────
 export function lowerPrice(s: GameState): void {
-  if (s.margin <= 0.01) return;
-  s.margin = Math.max(0.01, +(s.margin - 0.01).toFixed(2));
+  if (s.margin <= MIN_CLIP_PRICE) return;
+  setPrice(s, s.margin - 0.01);
 }
 
 export function raisePrice(s: GameState): void {
-  if (s.margin >= 1.0) return;
-  s.margin = Math.min(1.0, +(s.margin + 0.01).toFixed(2));
+  if (s.margin >= MAX_CLIP_PRICE) return;
+  setPrice(s, s.margin + 0.01);
+}
+
+export function setPrice(s: GameState, price: number): void {
+  const next = Math.max(MIN_CLIP_PRICE, Math.min(MAX_CLIP_PRICE, price));
+  s.margin = Math.round(next * 100) / 100;
 }
 
 export function buyAds(s: GameState): void {
@@ -140,10 +148,9 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   const totals: Record<string, number> = {};
   for (const n of active) totals[n] = 0;
 
-  // Round-robin: every strategy plays every other strategy (not itself), 10 games each
+  // Original tournament runs every ordered pairing, including self-matchups.
   for (const hName of active) {
     for (const vName of active) {
-      if (hName === vName) continue;
       let hPrev = 1, vPrev = 1;
       for (let r = 0; r < 10; r++) {
         const hm = stratMove(hName, r, payoff, vPrev);
@@ -161,19 +168,14 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   scores.sort((a, b) => b.score - a.score);
   const winner = scores[0];
   const picked = scores.find(s2 => s2.name === pickedStrat)!;
-  const placement = scores.indexOf(picked);
-
-  let yomiGain = picked.score * s.yomiBoost;
-  if (placement === 0) yomiGain += 50000;
-  else if (placement === 1) yomiGain += 30000;
-  else if (placement === 2) yomiGain += 20000;
+  const yomiGain = calculateYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
 
   s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
   s.tourneyCount++;
   s.currentTournament = {
     stratH: pickedStrat, stratV: winner.name,
     payoff, choiceNames,
-    totalRounds: active.length * (active.length - 1),
+    totalRounds: active.length * active.length,
     results: scores.map(sc => `${sc.name}: ${sc.score}`),
     pendingYomi: Math.floor(yomiGain),
   };
@@ -183,6 +185,44 @@ export function collectTourneyYomi(s: GameState): void {
   if (!s.currentTournament) return;
   s.yomi += s.currentTournament.pendingYomi;
   s.currentTournament.pendingYomi = 0;
+}
+
+function calculateYomiGain(
+  scores: { name: string; score: number }[],
+  picked: { name: string; score: number },
+  yomiBoost: number,
+  strategicAttachment: boolean,
+): number {
+  const placement = scores.findIndex(sc => sc.name === picked.name);
+  const beatBoost = Math.max(1, scores.length - placement - 1);
+  let yomiGain = picked.score * yomiBoost * beatBoost;
+
+  if (strategicAttachment) {
+    const winnerScore = scores[0]?.score;
+    const placeScore = getPlaceScore(scores);
+    const showScore = getShowScore(scores, placeScore);
+
+    if (picked.score === winnerScore) yomiGain += 50000;
+    else if (placeScore != null && picked.score === placeScore) yomiGain += 30000;
+    else if (showScore != null && picked.score === showScore) yomiGain += 20000;
+  }
+
+  return Math.floor(yomiGain);
+}
+
+function getPlaceScore(scores: { score: number }[]): number | null {
+  for (let i = 1; i < scores.length; i++) {
+    if (scores[i].score < scores[i - 1].score) return scores[i].score;
+  }
+  return null;
+}
+
+function getShowScore(scores: { score: number }[], placeScore: number | null): number | null {
+  if (placeScore == null) return null;
+  for (let i = 1; i < scores.length; i++) {
+    if (scores[i].score < placeScore) return scores[i].score;
+  }
+  return null;
 }
 
 function stratMove(name: string, round: number, payoff: number[][], opponentPrev = 1): number {
