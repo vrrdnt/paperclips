@@ -3,8 +3,7 @@ import { Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
 import { tickBatch } from './game/loop';
-import { loadGame, saveGame, resetGame, savePrestige } from './game/save';
-import { makeInitialState } from './game/state';
+import { hydrateGameState, loadGame, saveGame, resetGame, savePrestige } from './game/save';
 import { Btn } from './components/ui/Btn';
 import { Console } from './components/Console';
 import { BusinessPanel } from './components/panels/BusinessPanel';
@@ -164,7 +163,7 @@ export default function App() {
     try {
       const decoded = decodeURIComponent(escape(atob(importText.trim())));
       const loaded = JSON.parse(decoded);
-      const merged = { ...makeInitialState(), ...loaded };
+      const merged = hydrateGameState(loaded);
       Object.assign(G, merged);
       setSnap(G);
       saveGame(G);
@@ -215,19 +214,19 @@ export default function App() {
             <div className="col-left">
               <BusinessPanel snap={snap} />
               <ComputingPanel snap={snap} />
-              <StrategyPanel snap={snap} />
+              <PowerPanel snap={snap} />
+              <SwarmPanel snap={snap} />
             </div>
 
             <div className="col-center">
               <ProjectsPanel snap={snap} />
+              <StrategyPanel snap={snap} />
+              <ProbeDesignPanel snap={snap} />
+              <CombatPanel snap={snap} />
             </div>
 
             <div className="col-right">
               <SpacePanel snap={snap} />
-              <PowerPanel snap={snap} />
-              <SwarmPanel snap={snap} />
-              <ProbeDesignPanel snap={snap} />
-              <CombatPanel snap={snap} />
             </div>
           </main>
         ) : (

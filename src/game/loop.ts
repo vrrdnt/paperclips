@@ -426,34 +426,61 @@ function encounterHazards(s: GameState): void {
   }
 }
 
+function spawnWholeUnits(
+  s: GameState,
+  rawAmount: number,
+  unitCost: number,
+  partial: number,
+): { amount: number; partial: number } {
+  if (!isFinite(rawAmount) || rawAmount <= 0) {
+    return { amount: 0, partial: isFinite(partial) ? partial : 0 };
+  }
+
+  const pending = Math.max(0, (isFinite(partial) ? partial : 0) + rawAmount);
+  const desired = Math.floor(pending);
+  const nextPartial = pending - desired;
+  if (desired < 1) return { amount: 0, partial: nextPartial };
+
+  const affordable = Math.max(0, Math.floor(s.unusedClips / unitCost));
+  const amount = Math.min(desired, affordable);
+  s.unusedClips -= amount * unitCost;
+  return { amount, partial: nextPartial };
+}
+
 // ── Probe-spawned factories ───────────────────────────────────────────────
 function spawnFactories(s: GameState): void {
-  let amount = s.probeCount * PROBE_FAC_RATE * s.probeFac;
-  if (amount * FAC_SPAWN_COST > s.unusedClips) {
-    amount = Math.floor(s.unusedClips / FAC_SPAWN_COST);
-  }
-  s.unusedClips -= amount * FAC_SPAWN_COST;
-  s.factoryLevel += amount;
+  const spawned = spawnWholeUnits(
+    s,
+    s.probeCount * PROBE_FAC_RATE * s.probeFac,
+    FAC_SPAWN_COST,
+    s.partialFactorySpawn,
+  );
+  s.partialFactorySpawn = spawned.partial;
+  s.factoryLevel += spawned.amount;
 }
 
 // ── Probe-spawned harvester drones ────────────────────────────────────────
 function spawnHarvesters(s: GameState): void {
-  let amount = s.probeCount * PROBE_HARV_RATE * s.probeHarv;
-  if (amount * DRONE_SPAWN_COST > s.unusedClips) {
-    amount = Math.floor(s.unusedClips / DRONE_SPAWN_COST);
-  }
-  s.unusedClips -= amount * DRONE_SPAWN_COST;
-  s.harvesterLevel += amount;
+  const spawned = spawnWholeUnits(
+    s,
+    s.probeCount * PROBE_HARV_RATE * s.probeHarv,
+    DRONE_SPAWN_COST,
+    s.partialHarvesterSpawn,
+  );
+  s.partialHarvesterSpawn = spawned.partial;
+  s.harvesterLevel += spawned.amount;
 }
 
 // ── Probe-spawned wire drones ─────────────────────────────────────────────
 function spawnWireDrones(s: GameState): void {
-  let amount = s.probeCount * PROBE_WIRE_RATE * s.probeWire;
-  if (amount * DRONE_SPAWN_COST > s.unusedClips) {
-    amount = Math.floor(s.unusedClips / DRONE_SPAWN_COST);
-  }
-  s.unusedClips -= amount * DRONE_SPAWN_COST;
-  s.wireDroneLevel += amount;
+  const spawned = spawnWholeUnits(
+    s,
+    s.probeCount * PROBE_WIRE_RATE * s.probeWire,
+    DRONE_SPAWN_COST,
+    s.partialWireDroneSpawn,
+  );
+  s.partialWireDroneSpawn = spawned.partial;
+  s.wireDroneLevel += spawned.amount;
 }
 
 // ── Probe replication — spawnProbes() ────────────────────────────────────

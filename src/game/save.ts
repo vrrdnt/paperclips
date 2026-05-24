@@ -9,21 +9,48 @@ export function saveGame(s: GameState): void {
   } catch { /* storage full */ }
 }
 
+type WholeLevelKey = 'factoryLevel' | 'harvesterLevel' | 'wireDroneLevel';
+type PartialSpawnKey = 'partialFactorySpawn' | 'partialHarvesterSpawn' | 'partialWireDroneSpawn';
+
+function finiteNonNegative(value: number): number {
+  return isFinite(value) ? Math.max(0, value) : 0;
+}
+
+function normalizeWholeLevel(s: GameState, levelKey: WholeLevelKey, partialKey: PartialSpawnKey): void {
+  const level = finiteNonNegative(s[levelKey]);
+  const partial = finiteNonNegative(s[partialKey]);
+  const wholeLevel = Math.floor(level);
+  const pending = partial + (level - wholeLevel);
+  const wholePending = Math.floor(pending);
+
+  s[levelKey] = wholeLevel + wholePending;
+  s[partialKey] = pending - wholePending;
+}
+
+export function hydrateGameState(loaded: Partial<GameState>): GameState {
+  const merged = { ...makeInitialState(), ...loaded };
+
+  normalizeWholeLevel(merged, 'factoryLevel', 'partialFactorySpawn');
+  normalizeWholeLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
+  normalizeWholeLevel(merged, 'wireDroneLevel', 'partialWireDroneSpawn');
+
+  // Drop stale tournament objects that predate required fields
+  if (merged.currentTournament && (
+    !merged.currentTournament.choiceNames ||
+    typeof merged.currentTournament.pendingYomi !== 'number'
+  )) {
+    merged.currentTournament = null;
+  }
+
+  return merged;
+}
+
 export function loadGame(): GameState {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return makeInitialState();
     const loaded = JSON.parse(raw) as GameState;
-    // Merge with initial state so new fields have defaults
-    const merged = { ...makeInitialState(), ...loaded };
-    // Drop stale tournament objects that predate required fields
-    if (merged.currentTournament && (
-      !merged.currentTournament.choiceNames ||
-      typeof merged.currentTournament.pendingYomi !== 'number'
-    )) {
-      merged.currentTournament = null;
-    }
-    return merged;
+    return hydrateGameState(loaded);
   } catch {
     return makeInitialState();
   }
