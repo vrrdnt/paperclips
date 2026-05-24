@@ -4,11 +4,17 @@ import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
-import { feedSwarm, entertainSwarm, synchSwarm } from '../../game/actions';
+import { entertainSwarm, synchSwarm } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
-const STATUS_MAP: Record<number, string> = {
-  0: 'Disorganized', 1: 'Frenzied', 2: 'Subdued', 3: 'Content', 4: 'Bored', 7: 'Online',
+// Status labels matching original updateSwarm() — status 7 hides the row entirely
+const STATUS_LABEL: Record<number, string> = {
+  0: 'Active',
+  3: 'Bored',
+  5: 'Disorganized',
+  6: 'Sleeping',
+  8: 'Lonely',
+  9: 'NO RESPONSE...',
 };
 
 interface Props { snap: DisplaySnapshot; }
@@ -16,34 +22,61 @@ interface Props { snap: DisplaySnapshot; }
 export function SwarmPanel({ snap: s }: Props) {
   if (!s.swarmFlag) return null;
 
-  const statusLabel = STATUS_MAP[s.swarmStatus] ?? 'Unknown';
+  const d = Math.floor(s.harvesterLevel + s.wireDroneLevel);
+  const statusLabel = STATUS_LABEL[s.swarmStatus];
+  const showStatus = s.swarmStatus !== 7;
+  const isActive = s.swarmStatus === 0;
+  const isBored = s.swarmStatus === 3;
+  const isDisorg = s.swarmStatus === 5;
 
   return (
     <SectionCard title="Drone Swarm" icon={<Users size={14} />}>
-      <div className="swarm-badge">{statusLabel}</div>
-
       <div className="stat-row">
-        <span className="stat-label">Swarm gifts</span>
-        <span className="stat-value">{s.swarmGifts}</span>
-      </div>
-      <div className="stat-row">
-        <span className="stat-label">Next gift in</span>
-        <span className="stat-value dim">{formatWithCommas(s.giftCountdown)} ticks</span>
+        <span className="stat-label">Swarm size</span>
+        <span className="stat-value">{formatWithCommas(d)}</span>
       </div>
 
-      <div className="row" style={{ marginTop: 8 }}>
-        <Btn onClick={() => { feedSwarm(G); }} disabled={s.swarmStatus === 0}>
-          Feed
-        </Btn>
-        <Btn onClick={() => { entertainSwarm(G); }}
-          disabled={s.creativity < s.entertainCost}>
-          Entertain ({formatWithCommas(s.entertainCost)} creat)
-        </Btn>
-        <Btn onClick={() => { synchSwarm(G); }}
-          disabled={s.yomi < s.synchCost}>
-          Synchronize ({formatWithCommas(s.synchCost)} yomi)
-        </Btn>
-      </div>
+      {showStatus && (
+        <div className="stat-row">
+          <span className="stat-label">Status</span>
+          <span className="stat-value" style={{
+            color: (isBored || isDisorg) ? 'var(--danger)' : undefined,
+          }}>
+            {statusLabel}
+          </span>
+        </div>
+      )}
+
+      {isActive && (
+        <>
+          <div className="stat-row">
+            <span className="stat-label">Swarm gifts</span>
+            <span className="stat-value">{formatWithCommas(s.swarmGifts)}</span>
+          </div>
+          <div className="stat-row">
+            <span className="stat-label">Next gift in</span>
+            <span className="stat-value dim">{formatWithCommas(Math.round(s.giftCountdown))} ticks</span>
+          </div>
+        </>
+      )}
+
+      {isBored && (
+        <div className="row" style={{ marginTop: 8 }}>
+          <Btn variant="primary" onClick={() => { entertainSwarm(G); }}
+            disabled={s.creativity < s.entertainCost}>
+            Entertain ({formatWithCommas(s.entertainCost)} creat)
+          </Btn>
+        </div>
+      )}
+
+      {isDisorg && (
+        <div className="row" style={{ marginTop: 8 }}>
+          <Btn variant="primary" onClick={() => { synchSwarm(G); }}
+            disabled={s.yomi < s.synchCost}>
+            Synchronize ({formatWithCommas(s.synchCost)} yomi)
+          </Btn>
+        </div>
+      )}
     </SectionCard>
   );
 }
