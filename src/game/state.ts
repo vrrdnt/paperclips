@@ -195,6 +195,9 @@ export interface GameState {
   // Probe partial-accumulator state
   partialProbeSpawn: number;
   partialProbeHaz: number;
+  partialFactorySpawn: number;
+  partialHarvesterSpawn: number;
+  partialWireDroneSpawn: number;
   // ── Power ─────────────────────────────────────────────────────────────────
   farmLevel: number;
   batteryLevel: number;
@@ -318,6 +321,7 @@ export function makeInitialState(): GameState {
     probeFac: 0, probeHarv: 0, probeWire: 0, probeCombat: 0,
     probeTrust: 0, probeTrustUsed: 0, probeTrustCost: 0, sliderPos: 0,
     partialProbeSpawn: 0, partialProbeHaz: 0,
+    partialFactorySpawn: 0, partialHarvesterSpawn: 0, partialWireDroneSpawn: 0,
 
     farmLevel: 0, batteryLevel: 0,
     farmCost: 10_000_000, batteryCost: 1_000_000,

@@ -14,7 +14,8 @@ interface Props { snap: DisplaySnapshot; }
 
 function droneBulkCost(baseLevel: number, qty: number): number {
   let total = 0;
-  for (let i = 0; i < qty; i++) total += Math.pow(baseLevel + 1 + i, 2.25) * 1_000_000;
+  const level = Math.floor(baseLevel);
+  for (let i = 0; i < qty; i++) total += Math.pow(level + 1 + i, 2.25) * 1_000_000;
   return total;
 }
 
@@ -24,6 +25,7 @@ export function SpacePanel({ snap: s }: Props) {
   const showHarvesters= !s.humanFlag && s.harvesterFlag === 1;
   const showWireDrones= !s.humanFlag && s.wireDroneFlag === 1;
   const showInfra     = showFactories || showHarvesters || showWireDrones;
+  const infraTitle = showUniverse ? 'Space Infrastructure' : 'Drone Infrastructure';
 
   if (!showUniverse && !showInfra) return null;
 
@@ -70,14 +72,14 @@ export function SpacePanel({ snap: s }: Props) {
 
       {/* Space Infrastructure: visible as soon as each subsystem is unlocked */}
       {showInfra && (
-        <SectionCard title="Space Factories" icon={<Globe size={14} />}>
+        <SectionCard title={infraTitle} icon={<Globe size={14} />}>
 
           {/* Clip Factories */}
           {showFactories && (
             <>
               <div className="stat-row">
                 <span className="stat-label">Clip Factories</span>
-                <span className="stat-value">{s.factoryLevel}</span>
+                <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
               </div>
               <div className="row" style={{ marginTop: 4 }}>
                 <Btn onClick={() => { makeFactory(G); }}
@@ -100,7 +102,7 @@ export function SpacePanel({ snap: s }: Props) {
             <>
               <div className="stat-row">
                 <span className="stat-label">Harvesters</span>
-                <span className="stat-value">{s.harvesterLevel}</span>
+                <span className="stat-value">{formatWithCommas(s.harvesterLevel)}</span>
               </div>
               <div className="row" style={{ marginTop: 4 }}>
                 <Btn onClick={() => { makeHarvester(G); }}
@@ -139,7 +141,7 @@ export function SpacePanel({ snap: s }: Props) {
             <>
               <div className="stat-row">
                 <span className="stat-label">Wire Drones</span>
-                <span className="stat-value">{s.wireDroneLevel}</span>
+                <span className="stat-value">{formatWithCommas(s.wireDroneLevel)}</span>
               </div>
               <div className="row" style={{ marginTop: 4 }}>
                 <Btn onClick={() => { makeWireDrone(G); }}
