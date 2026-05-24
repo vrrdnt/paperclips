@@ -35,12 +35,12 @@ export function PowerPanel({ snap: s }: Props) {
       <div className="row" style={{ marginTop: 4 }}>
         <Btn onClick={() => { makeFarm(G); }}
           disabled={s.unusedClips < s.farmCost}>
-          Allocate Farm ({spellf(s.farmCost)})
+          Build Farm ({spellf(s.farmCost)})
         </Btn>
         {s.farmLevel > 0 && (
           <Btn onClick={() => { farmReboot(G); }}
             title={`Refund ${spellf(s.farmBill)} clips`}>
-            Deallocate
+            Dismantle
           </Btn>
         )}
       </div>
@@ -54,12 +54,12 @@ export function PowerPanel({ snap: s }: Props) {
       <div className="row" style={{ marginTop: 4 }}>
         <Btn onClick={() => { makeBattery(G); }}
           disabled={s.unusedClips < s.batteryCost}>
-          Allocate Battery ({spellf(s.batteryCost)})
+          Build Battery ({spellf(s.batteryCost)})
         </Btn>
         {s.batteryLevel > 0 && (
           <Btn onClick={() => { batteryReboot(G); }}
             title={`Refund ${spellf(s.batteryBill)} clips`}>
-            Deallocate
+            Dismantle
           </Btn>
         )}
       </div>

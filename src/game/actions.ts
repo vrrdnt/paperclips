@@ -195,36 +195,14 @@ function calculateYomiGain(
   yomiBoost: number,
   strategicAttachment: boolean,
 ): number {
-  const placement = scores.findIndex(sc => sc.name === picked.name);
-  const beatBoost = Math.max(1, scores.length - placement - 1);
-  let yomiGain = picked.score * yomiBoost * beatBoost;
-
+  const placement = scores.indexOf(picked);
+  let yomiGain = picked.score * yomiBoost;
   if (strategicAttachment) {
-    const winnerScore = scores[0]?.score;
-    const placeScore = getPlaceScore(scores);
-    const showScore = getShowScore(scores, placeScore);
-
-    if (picked.score === winnerScore) yomiGain += 50000;
-    else if (placeScore != null && picked.score === placeScore) yomiGain += 30000;
-    else if (showScore != null && picked.score === showScore) yomiGain += 20000;
+    if (placement === 0) yomiGain += 50000;
+    else if (placement === 1) yomiGain += 30000;
+    else if (placement === 2) yomiGain += 20000;
   }
-
-  return Math.floor(yomiGain);
-}
-
-function getPlaceScore(scores: { score: number }[]): number | null {
-  for (let i = 1; i < scores.length; i++) {
-    if (scores[i].score < scores[i - 1].score) return scores[i].score;
-  }
-  return null;
-}
-
-function getShowScore(scores: { score: number }[], placeScore: number | null): number | null {
-  if (placeScore == null) return null;
-  for (let i = 1; i < scores.length; i++) {
-    if (scores[i].score < placeScore) return scores[i].score;
-  }
-  return null;
+  return yomiGain;
 }
 
 function stratMove(name: string, round: number, payoff: number[][], opponentPrev = 1): number {
