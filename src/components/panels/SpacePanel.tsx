@@ -126,6 +126,10 @@ export function SpacePanel({ snap: s }: Props) {
                   </Btn>
                 )}
               </div>
+              <div className="stat-row" style={{ marginTop: 4 }}>
+                <span className="stat-label">Matter acquired</span>
+                <span className="stat-value">{spellf(s.acquiredMatter)}</span>
+              </div>
               {showWireDrones && <hr className="divider" />}
             </>
           )}
@@ -162,6 +166,14 @@ export function SpacePanel({ snap: s }: Props) {
                 )}
               </div>
             </>
+          )}
+
+          {/* Wire production stats — shown when wire production is unlocked */}
+          {showWireDrones && s.wireProductionFlag === 1 && (
+            <div className="stat-row" style={{ marginTop: 4 }}>
+              <span className="stat-label">Wire/sec</span>
+              <span className="stat-value">{spellf(s.wpps)}</span>
+            </div>
           )}
 
           {/* Nano wire — shown whenever wire drones or harvesters exist */}

@@ -151,6 +151,7 @@ export interface GameState {
   wireBuyerFlag: number;
   safetyProjectOn: boolean;
   // ── Space ─────────────────────────────────────────────────────────────────
+  wpps: number;
   nanoWire: number;
   availableMatter: number;
   acquiredMatter: number;
@@ -303,6 +304,7 @@ export function makeInitialState(): GameState {
     battleFlag: 0, qFlag: 0, swarmFlag: 0, milestoneFlag: 0,
     egoFlag: 0, tothFlag: 0, wireBuyerFlag: 0, safetyProjectOn: false,
 
+    wpps: 0,
     nanoWire: 0, availableMatter: AM, acquiredMatter: 0,
     processedMatter: 0, totalMatter: Math.pow(10, 54) * 30,
     foundMatter: AM, harvesterLevel: 0, wireDroneLevel: 0, factoryLevel: 0,

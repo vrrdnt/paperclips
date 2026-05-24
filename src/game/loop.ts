@@ -388,6 +388,7 @@ function processMatter(s: GameState): void {
   const dbstw = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.wireDroneLevel) : 1;
   let a = s.powMod * dbstw * Math.floor(s.wireDroneLevel) * s.wireDroneRate;
   a = a * ((200 - s.sliderPos) / 100);
+  s.wpps = a * 100;
   if (a > s.acquiredMatter) a = s.acquiredMatter;
   s.acquiredMatter -= a;
   s.wire += a;
