@@ -3,7 +3,7 @@ import { Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
 import { tickBatch } from './game/loop';
-import { hydrateGameState, loadGame, saveGame, resetGame, savePrestige } from './game/save';
+import { hydrateGameState, loadGame, saveGame, resetGame, savePrestige, toSaveableState } from './game/save';
 import { Btn } from './components/ui/Btn';
 import { Console } from './components/Console';
 import { BusinessPanel } from './components/panels/BusinessPanel';
@@ -137,7 +137,7 @@ export default function App() {
 
   async function handleExport() {
     saveGame(G);
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(G))));
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(toSaveableState(G)))));
     setExportText(encoded);
     const copied = await copyText(encoded);
     if (copied) {

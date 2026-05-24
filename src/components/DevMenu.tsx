@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DEV_SAVES } from '../devSaves';
 import { G } from '../game/state';
-import { hydrateGameState } from '../game/save';
+import { hydrateGameState, saveGame } from '../game/save';
 
 const TRIGGER = 'paperclips';
 
@@ -28,7 +28,7 @@ export function DevMenu() {
   function loadSave(data: object) {
     const merged = hydrateGameState(data);
     Object.assign(G, merged);
-    localStorage.setItem('upc_v2', JSON.stringify(merged));
+    saveGame(G);
     window.location.reload();
   }
 

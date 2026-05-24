@@ -1,6 +1,7 @@
 // Player-triggered actions — pure functions that mutate GameState
 import { GameState } from './state';
 import { displayMessage, buyWire as autoBuyWire } from './loop';
+import { formatWithCommas } from './format';
 
 export const MIN_CLIP_PRICE = 0.01;
 export const MAX_CLIP_PRICE = 3.00;
@@ -185,7 +186,12 @@ export function runTourney(s: GameState, pickedStrat: string): void {
 
 export function collectTourneyYomi(s: GameState): void {
   if (!s.currentTournament) return;
-  s.yomi += s.currentTournament.pendingYomi;
+  const pendingYomi = s.currentTournament.pendingYomi;
+  if (pendingYomi <= 0) return;
+
+  displayMessage(s, `Strategic modeling results: ${s.tourneyResult}`);
+  displayMessage(s, `${s.currentTournament.stratH} selected, ${formatWithCommas(pendingYomi)} yomi earned`);
+  s.yomi += pendingYomi;
   s.currentTournament.pendingYomi = 0;
 }
 
