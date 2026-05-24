@@ -27,8 +27,11 @@ export default function App() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
   const [exportCopied, setExportCopied] = useState(false);
+  const [showExportFallback, setShowExportFallback] = useState(false);
+  const [exportText, setExportText] = useState('');
   const [showHypnoTransition, setShowHypnoTransition] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const exportTextareaRef = useRef<HTMLTextAreaElement>(null);
   const prevHumanFlag = useRef<number | null>(null);
 
   useEffect(() => {
@@ -72,7 +75,18 @@ export default function App() {
     }
   }, [showImport]);
 
+  useEffect(() => {
+    if (showExportFallback) {
+      setTimeout(() => {
+        exportTextareaRef.current?.focus();
+        exportTextareaRef.current?.select();
+      }, 50);
+    }
+  }, [showExportFallback]);
+
   if (!snap) return <div style={{ padding: 24, color: 'var(--text-dim)' }}>Loading…</div>;
+
+  const postHuman = snap.humanFlag === 0;
 
   function handleReset() {
     if (!confirm('Reset game? This cannot be undone.')) return;
@@ -85,13 +99,64 @@ export default function App() {
     saveGame(G);
   }
 
-  function handleExport() {
+  function fallbackCopyText(text: string): boolean {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.setAttribute('readonly', '');
+    el.style.position = 'fixed';
+    el.style.top = '-1000px';
+    el.style.left = '-1000px';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    try {
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      document.body.removeChild(el);
+    }
+  }
+
+  async function copyText(text: string): Promise<boolean> {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // Some embedded preview browsers block Clipboard API writes.
+      }
+    }
+    return fallbackCopyText(text);
+  }
+
+  function showCopied() {
+    setExportCopied(true);
+    setTimeout(() => setExportCopied(false), 1800);
+  }
+
+  async function handleExport() {
     saveGame(G);
     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(G))));
-    navigator.clipboard.writeText(encoded).then(() => {
-      setExportCopied(true);
-      setTimeout(() => setExportCopied(false), 1800);
-    });
+    setExportText(encoded);
+    const copied = await copyText(encoded);
+    if (copied) {
+      showCopied();
+      setShowExportFallback(false);
+    } else {
+      setShowExportFallback(true);
+    }
+  }
+
+  async function handleExportCopyRetry() {
+    const copied = await copyText(exportText);
+    if (copied) {
+      showCopied();
+      setShowExportFallback(false);
+    } else {
+      exportTextareaRef.current?.focus();
+      exportTextareaRef.current?.select();
+    }
   }
 
   function handleImportConfirm() {
@@ -143,27 +208,49 @@ export default function App() {
           <Console snap={snap} />
         </div>
 
-        <main className="app-body">
-          <div className="col-left">
-            <BusinessPanel snap={snap} />
-            <ManufacturingPanel snap={snap} />
-          </div>
+        {postHuman ? (
+          <main className="app-body app-body-post-human">
+            <div className="col-left">
+              <BusinessPanel snap={snap} />
+              <ComputingPanel snap={snap} />
+              <StrategyPanel snap={snap} />
+            </div>
 
-          <div className="col-center">
-            <ComputingPanel snap={snap} />
-            <ProjectsPanel snap={snap} />
-            <StrategyPanel snap={snap} />
-            <InvestmentPanel snap={snap} />
-            <SwarmPanel snap={snap} />
-          </div>
+            <div className="col-center">
+              <ProjectsPanel snap={snap} />
+            </div>
 
-          <div className="col-right">
-            <SpacePanel snap={snap} />
-            <ProbeDesignPanel snap={snap} />
-            <PowerPanel snap={snap} />
-            <CombatPanel snap={snap} />
-          </div>
-        </main>
+            <div className="col-right">
+              <SpacePanel snap={snap} />
+              <PowerPanel snap={snap} />
+              <SwarmPanel snap={snap} />
+              <ProbeDesignPanel snap={snap} />
+              <CombatPanel snap={snap} />
+            </div>
+          </main>
+        ) : (
+          <main className="app-body app-body-human">
+            <div className="col-left">
+              <BusinessPanel snap={snap} />
+              <ManufacturingPanel snap={snap} />
+            </div>
+
+            <div className="col-center">
+              <ComputingPanel snap={snap} />
+              <ProjectsPanel snap={snap} />
+            </div>
+
+            <div className="col-right">
+              <StrategyPanel snap={snap} />
+              <InvestmentPanel snap={snap} />
+              <SpacePanel snap={snap} />
+              <ProbeDesignPanel snap={snap} />
+              <PowerPanel snap={snap} />
+              <SwarmPanel snap={snap} />
+              <CombatPanel snap={snap} />
+            </div>
+          </main>
+        )}
 
         <footer style={{ textAlign: 'center', padding: '16px 0 4px', fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6 }}>
           Based on{' '}
@@ -267,7 +354,53 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Export fallback modal */}
+      {showExportFallback && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setShowExportFallback(false); }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            background: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+          <div style={{
+            background: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            padding: '20px 24px',
+            width: 440, maxWidth: '92vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
+              Export Save
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
+              Clipboard access was blocked. Copy this save string manually.
+            </div>
+            <textarea
+              ref={exportTextareaRef}
+              value={exportText}
+              readOnly
+              rows={5}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                background: '#111', border: '1px solid var(--border)',
+                borderRadius: 4, color: 'var(--text)',
+                fontFamily: 'monospace', fontSize: 10,
+                padding: '8px 10px', resize: 'vertical',
+                outline: 'none',
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
+              <Btn onClick={() => setShowExportFallback(false)}>Close</Btn>
+              <Btn variant="primary" onClick={handleExportCopyRetry}>
+                Copy
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

@@ -14,7 +14,7 @@ export function ManufacturingPanel({ snap: s }: Props) {
   if (!s.autoClipperFlag || !s.humanFlag) return null;
 
   const h = useGameStore(st => st.histories);
-  const graphs = s.revPerSecFlag === 1;
+  const graphs = s.projectFlags[42] === 1;
 
   return (
     <SectionCard title="Manufacturing" icon={<Settings size={14} />}>

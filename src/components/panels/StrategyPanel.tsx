@@ -18,32 +18,49 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
   flash: Cell | null;
 }) {
   const [a, b] = choiceNames ?? ['A', 'B'];
-  const cell = (id: Cell, hVal: number, vVal: number) => (
-    <td style={{
-      padding: '4px 6px',
-      textAlign: 'center',
-      background: flash === id ? '#3a3a3a' : '#1c1c1c',
-      transition: 'background 0.04s',
+  const cell = (id: Cell, hVal: number, vVal: number) => {
+    const isFlashing = flash === id;
+    const scoreStyle = (score: number, other: number): React.CSSProperties => ({
+      display: 'inline-block',
+      minWidth: 18,
+      padding: '1px 4px',
       borderRadius: 2,
-      border: '1px solid #2a2a2a',
-    }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#ccc', fontVariantNumeric: 'tabular-nums' }}>{hVal}</div>
-      <div style={{ fontSize: 9, color: '#555', fontVariantNumeric: 'tabular-nums' }}>{vVal}</div>
-    </td>
-  );
+      border: isFlashing
+        ? `1px solid ${score > other ? 'var(--success)' : score < other ? 'var(--danger)' : '#777'}`
+        : '1px solid transparent',
+    });
+
+    return (
+      <td style={{
+        padding: '4px 6px',
+        textAlign: 'center',
+        background: isFlashing ? '#3a3a3a' : '#1c1c1c',
+        transition: 'background 0.04s',
+        borderRadius: 2,
+        border: '1px solid #2a2a2a',
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#ccc', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={scoreStyle(hVal, vVal)}>{hVal}</span>
+        </div>
+        <div style={{ fontSize: 9, color: '#777', fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>
+          <span style={scoreStyle(vVal, hVal)}>{vVal}</span>
+        </div>
+      </td>
+    );
+  };
 
   const labelStyle: React.CSSProperties = {
     fontSize: 9, fontWeight: 600, color: 'var(--text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.04em',
-    padding: '0 4px', whiteSpace: 'nowrap',
+    padding: '0 2px', whiteSpace: 'nowrap',
   };
 
   return (
     <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 3, marginTop: 4 }}>
       <colgroup>
-        <col style={{ width: '28%' }} />
-        <col style={{ width: '36%' }} />
-        <col style={{ width: '36%' }} />
+        <col style={{ width: '18%' }} />
+        <col style={{ width: '41%' }} />
+        <col style={{ width: '41%' }} />
       </colgroup>
       <thead>
         <tr>
@@ -110,9 +127,9 @@ export function StrategyPanel({ snap: s }: Props) {
       return CELLS[3];
     }
 
-    // Build ordered pair list (no self-matches) to cycle through during animation
+    // Original tournament includes every ordered pair, including self-matchups.
     const pairs: [string, string][] = [];
-    for (const h of strategies) for (const v of strategies) if (h !== v) pairs.push([h, v]);
+    for (const h of strategies) for (const v of strategies) pairs.push([h, v]);
 
     const TOTAL_ROUNDS = Math.min(totalRounds, pairs.length || 1);
     const GAMES = Math.max(3, Math.ceil(60 / TOTAL_ROUNDS));

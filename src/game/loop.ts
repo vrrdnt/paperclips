@@ -622,7 +622,6 @@ function tickRevenue(s: GameState): void {
     s.avgRev = chanceOfPurchase * 0.7 * Math.pow(s.demand, 1.15) * s.margin * 10;
   }
   s.income = 0;
-  if (s.avgRev > 0) s.revPerSecFlag = 1;
 }
 
 // ── Investments ───────────────────────────────────────────────────────────
@@ -762,7 +761,6 @@ function tickAutoTourney(s: GameState): void {
 
   for (const hName of active) {
     for (const vName of active) {
-      if (hName === vName) continue;
       let hPrev = 1, vPrev = 1;
       for (let r = 0; r < 10; r++) {
         const hm = autoStratMove(hName, r, payoff, vPrev);
@@ -781,27 +779,59 @@ function tickAutoTourney(s: GameState): void {
   const winner = scores[0];
   const pickedStrat = s.strategies[0] ?? 'RANDOM';
   const picked = scores.find(sc => sc.name === pickedStrat) ?? scores[0];
-  const placement = scores.indexOf(picked);
-
-  let yomiGain = picked.score * s.yomiBoost;
-  if (placement === 0) yomiGain += 50000;
-  else if (placement === 1) yomiGain += 30000;
-  else if (placement === 2) yomiGain += 20000;
+  const yomiGain = calculateAutoYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
 
   s.yomi += Math.floor(yomiGain);
   s.tourneyCount++;
   s.currentTournament = {
     stratH: pickedStrat, stratV: winner.name,
     payoff, choiceNames,
-    totalRounds: active.length * (active.length - 1),
+    totalRounds: active.length * active.length,
     results: scores.map(sc => `${sc.name}: ${sc.score}`),
     pendingYomi: 0,
   };
   s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
 }
 
-// ── End-game — runs every tick when dismantle >= 1 ────────────────────────
-// Original increments timers based on individual project flags (not dismantle stage).
+function calculateAutoYomiGain(
+  scores: { name: string; score: number }[],
+  picked: { name: string; score: number },
+  yomiBoost: number,
+  strategicAttachment: boolean,
+): number {
+  const placement = scores.findIndex(sc => sc.name === picked.name);
+  const beatBoost = Math.max(1, scores.length - placement - 1);
+  let yomiGain = picked.score * yomiBoost * beatBoost;
+
+  if (strategicAttachment) {
+    const winnerScore = scores[0]?.score;
+    const placeScore = getAutoPlaceScore(scores);
+    const showScore = getAutoShowScore(scores, placeScore);
+
+    if (picked.score === winnerScore) yomiGain += 50000;
+    else if (placeScore != null && picked.score === placeScore) yomiGain += 30000;
+    else if (showScore != null && picked.score === showScore) yomiGain += 20000;
+  }
+
+  return Math.floor(yomiGain);
+}
+
+function getAutoPlaceScore(scores: { score: number }[]): number | null {
+  for (let i = 1; i < scores.length; i++) {
+    if (scores[i].score < scores[i - 1].score) return scores[i].score;
+  }
+  return null;
+}
+
+function getAutoShowScore(scores: { score: number }[], placeScore: number | null): number | null {
+  if (placeScore == null) return null;
+  for (let i = 1; i < scores.length; i++) {
+    if (scores[i].score < placeScore) return scores[i].score;
+  }
+  return null;
+}
+
+// End-game timers increment from individual project flags, matching the original.
 function tickEndGame(s: GameState): void {
   if (s.projectFlags[148]) s.endTimer1++;
   if (s.projectFlags[211]) s.endTimer2++;
