@@ -76,14 +76,17 @@ export function SpacePanel({ snap: s }: Props) {
               <div className="row" style={{ marginTop: 4 }}>
                 <Btn onClick={() => { makeFactory(G); }}
                   disabled={s.unusedClips < s.factoryCost}>
-                  Build ({spellf(s.factoryCost)})
+                  Allocate ({spellf(s.factoryCost)})
                 </Btn>
                 <Btn onClick={() => { makeFactory(G, 10); }}
                   disabled={s.unusedClips < s.factoryCost * 10}>
                   ×10
                 </Btn>
                 {s.factoryLevel > 0 && (
-                  <Btn variant="danger" onClick={() => { factoryReboot(G); }}>Reboot</Btn>
+                  <Btn onClick={() => { factoryReboot(G); }}
+                    title={`Refund ${spellf(s.factoryBill)} clips`}>
+                    Deallocate
+                  </Btn>
                 )}
               </div>
               {showHarvesters && <hr className="divider" />}
@@ -100,14 +103,17 @@ export function SpacePanel({ snap: s }: Props) {
               <div className="row" style={{ marginTop: 4 }}>
                 <Btn onClick={() => { makeHarvester(G); }}
                   disabled={s.unusedClips < s.harvesterCost}>
-                  Build ({spellf(s.harvesterCost)})
+                  Allocate ({spellf(s.harvesterCost)})
                 </Btn>
                 <Btn onClick={() => { makeHarvester(G, 10); }}
                   disabled={s.unusedClips < s.harvesterCost * 10}>
                   ×10
                 </Btn>
                 {s.harvesterLevel > 0 && (
-                  <Btn variant="danger" onClick={() => { harvesterReboot(G); }}>Reboot</Btn>
+                  <Btn onClick={() => { harvesterReboot(G); }}
+                    title={`Refund ${spellf(s.harvesterBill)} clips`}>
+                    Deallocate
+                  </Btn>
                 )}
               </div>
               {showWireDrones && <hr className="divider" />}
@@ -124,14 +130,17 @@ export function SpacePanel({ snap: s }: Props) {
               <div className="row" style={{ marginTop: 4 }}>
                 <Btn onClick={() => { makeWireDrone(G); }}
                   disabled={s.unusedClips < s.wireDroneCost}>
-                  Build ({spellf(s.wireDroneCost)})
+                  Allocate ({spellf(s.wireDroneCost)})
                 </Btn>
                 <Btn onClick={() => { makeWireDrone(G, 10); }}
                   disabled={s.unusedClips < s.wireDroneCost * 10}>
                   ×10
                 </Btn>
                 {s.wireDroneLevel > 0 && (
-                  <Btn variant="danger" onClick={() => { wireDroneReboot(G); }}>Reboot</Btn>
+                  <Btn onClick={() => { wireDroneReboot(G); }}
+                    title={`Refund ${spellf(s.wireDroneBill)} clips`}>
+                    Deallocate
+                  </Btn>
                 )}
               </div>
             </>

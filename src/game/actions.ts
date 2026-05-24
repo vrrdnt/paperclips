@@ -66,16 +66,18 @@ export function buyAds(s: GameState): void {
 
 // ── Processors / Memory ───────────────────────────────────────────────────
 export function addProc(s: GameState): void {
-  const available = s.trust + s.swarmGifts - (s.processors + s.memory);
-  if (available < 1 && s.swarmGifts <= 0) return;
-  if (s.swarmGifts > 0) s.swarmGifts--;
+  const hasTrustCapacity = s.trust > s.processors + s.memory;
+  const hasSwarmGift = s.swarmGifts > 0;
+  if (!hasTrustCapacity && !hasSwarmGift) return;
+  if (hasSwarmGift && (!s.humanFlag || !hasTrustCapacity)) s.swarmGifts--;
   s.processors++;
 }
 
 export function addMem(s: GameState): void {
-  const available = s.trust + s.swarmGifts - (s.processors + s.memory);
-  if (available < 1 && s.swarmGifts <= 0) return;
-  if (s.swarmGifts > 0) s.swarmGifts--;
+  const hasTrustCapacity = s.trust > s.processors + s.memory;
+  const hasSwarmGift = s.swarmGifts > 0;
+  if (!hasTrustCapacity && !hasSwarmGift) return;
+  if (hasSwarmGift && (!s.humanFlag || !hasTrustCapacity)) s.swarmGifts--;
   s.memory++;
 }
 

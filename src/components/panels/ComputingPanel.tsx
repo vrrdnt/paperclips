@@ -244,7 +244,9 @@ export function ComputingPanel({ snap: s }: Props) {
   if (!s.compFlag) return null;
 
   const opsPct = s.memory > 0 ? Math.min(100, (s.operations / (s.memory * 1000)) * 100) : 0;
-  const available = s.trust + s.swarmGifts - (s.processors + s.memory);
+  const trustAvailable = Math.max(0, s.trust - (s.processors + s.memory));
+  const allocationAvailable = s.humanFlag === 1 ? trustAvailable : s.swarmGifts;
+  const canAllocateCompute = trustAvailable > 0 || s.swarmGifts > 0;
   const activeQChips = s.qChips.slice(0, s.nextQchip);
   const qSum = activeQChips.reduce((sum, v) => sum + v, 0);
   const qPotential = Math.ceil(qSum * 360);
@@ -264,12 +266,10 @@ export function ComputingPanel({ snap: s }: Props) {
       <hr className="divider" />
 
       {/* Processors + Memory */}
-      {s.humanFlag === 1 && (
-        <div className="stat-row">
-          <span className="stat-label">Trust available</span>
-          <span className="stat-value">{available}</span>
-        </div>
-      )}
+      <div className="stat-row">
+        <span className="stat-label">{s.humanFlag === 1 ? 'Trust available' : 'Swarm gifts'}</span>
+        <span className="stat-value">{formatWithCommas(allocationAvailable)}</span>
+      </div>
 
       <div className="row" style={{ marginTop: 4 }}>
         <div style={{ flex: 1 }}>
@@ -277,24 +277,20 @@ export function ComputingPanel({ snap: s }: Props) {
             <span className="stat-label"><Cpu size={10} /> Processors</span>
             <span className="stat-value">{s.processors}</span>
           </div>
-          {s.humanFlag === 1 && (
-            <Btn onClick={() => { addProc(G); }} disabled={available < 1 && s.swarmGifts <= 0}
-              style={{ marginTop: 4, width: '100%' }}>
-              +
-            </Btn>
-          )}
+          <Btn onClick={() => { addProc(G); }} disabled={!canAllocateCompute}
+            style={{ marginTop: 4, width: '100%' }}>
+            Allocate
+          </Btn>
         </div>
         <div style={{ flex: 1 }}>
           <div className="stat-row">
             <span className="stat-label"><Brain size={10} /> Memory</span>
             <span className="stat-value">{s.memory}</span>
           </div>
-          {s.humanFlag === 1 && (
-            <Btn onClick={() => { addMem(G); }} disabled={available < 1 && s.swarmGifts <= 0}
-              style={{ marginTop: 4, width: '100%' }}>
-              +
-            </Btn>
-          )}
+          <Btn onClick={() => { addMem(G); }} disabled={!canAllocateCompute}
+            style={{ marginTop: 4, width: '100%' }}>
+            Allocate
+          </Btn>
         </div>
       </div>
 
