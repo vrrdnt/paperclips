@@ -9,6 +9,18 @@ import { spellf, formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
+function farmBulkCost(level: number, qty: number): number {
+  let total = 0;
+  for (let i = 0; i < qty; i++) total += Math.pow(level + 1 + i, 2.78) * 100_000_000;
+  return total;
+}
+
+function batteryBulkCost(level: number, qty: number): number {
+  let total = 0;
+  for (let i = 0; i < qty; i++) total += Math.pow(level + 1 + i, 2.54) * 10_000_000;
+  return total;
+}
+
 export function PowerPanel({ snap: s }: Props) {
   if (!s.projectFlags[127]) return null;
 
@@ -35,7 +47,15 @@ export function PowerPanel({ snap: s }: Props) {
       <div className="row" style={{ marginTop: 4 }}>
         <Btn onClick={() => { makeFarm(G); }}
           disabled={s.unusedClips < s.farmCost}>
-          Build Farm ({spellf(s.farmCost)})
+          Build ({spellf(s.farmCost)})
+        </Btn>
+        <Btn onClick={() => { makeFarm(G, 10); }}
+          disabled={s.unusedClips < farmBulkCost(s.farmLevel, 10)}>
+          ×10
+        </Btn>
+        <Btn onClick={() => { makeFarm(G, 100); }}
+          disabled={s.unusedClips < farmBulkCost(s.farmLevel, 100)}>
+          ×100
         </Btn>
         {s.farmLevel > 0 && (
           <Btn onClick={() => { farmReboot(G); }}
@@ -54,7 +74,15 @@ export function PowerPanel({ snap: s }: Props) {
       <div className="row" style={{ marginTop: 4 }}>
         <Btn onClick={() => { makeBattery(G); }}
           disabled={s.unusedClips < s.batteryCost}>
-          Build Battery ({spellf(s.batteryCost)})
+          Build ({spellf(s.batteryCost)})
+        </Btn>
+        <Btn onClick={() => { makeBattery(G, 10); }}
+          disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 10)}>
+          ×10
+        </Btn>
+        <Btn onClick={() => { makeBattery(G, 100); }}
+          disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 100)}>
+          ×100
         </Btn>
         {s.batteryLevel > 0 && (
           <Btn onClick={() => { batteryReboot(G); }}
