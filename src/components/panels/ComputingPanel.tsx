@@ -279,7 +279,7 @@ export function ComputingPanel({ snap: s }: Props) {
           </div>
           <Btn onClick={() => { addProc(G); }} disabled={!canAllocateCompute}
             style={{ marginTop: 4, width: '100%' }}>
-            Allocate
+            +
           </Btn>
         </div>
         <div style={{ flex: 1 }}>
@@ -289,7 +289,7 @@ export function ComputingPanel({ snap: s }: Props) {
           </div>
           <Btn onClick={() => { addMem(G); }} disabled={!canAllocateCompute}
             style={{ marginTop: 4, width: '100%' }}>
-            Allocate
+            +
           </Btn>
         </div>
       </div>
