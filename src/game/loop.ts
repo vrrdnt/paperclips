@@ -372,10 +372,11 @@ function tickPower(s: GameState): void {
 
 // ── Matter acquisition — acquireMatter() ─────────────────────────────────
 function acquireMatter(s: GameState): void {
-  if (s.availableMatter <= 0) return;
   const dbsth = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.harvesterLevel) : 1;
   let mtr = s.powMod * dbsth * Math.floor(s.harvesterLevel) * s.harvesterRate;
   mtr = mtr * ((200 - s.sliderPos) / 100);
+  s.mps = mtr * 100;
+  if (s.availableMatter <= 0) return;
   if (mtr > s.availableMatter) mtr = s.availableMatter;
   s.availableMatter -= mtr;
   s.acquiredMatter += mtr;

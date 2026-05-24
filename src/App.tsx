@@ -210,25 +210,47 @@ export default function App() {
         </div>
 
         {postHuman ? (
-          <main className="app-body app-body-post-human">
-            <div className="col-left">
-              <BusinessPanel snap={snap} />
-              <ComputingPanel snap={snap} />
-              <PowerPanel snap={snap} />
-              <SwarmPanel snap={snap} />
-            </div>
+          snap.spaceFlag === 1 ? (
+            /* Phase 3 — space */
+            <main className="app-body app-body-post-human">
+              <div className="col-left">
+                <BusinessPanel snap={snap} />
+                <ComputingPanel snap={snap} />
+                <PowerPanel snap={snap} />
+                <SwarmPanel snap={snap} />
+              </div>
 
-            <div className="col-center">
-              <ProjectsPanel snap={snap} />
-              <StrategyPanel snap={snap} />
-              <ProbeDesignPanel snap={snap} />
-              <CombatPanel snap={snap} />
-            </div>
+              <div className="col-center">
+                <ProjectsPanel snap={snap} />
+                <StrategyPanel snap={snap} />
+                <ProbeDesignPanel snap={snap} />
+                <CombatPanel snap={snap} />
+              </div>
 
-            <div className="col-right">
-              <SpacePanel snap={snap} />
-            </div>
-          </main>
+              <div className="col-right">
+                <SpacePanel snap={snap} />
+              </div>
+            </main>
+          ) : (
+            /* Phase 2 — drones */
+            <main className="app-body app-body-phase2">
+              <div className="col-left">
+                <BusinessPanel snap={snap} />
+                <SpacePanel snap={snap} />
+              </div>
+
+              <div className="col-center">
+                <ComputingPanel snap={snap} />
+                <ProjectsPanel snap={snap} />
+              </div>
+
+              <div className="col-right">
+                <StrategyPanel snap={snap} />
+                <PowerPanel snap={snap} />
+                <SwarmPanel snap={snap} />
+              </div>
+            </main>
+          )
         ) : (
           <main className="app-body app-body-human">
             <div className="col-left">

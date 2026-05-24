@@ -24,18 +24,35 @@ function batteryBulkCost(level: number, qty: number): number {
 export function PowerPanel({ snap: s }: Props) {
   if (!s.projectFlags[127]) return null;
 
-  const storedPct = s.batterySize > 0
-    ? Math.min(100, (s.storedPower / (s.batteryLevel * s.batterySize)) * 100) || 0
-    : 0;
+  const production  = s.farmLevel * s.farmRate;
+  const factoryDraw = s.factoryLevel * s.factoryPowerRate;
+  const droneDraw   = (s.harvesterLevel + s.wireDroneLevel) * s.dronePowerRate;
+  const consumption = factoryDraw + droneDraw;
+  const performance = Math.round(s.powMod * 100);
+  const cap         = s.batteryLevel * s.batterySize;
+  const storedPct   = cap > 0 ? Math.min(100, (s.storedPower / cap) * 100) || 0 : 0;
 
   return (
     <SectionCard title="Power" icon={<Battery size={14} />}>
       <div className="stat-row">
-        <span className="stat-label">Stored power</span>
-        <span className="stat-value">{formatWithCommas(s.storedPower, 0)}</span>
+        <span className="stat-label">Factory/Drone performance</span>
+        <span className="stat-value">{performance}%</span>
       </div>
-      <div className="progress-bar">
-        <div className="progress-fill" style={{ width: `${storedPct}%` }} />
+
+      <hr className="divider" />
+
+      <div className="stat-row">
+        <span className="stat-label">Consumption</span>
+        <span className="stat-value">{formatWithCommas(consumption)} MW</span>
+      </div>
+      <div style={{ fontSize: 10, color: 'var(--text-muted)', paddingLeft: 8, marginTop: 2, lineHeight: 1.5 }}>
+        Factories: {formatWithCommas(factoryDraw)} MW<br />
+        Drones: {formatWithCommas(droneDraw)} MW
+      </div>
+
+      <div className="stat-row" style={{ marginTop: 6 }}>
+        <span className="stat-label">Production</span>
+        <span className="stat-value">{formatWithCommas(production)} MW</span>
       </div>
 
       <hr className="divider" />
@@ -59,8 +76,8 @@ export function PowerPanel({ snap: s }: Props) {
         </Btn>
         {s.farmLevel > 0 && (
           <Btn onClick={() => { farmReboot(G); }}
-            title={`Refund ${spellf(s.farmBill)} clips`}>
-            Dismantle
+            title={`+${spellf(s.farmBill)} clips`}>
+            Disassemble All
           </Btn>
         )}
       </div>
@@ -68,6 +85,14 @@ export function PowerPanel({ snap: s }: Props) {
       <hr className="divider" />
 
       <div className="stat-row">
+        <span className="stat-label">Storage</span>
+        <span className="stat-value">{formatWithCommas(s.storedPower, 0)} / {formatWithCommas(cap)} MW-s</span>
+      </div>
+      <div className="progress-bar">
+        <div className="progress-fill" style={{ width: `${storedPct}%` }} />
+      </div>
+
+      <div className="stat-row" style={{ marginTop: 6 }}>
         <span className="stat-label">Batteries</span>
         <span className="stat-value">{s.batteryLevel}</span>
       </div>
@@ -86,8 +111,8 @@ export function PowerPanel({ snap: s }: Props) {
         </Btn>
         {s.batteryLevel > 0 && (
           <Btn onClick={() => { batteryReboot(G); }}
-            title={`Refund ${spellf(s.batteryBill)} clips`}>
-            Dismantle
+            title={`+${spellf(s.batteryBill)} clips`}>
+            Disassemble All
           </Btn>
         )}
       </div>
