@@ -115,7 +115,7 @@ export function SpacePanel({ snap: s }: Props) {
                     <span className="stat-value">{spellf(s.availableMatter)}</span>
                   </div>
                   <div className="stat-row">
-                    <span className="stat-label">Matter acquired</span>
+                    <span className="stat-label">Matter unused</span>
                     <span className="stat-value">{spellf(s.acquiredMatter)}</span>
                   </div>
                   <div className="stat-row">
