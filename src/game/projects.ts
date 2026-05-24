@@ -734,7 +734,7 @@ export const ALL_PROJECTS: Project[] = [
     title: 'Another Token of Goodwill... ',
     priceTag: (s) => `($${formatWithCommas(s.bribe)})`,
     description: 'Another small gift to the supervisors. (+1 Trust)',
-    trigger: (s) => s.projectFlags[40] === 1 && s.trust < 100,
+    trigger: (s) => s.humanFlag === 1 && s.projectFlags[40] === 1 && s.trust < 100,
     cost: (s) => s.funds >= s.bribe,
     effect: (s) => {
       s.funds -= s.bribe;
