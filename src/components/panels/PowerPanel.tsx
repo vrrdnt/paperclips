@@ -35,11 +35,12 @@ export function PowerPanel({ snap: s }: Props) {
       <div className="row" style={{ marginTop: 4 }}>
         <Btn onClick={() => { makeFarm(G); }}
           disabled={s.unusedClips < s.farmCost}>
-          Buy Farm ({spellf(s.farmCost)})
+          Allocate Farm ({spellf(s.farmCost)})
         </Btn>
         {s.farmLevel > 0 && (
-          <Btn variant="danger" onClick={() => { farmReboot(G); }}>
-            Reboot
+          <Btn onClick={() => { farmReboot(G); }}
+            title={`Refund ${spellf(s.farmBill)} clips`}>
+            Deallocate
           </Btn>
         )}
       </div>
@@ -53,11 +54,12 @@ export function PowerPanel({ snap: s }: Props) {
       <div className="row" style={{ marginTop: 4 }}>
         <Btn onClick={() => { makeBattery(G); }}
           disabled={s.unusedClips < s.batteryCost}>
-          Buy Battery ({spellf(s.batteryCost)})
+          Allocate Battery ({spellf(s.batteryCost)})
         </Btn>
         {s.batteryLevel > 0 && (
-          <Btn variant="danger" onClick={() => { batteryReboot(G); }}>
-            Reboot
+          <Btn onClick={() => { batteryReboot(G); }}
+            title={`Refund ${spellf(s.batteryBill)} clips`}>
+            Deallocate
           </Btn>
         )}
       </div>
