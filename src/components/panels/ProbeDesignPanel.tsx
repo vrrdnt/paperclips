@@ -29,6 +29,7 @@ export function ProbeDesignPanel({ snap: s }: Props) {
   const available = Math.max(0, s.probeTrust - used);
   // Combat is only designable once the Combat project (131) is complete.
   const visibleAttrs = ATTRS.filter(a => a.key !== 'probeCombat' || s.projectFlags[131] === 1);
+  const maxTrustUnlocked = s.projectFlags[121] === 1;
   const probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
 
   return (
@@ -47,10 +48,12 @@ export function ProbeDesignPanel({ snap: s }: Props) {
           disabled={s.yomi < probeTrustCost || s.probeTrust >= s.maxTrust}>
           +Trust ({formatWithCommas(probeTrustCost)} yomi)
         </Btn>
-        <Btn onClick={() => { increaseMaxTrust(G); }}
-          disabled={s.honor < s.maxTrustCost}>
-          +Max ({formatWithCommas(Math.floor(s.maxTrustCost))} honor)
-        </Btn>
+        {maxTrustUnlocked && (
+          <Btn onClick={() => { increaseMaxTrust(G); }}
+            disabled={s.honor < s.maxTrustCost}>
+            +Max ({formatWithCommas(Math.floor(s.maxTrustCost))} honor)
+          </Btn>
+        )}
       </div>
 
       <hr className="divider" />
