@@ -1,8 +1,18 @@
 import { GameState, makeInitialState } from './state';
 import { reconstructReadoutsFromProjectFlags } from './projectReadouts';
+import { normalizeArtifactState } from './artifacts';
 
 const KEY = 'upc_v2';
 const PRESTIGE_KEY = 'upc_v2_prestige';
+
+interface PrestigeState {
+  u: number;
+  s: number;
+  completedMapCells: string[];
+  collectedArtifacts: string[];
+  activeArtifacts: string[];
+  usedArtifactTriggers: string[];
+}
 
 export function toSaveableState(s: GameState): Omit<GameState, 'currentTournament' | 'readouts' | 'tourneyResult'> {
   const { currentTournament, readouts, tourneyResult, ...saveable } = s;
@@ -36,6 +46,7 @@ function normalizeWholeLevel(s: GameState, levelKey: WholeLevelKey, partialKey: 
 export function hydrateGameState(loaded: Partial<GameState>): GameState {
   const initial = makeInitialState();
   const merged = { ...initial, ...loaded };
+  normalizeArtifactState(merged);
 
   normalizeWholeLevel(merged, 'factoryLevel', 'partialFactorySpawn');
   normalizeWholeLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
@@ -44,6 +55,11 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   merged.currentTournament = null;
   merged.tourneyResult = initial.tourneyResult;
   merged.readouts = reconstructReadoutsFromProjectFlags(merged);
+  if ((!merged.battleName || !merged.battleScale) && merged.battles.length > 0) {
+    const activeBattle = merged.battles.find(b => !b.over) ?? merged.battles[0];
+    merged.battleName = merged.battleName || activeBattle.name;
+    merged.battleScale = merged.battleScale || activeBattle.scale || activeBattle.unitSize;
+  }
 
   // Derive creativitySpeed from processors (older saves stored a stale value).
   merged.creativitySpeed = merged.processors >= 1
@@ -56,7 +72,7 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
 export function loadGame(): GameState {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return makeInitialState();
+    if (!raw) return resetGame();
     const loaded = JSON.parse(raw) as GameState;
     return hydrateGameState(loaded);
   } catch {
@@ -70,22 +86,71 @@ export function resetGame(): GameState {
   const s = makeInitialState();
   s.prestigeU = prestige.u;
   s.prestigeS = prestige.s;
+  s.completedMapCells = prestige.completedMapCells;
+  s.collectedArtifacts = prestige.collectedArtifacts;
+  s.activeArtifacts = prestige.activeArtifacts;
+  s.usedArtifactTriggers = prestige.usedArtifactTriggers;
+  normalizeArtifactState(s);
   // Apply prestige bonuses
   if (prestige.u > 0) s.demandBoost = 1 + prestige.u * 0.1;
   if (prestige.s > 0) s.creativitySpeed = 1 + prestige.s * 0.1;
   return s;
 }
 
-function getPrestige(): { u: number; s: number } {
+export function resetAllProgress(): GameState {
+  localStorage.removeItem(KEY);
+  localStorage.removeItem(PRESTIGE_KEY);
+  return makeInitialState();
+}
+
+function getPrestige(): PrestigeState {
   try {
     const raw = localStorage.getItem(PRESTIGE_KEY);
-    if (!raw) return { u: 0, s: 0 };
-    return JSON.parse(raw);
+    if (!raw) return emptyPrestige();
+    const parsed = JSON.parse(raw);
+    return {
+      ...emptyPrestige(),
+      ...parsed,
+      u: finitePrestige(parsed.u),
+      s: finitePrestige(parsed.s),
+    };
   } catch {
-    return { u: 0, s: 0 };
+    return emptyPrestige();
   }
 }
 
 export function savePrestige(u: number, s: number): void {
-  localStorage.setItem(PRESTIGE_KEY, JSON.stringify({ u, s }));
+  const existing = getPrestige();
+  localStorage.setItem(PRESTIGE_KEY, JSON.stringify({
+    ...existing,
+    u: finitePrestige(u),
+    s: finitePrestige(s),
+  }));
+}
+
+export function savePrestigeState(s: GameState): void {
+  normalizeArtifactState(s);
+  localStorage.setItem(PRESTIGE_KEY, JSON.stringify({
+    u: finitePrestige(s.prestigeU),
+    s: finitePrestige(s.prestigeS),
+    completedMapCells: s.completedMapCells,
+    collectedArtifacts: s.collectedArtifacts,
+    activeArtifacts: s.activeArtifacts,
+    usedArtifactTriggers: s.usedArtifactTriggers,
+  }));
+}
+
+function emptyPrestige(): PrestigeState {
+  return {
+    u: 0,
+    s: 0,
+    completedMapCells: [],
+    collectedArtifacts: [],
+    activeArtifacts: [],
+    usedArtifactTriggers: [],
+  };
+}
+
+function finitePrestige(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
 }

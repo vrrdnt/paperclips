@@ -8,10 +8,11 @@ import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import {
   clipClick, buyWire, lowerPrice, raisePrice, setPrice, buyAds, toggleWireBuyer,
-  makeFactory, factoryReboot,
+  makeFactory, factoryReboot, effectiveAdCost,
   MIN_CLIP_PRICE, MAX_CLIP_PRICE,
 } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
+import { A, hasActiveArtifact } from '../../game/artifacts';
 
 interface Props { snap: DisplaySnapshot; }
 
@@ -19,6 +20,8 @@ export function BusinessPanel({ snap: s }: Props) {
   const h = useGameStore(st => st.histories);
   const hasRevTracker = s.projectFlags[42] === 1;
   const price = s.margin.toFixed(2);
+  const adCost = effectiveAdCost(s);
+  const canBuyWire = s.funds >= s.wireCost || hasActiveArtifact(s, A.UNSTABLE_WIRE_PORTAL);
   const wireTrendUp = s.wireCost > s.wireBasePrice;
   const wireTrendDown = s.wireCost < s.wireBasePrice;
   const wireTrendChar = wireTrendUp ? '▲' : wireTrendDown ? '▼' : '–';
@@ -164,7 +167,7 @@ export function BusinessPanel({ snap: s }: Props) {
             </span>
           </div>
           <div className="row" style={{ marginTop: 6 }}>
-            <Btn onClick={() => { buyWire(G); }} disabled={s.funds < s.wireCost}>
+            <Btn onClick={() => { buyWire(G); }} disabled={!canBuyWire}>
               Buy wire (${formatWithCommas(s.wireCost)})
             </Btn>
             {s.wireBuyerFlag === 1 && (
@@ -189,8 +192,8 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value">{s.marketing.toFixed(2)}×</span>
           </div>
           <div style={{ marginTop: 6 }}>
-            <Btn onClick={() => { buyAds(G); }} disabled={s.funds < s.adCost}>
-              Advertize (${formatWithCommas(s.adCost)})
+            <Btn onClick={() => { buyAds(G); }} disabled={s.funds < adCost}>
+              Advertize (${formatWithCommas(adCost)})
             </Btn>
           </div>
         </SectionCard>

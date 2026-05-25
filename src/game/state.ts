@@ -17,17 +17,28 @@ export interface Battle {
   name: string;
   scale: number;
   unitSize: number;
+  clipProbes: number;
+  drifterProbes: number;
+  territory: number;
+  leftShips: number;
+  rightShips: number;
   probeShips: Ship[];
   drifterShips: Ship[];
   timer: number;
+  battleClock: number;
+  masterClock: number;
+  endDelay: number;
   over: boolean;
   result: 'victory' | 'defeat' | null;
   honor: number;
+  honorApplied: boolean;
 }
 
 export interface Ship {
   x: number; y: number;
   vx: number; vy: number;
+  gx: number; gy: number;
+  framesDead: number;
   alive: boolean;
   side: 'probe' | 'drifter';
 }
@@ -144,6 +155,10 @@ export interface GameState {
   harvesterFlag: number;
   wireDroneFlag: number;
   battleFlag: number;
+  battleId: number;
+  battleName: string;
+  battleScale: number;
+  bonusHonor: number;
   qFlag: number;
   swarmFlag: number;
   milestoneFlag: number;
@@ -246,6 +261,11 @@ export interface GameState {
   prestigeU: number;
   prestigeS: number;
   resetFlag: number;
+  completedMapCells: string[];
+  collectedArtifacts: string[];
+  activeArtifacts: string[];
+  usedArtifactTriggers: string[];
+  usedRunArtifactTriggers: string[];
   // ── End game ──────────────────────────────────────────────────────────────
   dismantle: number;
   endTimer1: number;
@@ -306,7 +326,8 @@ export function makeInitialState(): GameState {
     revPerSecFlag: 0, strategyEngineFlag: 0, investmentEngineFlag: 0,
     humanFlag: 1, trustFlag: 1, creationFlag: 0, wireProductionFlag: 0,
     spaceFlag: 0, factoryFlag: 0, harvesterFlag: 0, wireDroneFlag: 0,
-    battleFlag: 0, qFlag: 0, swarmFlag: 0, milestoneFlag: 0,
+    battleFlag: 0, battleId: 0, battleName: '', battleScale: 0, bonusHonor: 0,
+    qFlag: 0, swarmFlag: 0, milestoneFlag: 0,
     egoFlag: 0, tothFlag: 0, wireBuyerFlag: 0, safetyProjectOn: false,
 
     wpps: 0, mps: 0,
@@ -344,6 +365,8 @@ export function makeInitialState(): GameState {
     battles: [], bribe: 1_000_000, driftKingMessageCost: 1,
 
     prestigeU: 0, prestigeS: 0, resetFlag: 2,
+    completedMapCells: [], collectedArtifacts: [], activeArtifacts: [],
+    usedArtifactTriggers: [], usedRunArtifactTriggers: [],
 
     dismantle: 0, endTimer1: 0, endTimer2: 0, endTimer3: 0,
     endTimer4: 0, endTimer5: 0, endTimer6: 0, finalClips: 0,

@@ -2,6 +2,17 @@
 import { GameState } from './state';
 import { displayMessage, buyWire as autoBuyWire } from './loop';
 import { formatWithCommas } from './format';
+import {
+  A,
+  ARTIFACT_BY_ID,
+  ArtifactId,
+  activateMapArtifact,
+  artifactTriggerUnused,
+  deactivateMapArtifact,
+  hasActiveArtifact,
+  markArtifactTriggerUsed,
+  warpToCompletedCell,
+} from './artifacts';
 
 export const MIN_CLIP_PRICE = 0.01;
 export const MAX_CLIP_PRICE = 3.00;
@@ -31,12 +42,21 @@ export function makeClipper(s: GameState): void {
   s.clipmakerLevel++;
   s.clipmakerLevel2++;
   s.clipperCost = Math.pow(1.1, s.clipmakerLevel) + 5;
+  if (hasActiveArtifact(s, A.SATOSHIS_PYRAMID) && Math.random() < 0.05) {
+    const payout = s.clipmakerLevel * 1000;
+    s.funds += payout;
+    displayMessage(s, `Satoshi's Pyramid generated $${formatWithCommas(payout, 0)}`);
+  }
 }
 
 export function makeMegaClipper(s: GameState): void {
   if (s.funds < s.megaClipperCost) return;
   s.funds -= s.megaClipperCost;
   s.megaClipperLevel++;
+  if (hasActiveArtifact(s, A.HEX_MEGA_LOYALTY) && Math.random() < 0.06) {
+    s.megaClipperLevel += 6;
+    displayMessage(s, 'Hex-Dimensional MegaClipper Loyalty Chip added 6 MegaClippers');
+  }
   s.megaClipperCost = Math.pow(1.07, s.megaClipperLevel) * 1000;
 }
 
@@ -57,12 +77,17 @@ export function setPrice(s: GameState, price: number): void {
 }
 
 export function buyAds(s: GameState): void {
-  if (s.funds < s.adCost) return;
-  s.funds -= s.adCost;
+  const cost = effectiveAdCost(s);
+  if (s.funds < cost) return;
+  s.funds -= cost;
   s.marketingLvl++;
   s.marketing = Math.pow(1.1, s.marketingLvl - 1);
   s.adCost = Math.pow(2, s.marketingLvl) * 100;
   displayMessage(s, `Marketing level increased to ${s.marketingLvl}`);
+}
+
+export function effectiveAdCost(s: Pick<GameState, 'adCost' | 'activeArtifacts'>): number {
+  return hasActiveArtifact(s, A.MARKOVS_BLANKET) ? s.adCost / 2 : s.adCost;
 }
 
 // ── Processors / Memory ───────────────────────────────────────────────────
@@ -92,7 +117,9 @@ export function qComp(s: GameState): void {
   }
   let q = 0;
   for (let i = 0; i < 10; i++) q += s.qChips[i];
-  const qq = Math.ceil(q * 360);
+  let qq = Math.ceil(q * 360);
+  if (qq < 0 && hasActiveArtifact(s, A.EVERETTS_MIRROR)) qq = Math.abs(qq);
+  if (hasActiveArtifact(s, A.RECURSIVE_ARTHUR_MERLIN)) qq *= 6;
   const buffer = s.memory * 1000 - s.standardOps;
   const damper = s.tempOps / 100 + 5;
   if (qq > buffer) {
@@ -108,12 +135,24 @@ export function qComp(s: GameState): void {
 
 // ── Investments ───────────────────────────────────────────────────────────
 export function investDeposit(s: GameState): void {
-  s.bankroll += Math.floor(s.funds);
+  let amount = Math.floor(s.funds);
+  if (hasActiveArtifact(s, A.MARTINGALES_DEMON) && runArtifactTriggerUnused(s, A.MARTINGALES_DEMON)) {
+    amount *= 2;
+    markRunArtifactTriggerUsed(s, A.MARTINGALES_DEMON);
+    displayMessage(s, "Martingale's Demon doubled your first deposit");
+  }
+  s.bankroll += amount;
   s.funds = 0;
 }
 
 export function investWithdraw(s: GameState): void {
-  s.funds += s.bankroll;
+  let amount = s.bankroll;
+  if (hasActiveArtifact(s, A.MUNGERS_REGRET) && runArtifactTriggerUnused(s, A.MUNGERS_REGRET)) {
+    amount *= 2;
+    markRunArtifactTriggerUsed(s, A.MUNGERS_REGRET);
+    displayMessage(s, "Munger's Regret doubled your first withdrawal");
+  }
+  s.funds += amount;
   s.bankroll = 0;
 }
 
@@ -172,7 +211,8 @@ export function runTourney(s: GameState, pickedStrat: string): void {
   scores.sort((a, b) => b.score - a.score);
   const winner = scores[0];
   const picked = scores.find(s2 => s2.name === pickedStrat)!;
-  const yomiGain = calculateYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
+  let yomiGain = calculateYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
+  if (hasActiveArtifact(s, A.ZERO_DETERMINANT_LATTICE)) yomiGain *= 6;
 
   s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
   s.tourneyCount++;
@@ -345,6 +385,56 @@ export function increaseMaxTrust(s: GameState): void {
 
 export function setSlider(s: GameState, val: number): void {
   s.sliderPos = Math.max(0, Math.min(200, val));
+}
+
+// Artifact controls
+export function activateArtifact(s: GameState, id: string): void {
+  const artifactId = coerceArtifactId(id);
+  if (!artifactId) return;
+  const wasActive = hasActiveArtifact(s, artifactId);
+  if (!activateMapArtifact(s, artifactId)) return;
+  if (!wasActive) {
+    const def = ARTIFACT_BY_ID.get(artifactId);
+    if (def) displayMessage(s, `Artifact active: ${def.name}`);
+  }
+
+  if (artifactId === A.BANACH_TARSKI_CATALYST && artifactTriggerUnused(s, artifactId)) {
+    s.clips *= 10;
+    s.unusedClips *= 10;
+    s.unsoldClips *= 10;
+    markArtifactTriggerUsed(s, artifactId);
+    displayMessage(s, 'Banach Tarski Catalyst multiplied current paperclips by 10');
+  }
+
+  if (artifactId === A.SUPERLUMINOUS_SUPERNOVA && artifactTriggerUnused(s, artifactId)) {
+    s.creativity *= 2;
+    markArtifactTriggerUsed(s, artifactId);
+    displayMessage(s, 'Superluminous Supernova doubled current creativity');
+  }
+}
+
+export function deactivateArtifact(s: GameState, id: string): void {
+  const artifactId = coerceArtifactId(id);
+  if (!artifactId) return;
+  deactivateMapArtifact(s, artifactId);
+}
+
+export function warpToArtifactMapCell(s: GameState, world: number, sim: number): void {
+  if (!warpToCompletedCell(s, world, sim)) return;
+  displayMessage(s, `Warping to World ${world}, Simulation ${sim}`);
+  s.resetFlag = 1;
+}
+
+function coerceArtifactId(id: string): ArtifactId | null {
+  return ARTIFACT_BY_ID.has(id as ArtifactId) ? (id as ArtifactId) : null;
+}
+
+function runArtifactTriggerUnused(s: GameState, id: ArtifactId): boolean {
+  return !s.usedRunArtifactTriggers.includes(id);
+}
+
+function markRunArtifactTriggerUsed(s: GameState, id: ArtifactId): void {
+  if (!s.usedRunArtifactTriggers.includes(id)) s.usedRunArtifactTriggers.push(id);
 }
 
 // ── Disassemble (reboot) ──────────────────────────────────────────────────
