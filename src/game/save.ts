@@ -45,6 +45,11 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   merged.tourneyResult = initial.tourneyResult;
   merged.readouts = reconstructReadoutsFromProjectFlags(merged);
 
+  // Derive creativitySpeed from processors (older saves stored a stale value).
+  merged.creativitySpeed = merged.processors >= 1
+    ? Math.log10(merged.processors) * Math.pow(merged.processors, 1.1) + merged.processors - 1
+    : 0;
+
   return merged;
 }
 
