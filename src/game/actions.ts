@@ -176,6 +176,7 @@ const CHOICE_PAIRS: [string, string][] = [
 ];
 
 export function runTourney(s: GameState, pickedStrat: string): void {
+  if ((s.currentTournament?.pendingYomi ?? 0) > 0) return;
   if (s.operations < s.newTourneyCost) return;
   s.standardOps -= s.newTourneyCost;
   s.operations = Math.floor(s.standardOps + s.tempOps);

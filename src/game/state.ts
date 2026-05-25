@@ -14,9 +14,12 @@ export interface Stock {
 }
 
 export interface Battle {
+  id: number;
   name: string;
   scale: number;
   unitSize: number;
+  initialClipProbes: number;
+  initialDrifterProbes: number;
   clipProbes: number;
   drifterProbes: number;
   territory: number;

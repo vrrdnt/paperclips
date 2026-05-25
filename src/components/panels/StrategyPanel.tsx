@@ -103,6 +103,7 @@ export function StrategyPanel({ snap: s }: Props) {
   }, [stratCount]);
 
   const ct = s.currentTournament;
+  const tournamentRunning = running || (ct?.pendingYomi ?? 0) > 0;
 
   useEffect(() => {
     if (s.tourneyCount !== prevCountRef.current && ct) {
@@ -173,8 +174,12 @@ export function StrategyPanel({ snap: s }: Props) {
 
         <div className="row">
           <Btn
-            onClick={() => { runTourney(G, picked); }}
-            disabled={s.operations < s.newTourneyCost}
+            onClick={() => {
+              if (tournamentRunning) return;
+              runTourney(G, picked);
+              if (G.currentTournament) setRunning(true);
+            }}
+            disabled={tournamentRunning || s.operations < s.newTourneyCost}
           >
             Run Tournament ({formatWithCommas(s.newTourneyCost)} ops)
           </Btn>

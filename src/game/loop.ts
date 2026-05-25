@@ -605,9 +605,12 @@ function createBattle(s: GameState): void {
   s.battleScale = unitSize;
 
   s.battles.push({
+    id: s.battleId,
     name,
     scale: unitSize,
     unitSize,
+    initialClipProbes: clipProbes,
+    initialDrifterProbes: drifterProbes,
     clipProbes,
     drifterProbes,
     territory,
@@ -666,6 +669,8 @@ function stepBattles(s: GameState): void {
   for (let i = s.battles.length - 1; i >= 0; i--) {
     const b = s.battles[i];
     normalizeBattleRuntime(b);
+    s.battleName = b.name;
+    s.battleScale = b.scale || b.unitSize;
 
     if (b.over) {
       ageDeadShips(b);
@@ -685,10 +690,14 @@ function stepBattles(s: GameState): void {
 }
 
 function normalizeBattleRuntime(b: Battle): void {
+  b.id = Number.isFinite(b.id) ? b.id : 0;
+  b.name = b.name || (b.id ? `Drifter Attack ${b.id}` : 'Drifter Attack');
   b.scale = Number.isFinite(b.scale) ? b.scale : b.unitSize;
   b.unitSize = Number.isFinite(b.unitSize) ? b.unitSize : Math.max(1, b.scale || 1);
   b.clipProbes = Number.isFinite(b.clipProbes) ? b.clipProbes : b.probeShips.length * b.unitSize;
   b.drifterProbes = Number.isFinite(b.drifterProbes) ? b.drifterProbes : b.drifterShips.length * b.unitSize;
+  b.initialClipProbes = Number.isFinite(b.initialClipProbes) ? b.initialClipProbes : b.clipProbes;
+  b.initialDrifterProbes = Number.isFinite(b.initialDrifterProbes) ? b.initialDrifterProbes : b.drifterProbes;
   b.territory = Number.isFinite(b.territory) ? b.territory : 0;
   b.leftShips = Number.isFinite(b.leftShips) ? b.leftShips : b.probeShips.length;
   b.rightShips = Number.isFinite(b.rightShips) ? b.rightShips : b.drifterShips.length;
@@ -1155,6 +1164,7 @@ function autoStratMove(name: string, round: number, payoff: number[][], opponent
 }
 
 function tickAutoTourney(s: GameState): void {
+  if ((s.currentTournament?.pendingYomi ?? 0) > 0) return;
   autoTourneyTimer++;
   // Original cadence: a tournament plays out at 1s per round (rounds = strats^2)
   // then waits 3s on the results screen before the next starts.
