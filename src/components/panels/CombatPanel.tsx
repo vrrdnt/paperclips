@@ -1,6 +1,7 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
+import { CombatCanvas } from './CombatCanvas';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { formatWithCommas } from '../../game/format';
 
@@ -13,8 +14,10 @@ export function CombatPanel({ snap: s }: Props) {
 
   return (
     <SectionCard title="Combat" icon={<Shield size={14} />}>
+      <CombatCanvas />
+
       {recent.length === 0 ? (
-        <div className="empty-state">No active battles</div>
+        <div className="empty-state" style={{ marginTop: 8 }}>Standing by</div>
       ) : (
         recent.map((b, i) => (
           <div key={i} className="battle-item">
