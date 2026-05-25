@@ -379,10 +379,10 @@ export function increaseProbeTrust(s: GameState): void {
 }
 
 export function increaseMaxTrust(s: GameState): void {
+  if (s.projectFlags[121] !== 1) return;
   if (s.honor < s.maxTrustCost) return;
   s.honor -= s.maxTrustCost;
   s.maxTrust += 10;
-  s.maxTrustCost = Math.ceil(s.maxTrustCost * 1.5);
 }
 
 export function setSlider(s: GameState, val: number): void {
