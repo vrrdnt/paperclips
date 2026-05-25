@@ -26,7 +26,7 @@ export function ProbeDesignPanel({ snap: s }: Props) {
   if (!s.spaceFlag) return null;
 
   const used = ATTRS.reduce((acc, a) => acc + (s[a.key] as number), 0);
-  const available = s.probeTrust - used;
+  const available = Math.max(0, s.probeTrust - used);
   // Combat is only designable once the Combat project (131) is complete.
   const visibleAttrs = ATTRS.filter(a => a.key !== 'probeCombat' || s.projectFlags[131] === 1);
   const probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);

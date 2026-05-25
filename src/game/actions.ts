@@ -354,6 +354,7 @@ export function makeBattery(s: GameState, qty = 1): void {
 type ProbeAttr = 'probeSpeed' | 'probeNav' | 'probeRep' | 'probeHaz' | 'probeFac' | 'probeHarv' | 'probeWire' | 'probeCombat';
 
 export function raiseProbeAttr(s: GameState, attr: ProbeAttr): void {
+  if (attr === 'probeCombat' && s.projectFlags[131] !== 1) return;
   const used = probeUsed(s);
   if (s.probeTrust - used < 1) return;
   (s[attr] as number)++;
