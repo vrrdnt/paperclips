@@ -215,24 +215,23 @@ export default function App() {
         {postHuman ? (
           snap.spaceFlag === 1 ? (
             /* Phase 3 — space */
-            <main className="app-body app-body-post-human">
+            <main className="app-body app-body-phase3">
               <div className="col-left">
                 <BusinessPanel snap={snap} />
-                <ComputingPanel snap={snap} />
-                <SwarmPanel snap={snap} />
-                <QuantumPanel snap={snap} />
-                <PowerPanel snap={snap} />
+                <SpacePanel snap={snap} />
+                <ProbeDesignPanel snap={snap} />
               </div>
 
               <div className="col-center">
+                <ComputingPanel snap={snap} />
+                <SwarmPanel snap={snap} />
+                <QuantumPanel snap={snap} />
                 <ProjectsPanel snap={snap} />
-                <StrategyPanel snap={snap} />
-                <ProbeDesignPanel snap={snap} />
-                <CombatPanel snap={snap} />
               </div>
 
               <div className="col-right">
-                <SpacePanel snap={snap} />
+                <StrategyPanel snap={snap} />
+                <CombatPanel snap={snap} />
               </div>
             </main>
           ) : (
