@@ -5,6 +5,17 @@ dist/
 !public/icons/
 !public/icons/*.png
 
+# Signing keys and Play upload credentials.
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+keystore.properties
+*service-account*.json
+play-credentials*.json
+google-play*.json
+
 # Local original-script references; keep out of the published app repo.
 combat.js
 globals.js
