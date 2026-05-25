@@ -713,6 +713,70 @@ input[type="range"].price-slider::-moz-range-thumb {
 }
 
 /* ── Battle list ────────────────────────────────────────────────── */
+.battle-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.battle-outcome-pill {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  font-size: 9px;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.battle-outcome-pill.victory {
+  color: var(--success);
+  border-color: rgba(72, 187, 120, 0.45);
+}
+
+.battle-outcome-pill.defeat {
+  color: var(--danger);
+  border-color: rgba(245, 101, 101, 0.45);
+}
+
+.battle-outcome-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.battle-outcome-row.victory {
+  color: var(--success);
+}
+
+.battle-outcome-row.defeat {
+  color: var(--danger);
+}
+
+.battle-report-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 8px;
+  margin-top: 6px;
+  font-size: 10px;
+}
+
+.battle-idle {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
 .battle-item {
   display: flex;
   justify-content: space-between;

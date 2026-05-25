@@ -77,11 +77,25 @@ function normalizeProbeDesign(s: GameState): void {
   s.probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
 }
 
+function normalizeBattles(s: GameState): void {
+  for (const b of s.battles) {
+    b.id = Number.isFinite(b.id) ? b.id : 0;
+    b.name = b.name || (b.id ? `Drifter Attack ${b.id}` : 'Drifter Attack');
+    b.scale = Number.isFinite(b.scale) ? b.scale : b.unitSize;
+    b.unitSize = Number.isFinite(b.unitSize) ? b.unitSize : Math.max(1, b.scale || 1);
+    b.clipProbes = finiteNonNegative(b.clipProbes);
+    b.drifterProbes = finiteNonNegative(b.drifterProbes);
+    b.initialClipProbes = finiteNonNegative(b.initialClipProbes || b.clipProbes);
+    b.initialDrifterProbes = finiteNonNegative(b.initialDrifterProbes || b.drifterProbes);
+  }
+}
+
 export function hydrateGameState(loaded: Partial<GameState>): GameState {
   const initial = makeInitialState();
   const merged = { ...initial, ...loaded };
   normalizeArtifactState(merged);
   normalizeProbeDesign(merged);
+  normalizeBattles(merged);
 
   normalizeWholeLevel(merged, 'factoryLevel', 'partialFactorySpawn');
   normalizeWholeLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
