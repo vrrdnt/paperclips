@@ -30,7 +30,7 @@ export function SwarmPanel({ snap: s }: Props) {
   const isDisorg = s.swarmStatus === 5;
 
   return (
-    <SectionCard title="Drone Swarm" icon={<Users size={14} />}>
+    <SectionCard title={s.spaceFlag === 1 ? 'Probe Swarm' : 'Drone Swarm'} icon={<Users size={14} />}>
       <div className="stat-row">
         <span className="stat-label">Swarm size</span>
         <span className="stat-value">{formatWithCommas(d)}</span>
@@ -47,30 +47,28 @@ export function SwarmPanel({ snap: s }: Props) {
         </div>
       )}
 
-      {d >= 1 && (
-        <div style={{ marginTop: 10 }}>
-          <div className="stat-row" style={{ marginBottom: 4 }}>
-            <span className="stat-label">Drone focus</span>
-          </div>
-          <input
-            className="price-slider"
-            type="range"
-            min={0}
-            max={200}
-            step={1}
-            value={Math.min(200, Math.max(0, s.sliderPos))}
-            aria-label="Swarm work vs think balance"
-            onChange={e => { G.sliderPos = Number(e.target.value); }}
-            style={{
-              background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${s.sliderPos / 2}%, var(--panel2) ${s.sliderPos / 2}%, var(--panel2) 100%)`,
-            }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-            <span>Work</span>
-            <span>Think</span>
-          </div>
+      <div style={{ marginTop: 10 }}>
+        <div className="stat-row" style={{ marginBottom: 4 }}>
+          <span className="stat-label">{s.spaceFlag === 1 ? 'Probe focus' : 'Drone focus'}</span>
         </div>
-      )}
+        <input
+          className="price-slider"
+          type="range"
+          min={0}
+          max={200}
+          step={1}
+          value={Math.min(200, Math.max(0, s.sliderPos))}
+          aria-label="Swarm work vs think balance"
+          onChange={e => { G.sliderPos = Number(e.target.value); }}
+          style={{
+            background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${s.sliderPos / 2}%, var(--panel2) ${s.sliderPos / 2}%, var(--panel2) 100%)`,
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
+          <span>Work</span>
+          <span>Think</span>
+        </div>
+      </div>
 
       {isActive && (
         <>

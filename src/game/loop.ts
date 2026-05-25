@@ -519,9 +519,12 @@ function drift(s: GameState): void {
 
 // ── Combat ────────────────────────────────────────────────────────────────
 function tickCombat(s: GameState): void {
-  if (!s.battleFlag || s.drifterCount < 1_000_000 || s.probeCount <= 0) return;
+  // Combat unlocks (and the pane appears) only once drifters exceed the war trigger
+  // with probes present — mirrors the original's checkForBattles / battleFlag.
+  if (s.drifterCount <= 1_000_000 || s.probeCount <= 0) return;
   if (s.battles.length >= 3) return;
   if (Math.random() > 0.001) return;
+  if (!s.battleFlag) s.battleFlag = 1;
 
   const scale = Math.min(s.probeCount, s.drifterCount) / 100;
   s.battles.push({

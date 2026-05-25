@@ -99,7 +99,7 @@
   "factoryFlag": 1,
   "harvesterFlag": 1,
   "wireDroneFlag": 1,
-  "battleFlag": 1,
+  "battleFlag": 0,
   "qFlag": 1,
   "swarmFlag": 1,
   "milestoneFlag": 14,
