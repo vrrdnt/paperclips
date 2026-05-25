@@ -1,4 +1,3 @@
-import React from 'react';
 import { Settings } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Sparkline } from '../ui/Sparkline';

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { G, GameState } from '../game/state';
 import { saveGame } from '../game/save';
 import { useGameStore } from '../store/useGameStore';

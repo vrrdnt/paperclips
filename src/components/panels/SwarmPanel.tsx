@@ -1,4 +1,3 @@
-import React from 'react';
 import { Users } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Slider } from '../ui/Slider';

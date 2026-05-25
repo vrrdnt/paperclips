@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Map as MapIcon, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';

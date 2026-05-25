@@ -1052,18 +1052,25 @@ function riskVal(s: GameState): number {
 function tickInvestmentShop(s: GameState): void {
   const riskiness = riskVal(s);
   const portTotal = s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0);
-  const budget = Math.ceil(portTotal / riskiness);
-  const reserves = Math.ceil(portTotal / riskVal(s));
-  if (s.stocks.length < 5 && s.bankroll >= 5 && budget >= 1 && Math.random() < 0.25) {
-    createStock(s, budget, riskiness);
-  }
-  // Sell if bankroll is low relative to reserves (mirrors original stockShop logic)
+  let budget = Math.ceil(portTotal / riskiness);
+  const r = 11 - riskiness;
+  let reserves = Math.ceil(portTotal / r);
+  if (riskiness === 1) reserves = 0;
+
   if (s.bankroll - budget < reserves && riskiness === 1 && s.bankroll > portTotal / 10) {
-    // low risk: sell to maintain reserves
+    budget = s.bankroll;
+  } else if (s.bankroll - budget < reserves && riskiness === 1) {
+    budget = 0;
+  } else if (s.bankroll - budget < reserves) {
+    budget = s.bankroll - reserves;
+  }
+
+  if (s.stocks.length < s.portfolioSize && s.bankroll >= 5 && budget >= 1 && s.bankroll - budget >= reserves && Math.random() < 0.25) {
+    createStock(s, budget);
   }
 }
 
-function createStock(s: GameState, dollars: number, riskiness: number): void {
+function createStock(s: GameState, dollars: number): void {
   const roll = Math.random();
   let price: number;
   if (roll > 0.99)       price = Math.ceil(Math.random() * 3000);
