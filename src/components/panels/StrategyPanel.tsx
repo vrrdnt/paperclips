@@ -132,7 +132,10 @@ export function StrategyPanel({ snap: s }: Props) {
     for (const h of strategies) for (const v of strategies) pairs.push([h, v]);
 
     const TOTAL_ROUNDS = Math.min(totalRounds, pairs.length || 1);
-    const GAMES = Math.max(3, Math.ceil(60 / TOTAL_ROUNDS));
+    // Each pairing plays 10 moves at 100ms each → one full second per pairing, like the original.
+    const GAMES = 10;
+    const MOVE_FLASH = 50;
+    const MOVE_GAP = 50;
     let round = 0;
     let game = 0;
 
@@ -140,14 +143,14 @@ export function StrategyPanel({ snap: s }: Props) {
       setFlash(pickCell());
       setAnimRound(round + 1);
       if (game === 0 && pairs.length > 0) setAnimMatchup(pairs[round % pairs.length]);
-      timerRef.current = setTimeout(flashOff, 80);
+      timerRef.current = setTimeout(flashOff, MOVE_FLASH);
     }
     function flashOff() {
       setFlash(null);
       game++;
       if (game >= GAMES) { game = 0; round++; }
       if (round >= TOTAL_ROUNDS) { setRunning(false); setAnimMatchup(null); collectTourneyYomi(G); return; }
-      timerRef.current = setTimeout(flashOn, 45);
+      timerRef.current = setTimeout(flashOn, MOVE_GAP);
     }
     flashOn();
   }
@@ -171,7 +174,7 @@ export function StrategyPanel({ snap: s }: Props) {
         <div className="row">
           <Btn
             onClick={() => { runTourney(G, picked); }}
-            disabled={s.operations < s.newTourneyCost || running}
+            disabled={s.operations < s.newTourneyCost}
           >
             Run Tournament ({formatWithCommas(s.newTourneyCost)} ops)
           </Btn>

@@ -72,6 +72,7 @@ export function addProc(s: GameState): void {
   if (!hasTrustCapacity && !hasSwarmGift) return;
   if (hasSwarmGift && (!s.humanFlag || !hasTrustCapacity)) s.swarmGifts--;
   s.processors++;
+  s.creativitySpeed = Math.log10(s.processors) * Math.pow(s.processors, 1.1) + s.processors - 1;
 }
 
 export function addMem(s: GameState): void {

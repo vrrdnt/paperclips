@@ -769,7 +769,11 @@ function autoStratMove(name: string, round: number, payoff: number[][], opponent
 
 function tickAutoTourney(s: GameState): void {
   autoTourneyTimer++;
-  if (autoTourneyTimer < 300 || s.operations < s.newTourneyCost) return;
+  // Original cadence: a tournament plays out at 1s per round (rounds = strats^2)
+  // then waits 3s on the results screen before the next starts.
+  const rounds = s.strategies.length * s.strategies.length;
+  const interval = rounds * 100 + 300;
+  if (autoTourneyTimer < interval || s.operations < s.newTourneyCost) return;
   autoTourneyTimer = 0;
 
   s.standardOps -= s.newTourneyCost;
