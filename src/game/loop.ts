@@ -540,7 +540,7 @@ function tickCombat(s: GameState): void {
 
   battleCounter++;
   s.battles.push({
-    name: `Drifter Skirmish ${battleCounter}`,
+    name: `Drifter Attack ${battleCounter}`,
     scale: unitSize * BATTLE_SHIPS,
     unitSize,
     probeShips: initShips('probe', probeN),
