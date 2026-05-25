@@ -280,7 +280,7 @@ export function QuantumPanel({ snap: s }: Props) {
       {/* Sine waveform */}
       <QWave chips={s.qChips} activeCount={s.nextQchip} />
 
-      <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
+      <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} holdRepeat onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
         Quantum Compute
       </Btn>
     </SectionCard>

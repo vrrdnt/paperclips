@@ -63,15 +63,15 @@ export function PowerPanel({ snap: s }: Props) {
         <span className="stat-value">{s.farmLevel}</span>
       </div>
       <div className="row" style={{ marginTop: 4 }}>
-        <Btn onClick={() => { makeFarm(G); }}
+        <Btn holdRepeat onClick={() => { makeFarm(G); }}
           disabled={s.unusedClips < s.farmCost}>
           Build ({spellf(s.farmCost)})
         </Btn>
-        <Btn onClick={() => { makeFarm(G, 10); }}
+        <Btn holdRepeat onClick={() => { makeFarm(G, 10); }}
           disabled={s.unusedClips < farmBulkCost(s.farmLevel, 10)}>
           ×10
         </Btn>
-        <Btn onClick={() => { makeFarm(G, 100); }}
+        <Btn holdRepeat onClick={() => { makeFarm(G, 100); }}
           disabled={s.unusedClips < farmBulkCost(s.farmLevel, 100)}>
           ×100
         </Btn>
@@ -98,15 +98,15 @@ export function PowerPanel({ snap: s }: Props) {
         <span className="stat-value">{s.batteryLevel}</span>
       </div>
       <div className="row" style={{ marginTop: 4 }}>
-        <Btn onClick={() => { makeBattery(G); }}
+        <Btn holdRepeat onClick={() => { makeBattery(G); }}
           disabled={s.unusedClips < s.batteryCost}>
           Build ({spellf(s.batteryCost)})
         </Btn>
-        <Btn onClick={() => { makeBattery(G, 10); }}
+        <Btn holdRepeat onClick={() => { makeBattery(G, 10); }}
           disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 10)}>
           ×10
         </Btn>
-        <Btn onClick={() => { makeBattery(G, 100); }}
+        <Btn holdRepeat onClick={() => { makeBattery(G, 100); }}
           disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 100)}>
           ×100
         </Btn>

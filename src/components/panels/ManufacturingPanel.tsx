@@ -30,7 +30,7 @@ export function ManufacturingPanel({ snap: s }: Props) {
         {graphs && <div style={{ marginTop: 3 }}><Sparkline data={h.clipmakerRate} /></div>}
       </div>
       <div style={{ marginTop: 6 }}>
-        <Btn onClick={() => { makeClipper(G); }} disabled={s.funds < s.clipperCost}>
+        <Btn holdRepeat onClick={() => { makeClipper(G); }} disabled={s.funds < s.clipperCost}>
           Buy AutoClipper (${formatWithCommas(s.clipperCost, 2)})
         </Btn>
       </div>
@@ -44,7 +44,7 @@ export function ManufacturingPanel({ snap: s }: Props) {
             <span className="stat-value">{s.megaClipperLevel}</span>
           </div>
           <div style={{ marginTop: 6 }}>
-            <Btn onClick={() => { makeMegaClipper(G); }} disabled={s.funds < s.megaClipperCost}>
+            <Btn holdRepeat onClick={() => { makeMegaClipper(G); }} disabled={s.funds < s.megaClipperCost}>
               Buy MegaClipper (${formatWithCommas(s.megaClipperCost, 2)})
             </Btn>
           </div>

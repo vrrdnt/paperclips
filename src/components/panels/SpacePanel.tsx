@@ -73,19 +73,19 @@ export function SpacePanel({ snap: s }: Props) {
               </div>
               {!showUniverse && (
                 <div className="row" style={{ marginTop: 4 }}>
-                  <Btn onClick={() => { makeHarvester(G); }}
+                  <Btn holdRepeat onClick={() => { makeHarvester(G); }}
                     disabled={s.unusedClips < s.harvesterCost}>
                     Build ({spellf(s.harvesterCost)})
                   </Btn>
-                  <Btn onClick={() => { makeHarvester(G, 10); }}
+                  <Btn holdRepeat onClick={() => { makeHarvester(G, 10); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 10)}>
                     ×10
                   </Btn>
-                  <Btn onClick={() => { makeHarvester(G, 100); }}
+                  <Btn holdRepeat onClick={() => { makeHarvester(G, 100); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 100)}>
                     ×100
                   </Btn>
-                  <Btn onClick={() => { makeHarvester(G, 1000); }}
+                  <Btn holdRepeat onClick={() => { makeHarvester(G, 1000); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 1000)}>
                     ×1000
                   </Btn>
@@ -109,19 +109,19 @@ export function SpacePanel({ snap: s }: Props) {
               </div>
               {!showUniverse && (
                 <div className="row" style={{ marginTop: 4 }}>
-                  <Btn onClick={() => { makeWireDrone(G); }}
+                  <Btn holdRepeat onClick={() => { makeWireDrone(G); }}
                     disabled={s.unusedClips < s.wireDroneCost}>
                     Build ({spellf(s.wireDroneCost)})
                   </Btn>
-                  <Btn onClick={() => { makeWireDrone(G, 10); }}
+                  <Btn holdRepeat onClick={() => { makeWireDrone(G, 10); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 10)}>
                     ×10
                   </Btn>
-                  <Btn onClick={() => { makeWireDrone(G, 100); }}
+                  <Btn holdRepeat onClick={() => { makeWireDrone(G, 100); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 100)}>
                     ×100
                   </Btn>
-                  <Btn onClick={() => { makeWireDrone(G, 1000); }}
+                  <Btn holdRepeat onClick={() => { makeWireDrone(G, 1000); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 1000)}>
                     ×1000
                   </Btn>
@@ -147,7 +147,7 @@ export function SpacePanel({ snap: s }: Props) {
           </div>
 
           <div style={{ marginTop: 8 }}>
-            <Btn variant="primary" full
+            <Btn variant="primary" full holdRepeat
               onClick={() => { makeProbe(G); }}
               disabled={s.unusedClips < Math.pow(10, 17)}>
               <Rocket size={13} />

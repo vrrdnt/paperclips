@@ -64,6 +64,7 @@ export function InvestmentPanel({ snap: s }: Props) {
       <div className="stat-row" style={{ alignItems: 'center' }}>
         <span className="stat-label">Engine level {s.investLevel}</span>
         <Btn
+          holdRepeat
           onClick={() => { investUpgrade(G); }}
           disabled={s.yomi < s.investUpgradeCost}
           style={{ fontSize: 10, padding: '3px 8px', minHeight: 'unset' }}

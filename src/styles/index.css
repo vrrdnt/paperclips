@@ -29,16 +29,35 @@
   :root { font-size: 13px; }
 }
 
-body { background: var(--bg); min-height: 100vh; }
+html {
+  background: var(--bg);
+  min-height: 100%;
+}
 
-#root { display: flex; flex-direction: column; min-height: 100vh; }
+body {
+  background: var(--bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior-y: contain;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
 
 /* ── Layout ─────────────────────────────────────────────────────── */
 .app-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding:
+    calc(12px + env(safe-area-inset-top))
+    calc(14px + env(safe-area-inset-right))
+    12px
+    calc(14px + env(safe-area-inset-left));
   background: var(--panel2);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -88,7 +107,11 @@ body { background: var(--bg); min-height: 100vh; }
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-  padding: 10px 10px 32px;
+  padding:
+    10px
+    max(10px, env(safe-area-inset-right))
+    calc(32px + env(safe-area-inset-bottom))
+    max(10px, env(safe-area-inset-left));
   gap: 10px;
 }
 
@@ -110,7 +133,13 @@ body { background: var(--bg); min-height: 100vh; }
 
 /* Tablet: 2 columns */
 @media (min-width: 600px) {
-  .app-wrap { padding: 12px 12px 32px; }
+  .app-wrap {
+    padding:
+      12px
+      max(12px, env(safe-area-inset-right))
+      calc(32px + env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
   .app-body { grid-template-columns: 1fr 1fr; }
 }
 
