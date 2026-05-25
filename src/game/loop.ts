@@ -519,29 +519,29 @@ function drift(s: GameState): void {
 }
 
 // ── Combat ────────────────────────────────────────────────────────────────
-const BATTLE_SHIPS = 60;          // ships per side at full strength (sim + visual)
-const BATTLE_ATTACK_SPEED = 0.05; // base fraction of the enemy destroyed per tick
-const BATTLE_LINGER = 200;        // ticks a resolved battle stays on screen (~2s)
-const MAX_BATTLES = 3;
+const BATTLE_SHIPS = 60;     // ships per side at full strength (sim + visual)
+const BATTLE_LINGER = 150;   // ticks a resolved battle stays in the list (~1.5s)
+const MAX_BATTLES = 4;
 let battleCounter = 0;
 
-// checkForBattles — spawn a skirmish once drifters exceed the war trigger.
+// checkForBattles — keep one skirmish running at all times so combat is
+// visually continuous (like the original) once drifters pass the war trigger.
 function tickCombat(s: GameState): void {
   if (s.drifterCount <= 1_000_000 || s.probeCount <= 0) return;
-  if (s.battles.length >= MAX_BATTLES) return;
-  if (Math.random() > 0.001) return;
   if (!s.battleFlag) s.battleFlag = 1;
+  if (s.battles.some(b => !b.over)) return;   // a skirmish is already underway
+  if (s.battles.length >= MAX_BATTLES) return; // wait for lingering ones to clear
 
-  // Engage a bounded skirmish drawn evenly from both fleets.
-  const engaged = Math.min(s.probeCount, s.drifterCount);
-  const unitSize = Math.max(1, Math.floor(engaged / BATTLE_SHIPS));
+  // Engage a modest slice of each fleet so a single battle doesn't wipe the
+  // drifter population (which would halt combat).
+  const unitSize = Math.max(1, Math.floor(Math.min(s.probeCount, s.drifterCount) / 50_000));
   const probeN = Math.min(BATTLE_SHIPS, Math.max(1, Math.floor(s.probeCount / unitSize)));
   const drifterN = Math.min(BATTLE_SHIPS, Math.max(1, Math.floor(s.drifterCount / unitSize)));
 
   battleCounter++;
   s.battles.push({
     name: `Drifter Skirmish ${battleCounter}`,
-    scale: engaged,
+    scale: unitSize * BATTLE_SHIPS,
     unitSize,
     probeShips: initShips('probe', probeN),
     drifterShips: initShips('drifter', drifterN),
@@ -581,12 +581,12 @@ function tickBattles(s: GameState): void {
       continue;
     }
 
-    const probePower = (1 + s.probeCombat) * BATTLE_ATTACK_SPEED;
-    const drifterKills = Math.min(driftersAlive, Math.round(probesAlive * probePower * Math.random()));
-    const probeKills = Math.min(probesAlive, Math.round(driftersAlive * BATTLE_ATTACK_SPEED * Math.random()));
-
-    killShips(s, b, 'drifter', drifterKills);
-    killShips(s, b, 'probe', probeKills);
+    // Slow, probabilistic attrition (~one ship every several ticks per side) so
+    // a 60-ship skirmish plays out over a few seconds. The Combat probe-design
+    // attribute tilts the exchange in the probes' favour.
+    const adv = 1 + Math.min(s.probeCombat, 8) * 0.5;
+    if (Math.random() < 0.06 * adv) killShips(s, b, 'drifter', 1);
+    if (Math.random() < 0.06 / adv) killShips(s, b, 'probe', 1);
   }
 }
 
