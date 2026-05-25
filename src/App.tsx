@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
+import { Map as MapIcon, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
 import { tickBatch } from './game/loop';
-import { hydrateGameState, loadGame, saveGame, resetGame, savePrestige, toSaveableState } from './game/save';
+import { hydrateGameState, loadGame, saveGame, resetGame, resetAllProgress, savePrestigeState, toSaveableState } from './game/save';
 import { Btn } from './components/ui/Btn';
 import { Console } from './components/Console';
 import { BusinessPanel } from './components/panels/BusinessPanel';
@@ -18,9 +18,11 @@ import { ProbeDesignPanel } from './components/panels/ProbeDesignPanel';
 import { PowerPanel } from './components/panels/PowerPanel';
 import { SwarmPanel } from './components/panels/SwarmPanel';
 import { CombatPanel } from './components/panels/CombatPanel';
+import { ArtifactsDropdown } from './components/panels/ArtifactsPanel';
 import { DevMenu } from './components/DevMenu';
 import { AdminMenu } from './components/AdminMenu';
 import { spellf } from './game/format';
+import { artifactMapUnlocked } from './game/artifacts';
 
 export default function App() {
   const setSnap = useGameStore(st => st.setSnap);
@@ -31,6 +33,7 @@ export default function App() {
   const [exportCopied, setExportCopied] = useState(false);
   const [showExportFallback, setShowExportFallback] = useState(false);
   const [exportText, setExportText] = useState('');
+  const [showArtifactMap, setShowArtifactMap] = useState(false);
   const [showHypnoTransition, setShowHypnoTransition] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const exportTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -44,7 +47,7 @@ export default function App() {
     const gameTimer = setInterval(() => { tickBatch(G); }, 50);
     const displayTimer = setInterval(() => {
       if (G.resetFlag === 1) {
-        savePrestige(G.prestigeU, G.prestigeS);
+        savePrestigeState(G);
         resetGame();
         window.location.reload();
         return;
@@ -89,10 +92,12 @@ export default function App() {
   if (!snap) return <div style={{ padding: 24, color: 'var(--text-dim)' }}>Loading…</div>;
 
   const postHuman = snap.humanFlag === 0;
+  const artifactsUnlocked = artifactMapUnlocked(snap);
 
   function handleReset() {
-    if (!confirm('Reset game? This cannot be undone.')) return;
-    const fresh = resetGame();
+    if (!confirm('Reset all progress, including prestige and artifacts? This cannot be undone.')) return;
+    setShowArtifactMap(false);
+    const fresh = resetAllProgress();
     Object.assign(G, fresh);
     setSnap(G);
   }
@@ -197,9 +202,23 @@ export default function App() {
             <Upload size={13} />
             {exportCopied && <span style={{ fontSize: 9, color: 'var(--success)' }}>copied</span>}
           </Btn>
-          <Btn onClick={() => setShowImport(true)} title="Import save from clipboard">
+          <Btn onClick={() => { setShowArtifactMap(false); setShowImport(true); }} title="Import save from clipboard">
             <Download size={13} />
           </Btn>
+          {artifactsUnlocked && (
+            <div className="artifact-header-wrap">
+              <Btn
+                onClick={() => setShowArtifactMap(open => !open)}
+                title="Artifact map"
+                variant={showArtifactMap ? 'primary' : 'default'}
+              >
+                <MapIcon size={13} />
+              </Btn>
+              {showArtifactMap && (
+                <ArtifactsDropdown snap={snap} onClose={() => setShowArtifactMap(false)} />
+              )}
+            </div>
+          )}
           <Btn variant="danger" onClick={handleReset} title="Reset game">
             <RotateCcw size={13} />
           </Btn>

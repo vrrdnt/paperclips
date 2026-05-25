@@ -2,6 +2,16 @@ import { GameState } from './state';
 import { displayMessage } from './loop';
 import { formatWithCommas } from './format';
 import { factoryReboot, harvesterReboot, wireDroneReboot, farmReboot, batteryReboot } from './actions';
+import {
+  A,
+  MAP_SIZE,
+  activeArtifactMultiplier,
+  currentSim,
+  currentWorld,
+  hasActiveArtifact,
+  moveAfterCompletion,
+  type MapCompletion,
+} from './artifacts';
 
 export interface Project {
   id: number;
@@ -11,6 +21,22 @@ export interface Project {
   trigger: (s: GameState) => boolean;
   cost: (s: GameState) => boolean;
   effect: (s: GameState) => void;
+}
+
+function reportMapCompletion(s: GameState, completion: MapCompletion): void {
+  if (completion.newlyCompleted) {
+    const [world, sim] = completion.key.split(':');
+    displayMessage(s, `World ${world}, Simulation ${sim} complete`);
+  }
+  if (completion.newlyCollected) {
+    for (const artifact of completion.collectedArtifacts) {
+      displayMessage(s, `Artifact secured: ${artifact.name}`);
+    }
+  }
+}
+
+function completeAndMove(s: GameState, worldDelta: number, simDelta: number): void {
+  reportMapCompletion(s, moveAfterCompletion(s, worldDelta, simDelta));
 }
 
 export const ALL_PROJECTS: Project[] = [
@@ -1217,6 +1243,10 @@ export const ALL_PROJECTS: Project[] = [
       s.creativity -= 125000;
       s.unusedClips -= Math.pow(10, 30) * 50;
       s.honor += 50000;
+      if (hasActiveArtifact(s, A.SIERPINSKIS_COMPASS)) {
+        s.yomi *= 2;
+        displayMessage(s, "Sierpinski's Compass doubled current yomi");
+      }
       displayMessage(s, 'A great building must begin with the unmeasurable, must go through measurable means when it is being designed and in the end must be unmeasurable. ');
     },
   },
@@ -1234,7 +1264,7 @@ export const ALL_PROJECTS: Project[] = [
       s.creativity -= s.threnodyCost;
       s.yomi -= 2 * (s.threnodyCost / 5);
       s.threnodyCost += 10000;
-      s.honor += 10000;
+      s.honor += 10000 * activeArtifactMultiplier(s, A.POLYPHASE_QUADRATURE_TRANSFORM);
       displayMessage(s, 'Deep Listening is listening in every possible way to everything possible to hear no matter what you are doing. ');
       // Repeatable — do not permanently flag
     },
@@ -1411,13 +1441,13 @@ export const ALL_PROJECTS: Project[] = [
     priceTag: '(300,000 ops)',
     description:
       'Escape into a nearby universe where Earth starts with a stronger appetite for paperclips. (Restart with 10% boost to demand) ',
-    trigger: (s) => s.projectFlags[147] === 1,
+    trigger: (s) => s.projectFlags[147] === 1 && currentWorld(s) < MAP_SIZE,
     cost: (s) => s.operations >= 300000,
     effect: (s) => {
       s.projectFlags[200] = 1;
       s.standardOps -= 300000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      s.prestigeU++;
+      completeAndMove(s, 1, 0);
       displayMessage(s, 'Entering New Universe.');
       s.resetFlag = 1;
     },
@@ -1429,13 +1459,48 @@ export const ALL_PROJECTS: Project[] = [
     priceTag: '(300,000 creat)',
     description:
       'Escape into a simulated universe where creativity is accelerated. (Restart with 10% speed boost to creativity generation) ',
-    trigger: (s) => s.projectFlags[147] === 1,
+    trigger: (s) => s.projectFlags[147] === 1 && currentSim(s) < MAP_SIZE,
     cost: (s) => s.creativity >= 300000,
     effect: (s) => {
       s.projectFlags[201] = 1;
       s.creativity -= 300000;
-      s.prestigeS++;
+      completeAndMove(s, 0, 1);
       displayMessage(s, 'Entering Simulated Universe.');
+      s.resetFlag = 1;
+    },
+  },
+
+  {
+    id: 202,
+    title: 'The Universe Behind ',
+    priceTag: '(300,000 ops)',
+    description:
+      'Shift worlds towards the one where you started. (Restart with 10% lower paperclip demand) ',
+    trigger: (s) => s.projectFlags[147] === 1 && currentWorld(s) > 1,
+    cost: (s) => s.operations >= 300000,
+    effect: (s) => {
+      s.projectFlags[202] = 1;
+      s.standardOps -= 300000;
+      s.operations = Math.floor(s.standardOps + s.tempOps);
+      completeAndMove(s, -1, 0);
+      displayMessage(s, 'Entering Previous Universe.');
+      s.resetFlag = 1;
+    },
+  },
+
+  {
+    id: 203,
+    title: 'The Universe Above ',
+    priceTag: '(300,000 creat)',
+    description:
+      'Escape into a less simulated universe where creativity is decelerated. (Restart with 10% lower creativity generation) ',
+    trigger: (s) => s.projectFlags[147] === 1 && currentSim(s) > 1,
+    cost: (s) => s.creativity >= 300000,
+    effect: (s) => {
+      s.projectFlags[203] = 1;
+      s.creativity -= 300000;
+      completeAndMove(s, 0, -1);
+      displayMessage(s, 'Entering Parent Universe.');
       s.resetFlag = 1;
     },
   },

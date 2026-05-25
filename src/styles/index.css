@@ -644,6 +644,11 @@ input[type="range"].price-slider::-moz-range-thumb {
   100% { opacity: 0; transform: scale(0.95) translateY(4px); }
 }
 
+@keyframes artifact-float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
 /* ── Investment stock table ─────────────────────────────────────── */
 .stock-table {
   width: 100%;
@@ -703,7 +708,7 @@ input[type="range"].price-slider::-moz-range-thumb {
   height: auto;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: #8c8c8c;
+  background: #252525;
   display: block;
 }
 
@@ -715,6 +720,245 @@ input[type="range"].price-slider::-moz-range-thumb {
   font-size: 11px;
   padding: 3px 0;
   border-bottom: 1px solid var(--border);
+}
+
+/* Artifact map */
+.artifact-header-wrap {
+  position: relative;
+  display: flex;
+}
+
+.artifact-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 250;
+  width: min(520px, calc(100vw - 20px));
+  max-height: min(78vh, 760px);
+  overflow: auto;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.55);
+}
+
+@media (max-width: 600px) {
+  .artifact-dropdown {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    top: 58px;
+    width: auto;
+    max-height: calc(100vh - 70px);
+  }
+}
+
+.artifact-dropdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 7px;
+  margin-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+
+.artifact-dropdown-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.artifact-close {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel2);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.artifact-close:hover {
+  color: var(--text);
+  border-color: var(--border2);
+}
+
+.artifact-current {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.artifact-current span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border2);
+  background: var(--panel2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--text-dim);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.artifact-map-wrap {
+  margin-top: 9px;
+}
+
+.artifact-map-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.artifact-map-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.artifact-map-cell {
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: #292929;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.artifact-map-cell:disabled {
+  cursor: default;
+}
+
+.artifact-map-cell.is-completed {
+  background: #424242;
+  border-color: var(--border2);
+  color: var(--text);
+}
+
+.artifact-map-cell.is-current {
+  outline: 1px solid #d8d8d8;
+  outline-offset: -2px;
+  color: #f0f0f0;
+}
+
+.artifact-map-cell.has-artifact .artifact-cell-icon {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  color: var(--success);
+  display: inline-flex;
+  animation: artifact-float 1.8s ease-in-out infinite alternate;
+}
+
+.artifact-cell-mark {
+  position: relative;
+  z-index: 1;
+}
+
+.artifact-slots {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.artifact-slot {
+  min-height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: #272727;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.artifact-slot.is-filled {
+  background: #3f3f3f;
+  color: var(--text);
+  border-color: var(--border2);
+}
+
+.artifact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 9px;
+  max-height: 260px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.artifact-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel2);
+}
+
+.artifact-item.is-active {
+  border-color: var(--success);
+}
+
+.artifact-item-icon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #292929;
+}
+
+.artifact-item.is-active .artifact-item-icon {
+  color: var(--success);
+  border-color: rgba(80,160,80,0.55);
+}
+
+.artifact-name {
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.artifact-effect {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.25;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
 }
 
 /* ── Swarm status badge ─────────────────────────────────────────── */

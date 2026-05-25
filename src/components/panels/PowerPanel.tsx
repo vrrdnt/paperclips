@@ -6,6 +6,7 @@ import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import { makeFarm, makeBattery, farmReboot, batteryReboot } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
+import { A, activeArtifactMultiplier } from '../../game/artifacts';
 
 interface Props { snap: DisplaySnapshot; }
 
@@ -25,7 +26,7 @@ export function PowerPanel({ snap: s }: Props) {
   // Power is a terrestrial concern: shown once the grid is online, gone once probes take over in space.
   if (!s.projectFlags[127] || s.spaceFlag === 1) return null;
 
-  const production  = s.farmLevel * s.farmRate;
+  const production  = s.farmLevel * s.farmRate * activeArtifactMultiplier(s, A.OSCILLONS_ANTI_SUN);
   const factoryDraw = s.factoryLevel * s.factoryPowerRate;
   const droneDraw   = (s.harvesterLevel + s.wireDroneLevel) * s.dronePowerRate;
   const consumption = factoryDraw + droneDraw;

@@ -1,5 +1,6 @@
 import { GameState, Battle, Ship } from './state';
 import { saveGame } from './save';
+import { A, activeArtifactMultiplier, effectiveProbeAttr, hasActiveArtifact } from './artifacts';
 
 // ── Constants (verbatim from main.js / globals.js) ────────────────────────
 const PROBE_BASE_COST   = Math.pow(10, 17);        // probeCost
@@ -68,7 +69,8 @@ export function tick(s: GameState): void {
   // Factory production — no spaceFlag gate; gated only on dismantle<4
   if (s.factoryLevel > 0 && s.dismantle < 4) {
     const fbst = s.factoryBoost > 1 ? s.factoryBoost * s.factoryLevel : 1;
-    clipClick(s, s.powMod * fbst * s.factoryLevel * s.factoryRate);
+    const artifactBoost = activeArtifactMultiplier(s, A.QUARK_GLUON_HEART);
+    clipClick(s, s.powMod * fbst * s.factoryLevel * s.factoryRate * artifactBoost);
   }
 
   // Space probe functions — only when spaceFlag==1
@@ -86,8 +88,8 @@ export function tick(s: GameState): void {
 
   // Auto-clipper production — dismantle<4 (original has no humanFlag gate here)
   if (s.dismantle < 4) {
-    const clipperRate = s.clipperBoost * (s.clipmakerLevel / 100);
-    const megaRate = s.megaClipperBoost * (s.megaClipperLevel * 5);
+    const clipperRate = s.clipperBoost * activeArtifactMultiplier(s, A.WURTZITE_FANG) * (s.clipmakerLevel / 100);
+    const megaRate = s.megaClipperBoost * activeArtifactMultiplier(s, A.LONSDALEITE_CLAW) * (s.megaClipperLevel * 5);
     if (s.humanFlag) {
       // Track display rate in human phase
       s.clipmakerRate = (clipperRate + megaRate) * 100;
@@ -183,7 +185,14 @@ function tickOps(s: GameState): void {
   s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
 
   if (s.operations < s.memory * 1000) {
-    const opCycle = s.processors / 10;
+    let effectiveProcessors = s.processors;
+    if (hasActiveArtifact(s, A.BOLTZMANNS_BRAIN)) effectiveProcessors += 10;
+    if (hasActiveArtifact(s, A.SMART_FACTORY_FORCE_FEEDBACK)) effectiveProcessors += Math.floor(s.factoryLevel);
+    let processorMultiplier = activeArtifactMultiplier(s, A.KOLMOGOROVS_BOUNDARY);
+    if (hasActiveArtifact(s, A.KOLMOGOROVS_INFINITESIMAL)) {
+      processorMultiplier *= 1 + Math.max(0, effectiveProcessors) * 0.02;
+    }
+    const opCycle = (effectiveProcessors * processorMultiplier) / 10;
     const opBuf = s.memory * 1000 - s.operations;
     s.standardOps += Math.min(opCycle, opBuf);
   }
@@ -220,10 +229,11 @@ function tickWirePrice(s: GameState): void {
 
 // ── Wire buying ───────────────────────────────────────────────────────────
 export function buyWire(s: GameState): void {
-  if (s.funds < s.wireCost) return;
+  const free = hasActiveArtifact(s, A.UNSTABLE_WIRE_PORTAL) && Math.random() < 0.5;
+  if (!free && s.funds < s.wireCost) return;
   s.wirePriceTimer = 0;
   s.wire += s.wireSupply;
-  s.funds -= s.wireCost;
+  if (!free) s.funds -= s.wireCost;
   s.wirePurchase++;
   s.wireBasePrice += 0.05;
 }
@@ -339,7 +349,7 @@ function tickQuantum(s: GameState): void {
 function tickPower(s: GameState): void {
   if (s.spaceFlag) return;
 
-  const supply = s.farmLevel * s.farmRate / 100;
+  const supply = s.farmLevel * s.farmRate * activeArtifactMultiplier(s, A.OSCILLONS_ANTI_SUN) / 100;
   const dDemand = (s.harvesterLevel * s.dronePowerRate / 100) + (s.wireDroneLevel * s.dronePowerRate / 100);
   const fDemand = s.factoryLevel * s.factoryPowerRate / 100;
   const totalDemand = dDemand + fDemand;
@@ -352,12 +362,12 @@ function tickPower(s: GameState): void {
       s.storedPower += xsSupply;
     }
     if (s.powMod < 1) s.powMod = 1;
-    if (s.momentum) s.powMod += 0.0005;
+    if (s.momentum) s.powMod += 0.0005 * activeArtifactMultiplier(s, A.MICROSTATE_LOOP_CALIBRATOR);
   } else {
     const xsDemand = totalDemand - supply;
     if (s.storedPower > 0) {
       if (s.storedPower >= xsDemand) {
-        if (s.momentum) s.powMod += 0.0005;
+        if (s.momentum) s.powMod += 0.0005 * activeArtifactMultiplier(s, A.MICROSTATE_LOOP_CALIBRATOR);
         s.storedPower -= xsDemand;
       } else {
         const remaining = xsDemand - s.storedPower;
@@ -374,7 +384,8 @@ function tickPower(s: GameState): void {
 // ── Matter acquisition — acquireMatter() ─────────────────────────────────
 function acquireMatter(s: GameState): void {
   const dbsth = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.harvesterLevel) : 1;
-  let mtr = s.powMod * dbsth * Math.floor(s.harvesterLevel) * s.harvesterRate;
+  let mtr = s.powMod * dbsth * Math.floor(s.harvesterLevel) *
+    s.harvesterRate * activeArtifactMultiplier(s, A.EXOTHERMIC_DECOMPOSITION);
   mtr = mtr * ((200 - s.sliderPos) / 100);
   s.mps = mtr * 100;
   if (s.availableMatter <= 0) return;
@@ -388,7 +399,8 @@ function acquireMatter(s: GameState): void {
 function processMatter(s: GameState): void {
   if (s.acquiredMatter <= 0) return;
   const dbstw = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.wireDroneLevel) : 1;
-  let a = s.powMod * dbstw * Math.floor(s.wireDroneLevel) * s.wireDroneRate;
+  let a = s.powMod * dbstw * Math.floor(s.wireDroneLevel) *
+    s.wireDroneRate * activeArtifactMultiplier(s, A.FROTH_RECOVERY);
   a = a * ((200 - s.sliderPos) / 100);
   s.wpps = a * 100;
   if (a > s.acquiredMatter) a = s.acquiredMatter;
@@ -399,7 +411,9 @@ function processMatter(s: GameState): void {
 // ── Universe exploration — exploreUniverse() ─────────────────────────────
 // Runs whenever probeCount >= 1 regardless of spaceFlag.
 function exploreUniverse(s: GameState): void {
-  const xRate = Math.floor(s.probeCount) * PROBE_X_BASE_RATE * s.probeSpeed * s.probeNav;
+  const probeSpeed = effectiveProbeAttr(s, s.probeSpeed, A.ABANDONED_HYPERBOLIC_SOLITON);
+  const probeNav = effectiveProbeAttr(s, s.probeNav, A.CADASTRAL_MAP);
+  const xRate = Math.floor(s.probeCount) * PROBE_X_BASE_RATE * probeSpeed * probeNav;
   const maxExplore = s.totalMatter - s.foundMatter;
   const actual = Math.min(xRate, maxExplore);
   s.foundMatter += actual;
@@ -411,7 +425,8 @@ function exploreUniverse(s: GameState): void {
 
 // ── Probe hazards — encounterHazards() ───────────────────────────────────
 function encounterHazards(s: GameState): void {
-  const boost = Math.pow(s.probeHaz, 1.6);
+  const probeHaz = effectiveProbeAttr(s, s.probeHaz, A.GRAPHENE_SHELL);
+  const boost = Math.pow(probeHaz, 1.6);
   let amount = s.probeCount * (PROBE_HAZ_RATE / (3 * boost + 1));
   if (s.projectFlags[129] === 1) amount *= 0.5;
   if (amount < 1) {
@@ -487,7 +502,8 @@ function spawnWireDrones(s: GameState): void {
 
 // ── Probe replication — spawnProbes() ────────────────────────────────────
 function spawnProbes(s: GameState): void {
-  let nextGen = s.probeCount * PROBE_REP_RATE * s.probeRep;
+  const probeRep = effectiveProbeAttr(s, s.probeRep, A.LABYRINTH_THREAD);
+  let nextGen = s.probeCount * PROBE_REP_RATE * probeRep;
 
   if (nextGen > 0 && nextGen < 1) {
     s.partialProbeSpawn += nextGen;
@@ -519,107 +535,392 @@ function drift(s: GameState): void {
 }
 
 // ── Combat ────────────────────────────────────────────────────────────────
-const BATTLE_SHIPS = 60;     // ships per side at full strength (sim + visual)
-const BATTLE_LINGER = 150;   // ticks a resolved battle stays in the list (~1.5s)
-const MAX_BATTLES = 4;
-let battleCounter = 0;
+const BATTLE_W = 310;
+const BATTLE_H = 150;
+const BATTLE_GRID_W = 31;
+const BATTLE_GRID_H = 15;
+const BATTLE_INV_GRID_W = 1 / (BATTLE_W / BATTLE_GRID_W);
+const BATTLE_INV_GRID_H = 1 / (BATTLE_H / BATTLE_GRID_H);
+const BATTLE_MAXSPEED = 2;
+const BATTLE_DEATH_THRESHOLD = 0.5;
+const PROBE_COMBAT_BASE_RATE = 0.15;
+const DRIFTER_COMBAT = 1.75;
+const WAR_TRIGGER = 1_000_000;
+const MAX_BATTLES = 1;
+const BATTLE_FRAME_MS = 16;
+let battleFrameAccumulator = 0;
 
-// checkForBattles — keep one skirmish running at all times so combat is
-// visually continuous (like the original) once drifters pass the war trigger.
+const BATTLE_NAMES = [
+  'Aboukir', 'Abensberg', 'Acre', 'Alba de Tormes', 'la Albuera', 'Algeciras Bay',
+  'Amstetten', 'Arcis-sur-Aube', 'Aspern-Essling', 'Jena-Auerstedt', 'Arcole',
+  'Austerlitz', 'Badajoz', 'Bailen', 'la Barrosa', 'Bassano', 'Bautzen', 'Berezina',
+  'Bergisel', 'Borodino', 'Burgos', 'Bucaco', 'Cadiz', 'Caldiero', 'Castiglione',
+  'Castlebar', 'Champaubert', 'Chateau-Thierry', 'Copenhagen', 'Corunna', 'Craonne',
+  'Dego', 'Dennewitz', 'Dresden', 'Durenstein', 'Eckmuhl', 'Elchingen',
+  'Espinosa de los Monteros', 'Eylau', 'Cape Finisterre', 'Friedland',
+  'Fuentes de Onoro', 'Gevora River', 'Gerona', 'Hamburg', 'Haslach-Jungingen',
+  'Heilsberg', 'Hohenlinden', 'Jena-Auerstedt', 'Kaihona', 'Kolberg', 'Landshut',
+  'Leipzig', 'Ligny', 'Lodi', 'Lubeck', 'Lutzen', 'Marengo', 'Maria', 'Medellin',
+  'Medina de Rioseco', 'Millesimo', 'Mincio River', 'Mondovi', 'Montebello',
+  'Montenotte', 'Montmirail', 'Mount Tabor', 'The Nile', 'Novi', 'Ocana',
+  'Cape Ortegal', 'Orthez', 'Pancorbo', 'Piave River', 'The Pyramids', 'Quatre Bras',
+  'Raab', 'Raszyn', 'Rivoli', 'Rolica', 'La Rothiere', 'Rovereto', 'Saalfeld',
+  'Schongrabern', 'Salamanca', 'Smolensk', 'Somosierra', 'Talavera', 'Tamames',
+  'Trafalgar', 'Trebbia', 'Tudela', 'Ulm', 'Valls', 'Valmaseda', 'Valutino',
+  'Vauchamps', 'Vimeiro', 'Vitoria', 'Wagram', 'Waterloo', 'Wavre', 'Wertingen',
+  'Zaragoza',
+];
+const battleNameNumbers = BATTLE_NAMES.map(() => 1);
+
+type BattleGrid = Ship[][][];
+
+// checkForBattles / createBattle from combat.js.
 function tickCombat(s: GameState): void {
-  if (s.drifterCount <= 1_000_000 || s.probeCount <= 0) return;
-  if (!s.battleFlag) s.battleFlag = 1;
-  if (s.battles.some(b => !b.over)) return;   // a skirmish is already underway
-  if (s.battles.length >= MAX_BATTLES) return; // wait for lingering ones to clear
+  if (s.drifterCount > WAR_TRIGGER && s.probeCount > 0 && s.battles.length < MAX_BATTLES) {
+    if (Math.random() * 100 >= 50) {
+      if (!s.battleFlag) s.battleFlag = 1;
+      createBattle(s);
+    }
+  }
+}
 
-  // Engage a modest slice of each fleet so a single battle doesn't wipe the
-  // drifter population (which would halt combat).
-  const unitSize = Math.max(1, Math.floor(Math.min(s.probeCount, s.drifterCount) / 50_000));
-  const probeN = Math.min(BATTLE_SHIPS, Math.max(1, Math.floor(s.probeCount / unitSize)));
-  const drifterN = Math.min(BATTLE_SHIPS, Math.max(1, Math.floor(s.drifterCount / unitSize)));
+function createBattle(s: GameState): void {
+  let unitSize = s.drifterCount >= s.probeCount ? s.probeCount / 100 : s.drifterCount / 100;
+  if (unitSize < 1) unitSize = 1;
 
-  battleCounter++;
+  const drifterProbes = Math.max(1, Math.random() * s.drifterCount);
+  const clipProbes = Math.max(1, Math.random() * s.probeCount);
+  const territory = Math.random() * s.availableMatter;
+
+  let leftShips = Math.ceil(clipProbes / 1_000_000);
+  if (leftShips > 200) leftShips = 200;
+  if (leftShips === 200 && Math.random() < 0.5) leftShips = Math.ceil(Math.random() * 175);
+
+  let rightShips = Math.ceil(drifterProbes / 1_000_000);
+  if (rightShips > 200) rightShips = 200;
+
+  s.battleId = (s.battleId || 0) + 1;
+  const name = s.projectFlags[121] === 1 ? generateBattleName() : `Drifter Attack ${s.battleId}`;
+  s.battleName = name;
+  s.battleScale = unitSize;
+
   s.battles.push({
-    name: `Drifter Attack ${battleCounter}`,
-    scale: unitSize * BATTLE_SHIPS,
+    name,
+    scale: unitSize,
     unitSize,
-    probeShips: initShips('probe', probeN),
-    drifterShips: initShips('drifter', drifterN),
+    clipProbes,
+    drifterProbes,
+    territory,
+    leftShips,
+    rightShips,
+    probeShips: initShips('probe', leftShips),
+    drifterShips: initShips('drifter', rightShips),
     timer: 0,
+    battleClock: 0,
+    masterClock: 0,
+    endDelay: 0,
     over: false,
     result: null,
     honor: 0,
+    honorApplied: false,
   });
 }
 
+function generateBattleName(): string {
+  const x = Math.floor(Math.random() * BATTLE_NAMES.length);
+  const name = `${BATTLE_NAMES[x]} ${battleNameNumbers[x]}`;
+  battleNameNumbers[x]++;
+  return name;
+}
+
 function initShips(side: 'probe' | 'drifter', count: number): Ship[] {
+  const probe = side === 'probe';
   return Array.from({ length: count }, () => ({
-    x: Math.random() * 310, y: Math.random() * 150,
-    vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
-    alive: true, side,
+    x: probe ? Math.random() * 0.2 * BATTLE_W : (Math.random() * 0.2 + 0.8) * BATTLE_W,
+    y: Math.random() * BATTLE_H,
+    vx: probe ? Math.random() * BATTLE_MAXSPEED : -Math.random() * BATTLE_MAXSPEED,
+    vy: Math.random() - 0.5,
+    gx: 0,
+    gy: 0,
+    framesDead: 0,
+    alive: true,
+    side,
   }));
 }
 
-// Resolve in-progress battles tick by tick: fleets trade losses (probe
-// effectiveness scales with the Combat probe-design attribute), the global
-// drifter/probe counts move, and honor is awarded on a win.
+// The original combat renderer advances at 16ms, separate from the 10ms main loop.
 function tickBattles(s: GameState): void {
+  if (s.battles.length === 0) {
+    battleFrameAccumulator = 0;
+    return;
+  }
+
+  battleFrameAccumulator += 10;
+  while (battleFrameAccumulator >= BATTLE_FRAME_MS) {
+    stepBattles(s);
+    battleFrameAccumulator -= BATTLE_FRAME_MS;
+  }
+}
+
+function stepBattles(s: GameState): void {
   for (let i = s.battles.length - 1; i >= 0; i--) {
     const b = s.battles[i];
-    b.timer++;
+    normalizeBattleRuntime(b);
 
     if (b.over) {
-      if (b.timer > BATTLE_LINGER) s.battles.splice(i, 1);
+      ageDeadShips(b);
+      b.endDelay++;
+      if (b.endDelay >= battleEndTimer(s)) s.battles.splice(i, 1);
       continue;
     }
 
-    const probesAlive = b.probeShips.reduce((n, sh) => n + (sh.alive ? 1 : 0), 0);
-    const driftersAlive = b.drifterShips.reduce((n, sh) => n + (sh.alive ? 1 : 0), 0);
+    const grid = updateBattleGrid(b);
+    moveBattleShips(b, grid);
+    doBattleCombat(s, b, grid);
 
-    if (probesAlive === 0 || driftersAlive === 0) {
-      finishBattle(s, b, probesAlive, driftersAlive);
-      continue;
+    if (checkForBattleEnd(s, b)) {
+      s.battles.splice(i, 1);
     }
-
-    // Slow, probabilistic attrition (~one ship every several ticks per side) so
-    // a 60-ship skirmish plays out over a few seconds. The Combat probe-design
-    // attribute tilts the exchange in the probes' favour.
-    const adv = 1 + Math.min(s.probeCombat, 8) * 0.5;
-    if (Math.random() < 0.06 * adv) killShips(s, b, 'drifter', 1);
-    if (Math.random() < 0.06 / adv) killShips(s, b, 'probe', 1);
   }
 }
 
-function killShips(s: GameState, b: Battle, side: 'probe' | 'drifter', n: number): void {
-  if (n <= 0) return;
-  const ships = side === 'probe' ? b.probeShips : b.drifterShips;
-  let killed = 0;
-  for (const sh of ships) {
-    if (killed >= n) break;
-    if (sh.alive) { sh.alive = false; killed++; }
+function normalizeBattleRuntime(b: Battle): void {
+  b.scale = Number.isFinite(b.scale) ? b.scale : b.unitSize;
+  b.unitSize = Number.isFinite(b.unitSize) ? b.unitSize : Math.max(1, b.scale || 1);
+  b.clipProbes = Number.isFinite(b.clipProbes) ? b.clipProbes : b.probeShips.length * b.unitSize;
+  b.drifterProbes = Number.isFinite(b.drifterProbes) ? b.drifterProbes : b.drifterShips.length * b.unitSize;
+  b.territory = Number.isFinite(b.territory) ? b.territory : 0;
+  b.leftShips = Number.isFinite(b.leftShips) ? b.leftShips : b.probeShips.length;
+  b.rightShips = Number.isFinite(b.rightShips) ? b.rightShips : b.drifterShips.length;
+  b.battleClock = b.battleClock || 0;
+  b.masterClock = b.masterClock || 0;
+  b.endDelay = b.endDelay || 0;
+  b.honor = b.honor || 0;
+  b.honorApplied = b.honorApplied || false;
+  b.probeShips.forEach(normalizeShipRuntime);
+  b.drifterShips.forEach(normalizeShipRuntime);
+}
+
+function normalizeShipRuntime(sh: Ship): void {
+  sh.gx = sh.gx || 0;
+  sh.gy = sh.gy || 0;
+  sh.framesDead = sh.framesDead || 0;
+}
+
+function updateBattleGrid(b: Battle): BattleGrid {
+  const grid = Array.from({ length: BATTLE_GRID_H }, () =>
+    Array.from({ length: BATTLE_GRID_W }, () => [] as Ship[]));
+
+  for (const p of allBattleShips(b)) {
+    if (!p.alive) continue;
+    p.gx = clamp(Math.floor(p.x * BATTLE_INV_GRID_W), 0, BATTLE_GRID_W - 1);
+    p.gy = clamp(Math.floor(p.y * BATTLE_INV_GRID_H), 0, BATTLE_GRID_H - 1);
+    grid[p.gy][p.gx].push(p);
   }
-  const units = killed * b.unitSize;
-  if (side === 'probe') {
-    s.probesLostCombat += units;
+
+  return grid;
+}
+
+function moveBattleShips(b: Battle, grid: BattleGrid): void {
+  const centroid = findBattleCentroid(b);
+  for (const p of allBattleShips(b)) {
+    if (!p.alive) {
+      if (p.framesDead < 10) p.framesDead++;
+      continue;
+    }
+    moveSingleBattleShip(p, centroid, grid);
+  }
+}
+
+function ageDeadShips(b: Battle): void {
+  for (const p of allBattleShips(b)) {
+    if (!p.alive && p.framesDead < 10) p.framesDead++;
+  }
+}
+
+function findBattleCentroid(b: Battle): { x: number; y: number } {
+  let x = 0;
+  let y = 0;
+  let shipsAlive = 0;
+  for (const p of allBattleShips(b)) {
+    if (!p.alive) continue;
+    x += p.x;
+    y += p.y;
+    shipsAlive++;
+  }
+  if (shipsAlive === 0) return { x: BATTLE_W / 2, y: BATTLE_H / 2 };
+  x /= shipsAlive;
+  y /= shipsAlive;
+  return {
+    x: x * 0.8 + (BATTLE_W / 2) * 0.2,
+    y: y * 0.8 + (BATTLE_H / 2) * 0.2,
+  };
+}
+
+function moveSingleBattleShip(
+  p: Ship,
+  centroid: { x: number; y: number },
+  grid: BattleGrid,
+): void {
+  p.vx += (centroid.x - p.x) * 0.001;
+  p.vy += (centroid.y - p.y) * 0.001;
+
+  let teammatesConsidered = 0;
+  for (let row = Math.max(p.gy - 1, 0); row < Math.min(p.gy + 2, BATTLE_GRID_H); row++) {
+    for (let col = Math.max(p.gx - 1, 0); col < Math.min(p.gx + 2, BATTLE_GRID_W); col++) {
+      if (grid[row][col].length < 2) continue;
+      for (const other of grid[row][col]) {
+        if (!other.alive) continue;
+        if (other.side === p.side) {
+          teammatesConsidered++;
+          if (teammatesConsidered > 3) continue;
+          p.vx += other.vx * 0.01;
+          p.vy += other.vy * 0.01;
+          p.vx -= (other.x - p.x) * 0.1;
+          p.vy -= (other.y - p.y) * 0.1;
+        } else {
+          p.vx += other.vx * 0.2;
+          p.vy += other.vy * 0.2;
+          p.vx += (other.x - p.x) * 0.2;
+          p.vy += (other.y - p.y) * 0.2;
+        }
+      }
+    }
+  }
+
+  if (Math.abs(p.vx) > BATTLE_MAXSPEED) p.vx = p.vx < 0 ? -BATTLE_MAXSPEED : BATTLE_MAXSPEED;
+  if (Math.abs(p.vy) > BATTLE_MAXSPEED) p.vy = p.vy < 0 ? -BATTLE_MAXSPEED : BATTLE_MAXSPEED;
+
+  p.x += p.vx;
+  p.y += p.vy;
+
+  if (p.x > BATTLE_W) {
+    p.x = BATTLE_W;
+    p.vx = -BATTLE_MAXSPEED;
+  } else if (p.x < 0) {
+    p.x = 0;
+    p.vx = BATTLE_MAXSPEED;
+  }
+  if (p.y > BATTLE_H) {
+    p.y = BATTLE_H;
+    p.vy = -BATTLE_MAXSPEED;
+  } else if (p.y < 0) {
+    p.y = 0;
+    p.vy = BATTLE_MAXSPEED;
+  }
+}
+
+function doBattleCombat(s: GameState, b: Battle, grid: BattleGrid): void {
+  const probeCombat = effectiveProbeAttr(s, s.probeCombat, A.BATTLE_BEACON);
+  const probeSpeed = effectiveProbeAttr(s, s.probeSpeed, A.ABANDONED_HYPERBOLIC_SOLITON);
+  const pX = probeCombat * PROBE_COMBAT_BASE_RATE;
+  const dX = DRIFTER_COMBAT;
+  const ooda = s.projectFlags[120] === 1 ? probeSpeed * 0.2 : 0;
+
+  for (let row = 0; row < BATTLE_GRID_H; row++) {
+    for (let col = 0; col < BATTLE_GRID_W; col++) {
+      const ships = grid[row][col];
+      if (ships.length < 2) continue;
+
+      let numLeftTeam = 0;
+      let numRightTeam = 0;
+      for (const p of ships) {
+        if (!p.alive) continue;
+        if (p.side === 'probe') numLeftTeam++;
+        else numRightTeam++;
+      }
+      if (numLeftTeam === 0 || numRightTeam === 0) continue;
+
+      for (const p of ships) {
+        if (!p.alive) continue;
+        let diceRoll: number;
+        let threshold = BATTLE_DEATH_THRESHOLD;
+        if (p.side === 'probe') {
+          diceRoll = Math.random() * dX * ((numRightTeam / numLeftTeam) * 0.5);
+          threshold += ooda;
+        } else {
+          diceRoll = ((Math.random() * pX) + (probeCombat * 0.1)) *
+            ((numLeftTeam / numRightTeam) * 0.5);
+        }
+
+        if (diceRoll > threshold) killBattleShip(s, b, p);
+      }
+    }
+  }
+}
+
+function killBattleShip(s: GameState, b: Battle, ship: Ship): void {
+  ship.alive = false;
+  ship.framesDead = 0;
+
+  if (ship.side === 'probe') {
+    if (b.unitSize > s.probeCount) b.unitSize = s.probeCount;
+    const units = b.unitSize;
     s.probeCount = Math.max(0, s.probeCount - units);
+    b.clipProbes = Math.max(0, b.clipProbes - units);
+    s.probesLostCombat += units;
   } else {
-    s.driftersKilled += units;
+    if (b.unitSize > s.drifterCount) b.unitSize = s.drifterCount;
+    const units = b.unitSize;
     s.drifterCount = Math.max(0, s.drifterCount - units);
+    b.drifterProbes = Math.max(0, b.drifterProbes - units);
+    s.driftersKilled += units;
   }
 }
 
-function finishBattle(s: GameState, b: Battle, probesAlive: number, driftersAlive: number): void {
-  b.over = true;
-  b.timer = 0; // repurposed as the linger countdown
-  if (probesAlive > 0 && driftersAlive === 0) {
-    b.result = 'victory';
-    b.honor = Math.max(1, Math.ceil(Math.log10(probesAlive * b.unitSize + 10) * 50));
-    s.honor += b.honor;
-  } else if (driftersAlive > 0 && probesAlive === 0) {
-    b.result = 'defeat';
-  } else {
-    b.result = null;
+function checkForBattleEnd(s: GameState, b: Battle): boolean {
+  const probesAlive = countAlive(b.probeShips);
+  const driftersAlive = countAlive(b.drifterShips);
+
+  if (probesAlive === 0 || driftersAlive === 0) {
+    if (!b.over) {
+      b.over = true;
+      b.result = probesAlive === 0 ? 'defeat' : 'victory';
+      applyBattleHonor(s, b);
+    }
+    b.endDelay++;
+    return b.endDelay >= battleEndTimer(s);
   }
+
+  if (probesAlive <= 4 || driftersAlive <= 4) {
+    b.battleClock++;
+    if (b.battleClock > 2000) return true;
+  }
+
+  b.masterClock++;
+  return b.masterClock >= 8000;
+}
+
+function applyBattleHonor(s: GameState, b: Battle): void {
+  if (b.honorApplied || s.projectFlags[121] !== 1) return;
+
+  if (b.result === 'defeat') {
+    s.bonusHonor = 0;
+    b.honor = -b.leftShips;
+    s.honor += b.honor;
+  } else if (b.result === 'victory') {
+    b.honor = b.rightShips + (s.bonusHonor || 0);
+    s.honor += b.honor;
+    if (s.projectFlags[134] === 1) s.bonusHonor = (s.bonusHonor || 0) + 10;
+  }
+
+  b.honorApplied = true;
+}
+
+function battleEndTimer(s: GameState): number {
+  return s.projectFlags[121] === 1 ? 200 : 100;
+}
+
+function allBattleShips(b: Battle): Ship[] {
+  return [...b.probeShips, ...b.drifterShips];
+}
+
+function countAlive(ships: Ship[]): number {
+  return ships.reduce((n, sh) => n + (sh.alive ? 1 : 0), 0);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 // ── Swarm — updateSwarm() ─────────────────────────────────────────────────
@@ -670,7 +971,8 @@ function tickSwarm(s: GameState): void {
 
   // Gift generation (active swarm only)
   if (s.swarmStatus === 0 && d > 1) {
-    s.giftBitGenerationRate = Math.log(d) * (s.sliderPos / 100);
+    s.giftBitGenerationRate = Math.log(d) * (s.sliderPos / 100) *
+      activeArtifactMultiplier(s, A.TRUE_LEXICON);
     if (s.giftBitGenerationRate > 0) {
       s.giftBits += s.giftBitGenerationRate;
       s.giftCountdown = (s.giftPeriod - s.giftBits) / s.giftBitGenerationRate;
@@ -793,10 +1095,18 @@ function tickInvestmentUpdate(s: GameState): void {
       if (gain) {
         st.price += delta;
         st.profit += delta * st.amount;
+        if (hasActiveArtifact(s, A.HUYGENS_DUTCH_BOOK) && Math.random() < 0.1) {
+          const extra = st.price;
+          st.price *= 2;
+          st.profit += extra * st.amount;
+        }
       } else {
         st.price = Math.max(0, st.price - delta);
         if (st.price === 0 && Math.random() > 0.24) st.price = 1;
         st.profit -= delta * st.amount;
+      }
+      if (hasActiveArtifact(s, A.SHANNONS_VOLATILITY_PUMP) && st.price !== st.prevPrice) {
+        s.funds += 1000;
       }
       st.val = st.price * st.amount;
       st.priceHistory = [...(st.priceHistory ?? []), st.price].slice(-20);
@@ -887,7 +1197,8 @@ function tickAutoTourney(s: GameState): void {
   const winner = scores[0];
   const pickedStrat = s.strategies[0] ?? 'RANDOM';
   const picked = scores.find(sc => sc.name === pickedStrat) ?? scores[0];
-  const yomiGain = calculateAutoYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
+  let yomiGain = calculateAutoYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
+  if (hasActiveArtifact(s, A.ZERO_DETERMINANT_LATTICE)) yomiGain *= 6;
 
   s.yomi += Math.floor(yomiGain);
   s.tourneyCount++;
