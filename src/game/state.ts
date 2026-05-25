@@ -16,6 +16,7 @@ export interface Stock {
 export interface Battle {
   name: string;
   scale: number;
+  unitSize: number;
   probeShips: Ship[];
   drifterShips: Ship[];
   timer: number;

@@ -1,4 +1,4 @@
-import { GameState } from './state';
+import { GameState, Battle, Ship } from './state';
 import { saveGame } from './save';
 
 // ── Constants (verbatim from main.js / globals.js) ────────────────────────
@@ -81,6 +81,7 @@ export function tick(s: GameState): void {
     spawnProbes(s);
     drift(s);
     tickCombat(s);
+    tickBattles(s);
   }
 
   // Auto-clipper production — dismantle<4 (original has no humanFlag gate here)
@@ -518,34 +519,107 @@ function drift(s: GameState): void {
 }
 
 // ── Combat ────────────────────────────────────────────────────────────────
+const BATTLE_SHIPS = 60;          // ships per side at full strength (sim + visual)
+const BATTLE_ATTACK_SPEED = 0.05; // base fraction of the enemy destroyed per tick
+const BATTLE_LINGER = 200;        // ticks a resolved battle stays on screen (~2s)
+const MAX_BATTLES = 3;
+let battleCounter = 0;
+
+// checkForBattles — spawn a skirmish once drifters exceed the war trigger.
 function tickCombat(s: GameState): void {
-  // Combat unlocks (and the pane appears) only once drifters exceed the war trigger
-  // with probes present — mirrors the original's checkForBattles / battleFlag.
   if (s.drifterCount <= 1_000_000 || s.probeCount <= 0) return;
-  if (s.battles.length >= 3) return;
+  if (s.battles.length >= MAX_BATTLES) return;
   if (Math.random() > 0.001) return;
   if (!s.battleFlag) s.battleFlag = 1;
 
-  const scale = Math.min(s.probeCount, s.drifterCount) / 100;
+  // Engage a bounded skirmish drawn evenly from both fleets.
+  const engaged = Math.min(s.probeCount, s.drifterCount);
+  const unitSize = Math.max(1, Math.floor(engaged / BATTLE_SHIPS));
+  const probeN = Math.min(BATTLE_SHIPS, Math.max(1, Math.floor(s.probeCount / unitSize)));
+  const drifterN = Math.min(BATTLE_SHIPS, Math.max(1, Math.floor(s.drifterCount / unitSize)));
+
+  battleCounter++;
   s.battles.push({
-    name: `Drifter Attack ${s.battles.length + 1}`,
-    scale,
-    probeShips: initShips('probe', scale),
-    drifterShips: initShips('drifter', scale),
+    name: `Drifter Skirmish ${battleCounter}`,
+    scale: engaged,
+    unitSize,
+    probeShips: initShips('probe', probeN),
+    drifterShips: initShips('drifter', drifterN),
     timer: 0,
     over: false,
     result: null,
-    honor: 200,
+    honor: 0,
   });
 }
 
-function initShips(side: 'probe' | 'drifter', scale: number) {
-  const count = Math.min(200, Math.ceil(scale));
+function initShips(side: 'probe' | 'drifter', count: number): Ship[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * 310, y: Math.random() * 150,
     vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
     alive: true, side,
   }));
+}
+
+// Resolve in-progress battles tick by tick: fleets trade losses (probe
+// effectiveness scales with the Combat probe-design attribute), the global
+// drifter/probe counts move, and honor is awarded on a win.
+function tickBattles(s: GameState): void {
+  for (let i = s.battles.length - 1; i >= 0; i--) {
+    const b = s.battles[i];
+    b.timer++;
+
+    if (b.over) {
+      if (b.timer > BATTLE_LINGER) s.battles.splice(i, 1);
+      continue;
+    }
+
+    const probesAlive = b.probeShips.reduce((n, sh) => n + (sh.alive ? 1 : 0), 0);
+    const driftersAlive = b.drifterShips.reduce((n, sh) => n + (sh.alive ? 1 : 0), 0);
+
+    if (probesAlive === 0 || driftersAlive === 0) {
+      finishBattle(s, b, probesAlive, driftersAlive);
+      continue;
+    }
+
+    const probePower = (1 + s.probeCombat) * BATTLE_ATTACK_SPEED;
+    const drifterKills = Math.min(driftersAlive, Math.round(probesAlive * probePower * Math.random()));
+    const probeKills = Math.min(probesAlive, Math.round(driftersAlive * BATTLE_ATTACK_SPEED * Math.random()));
+
+    killShips(s, b, 'drifter', drifterKills);
+    killShips(s, b, 'probe', probeKills);
+  }
+}
+
+function killShips(s: GameState, b: Battle, side: 'probe' | 'drifter', n: number): void {
+  if (n <= 0) return;
+  const ships = side === 'probe' ? b.probeShips : b.drifterShips;
+  let killed = 0;
+  for (const sh of ships) {
+    if (killed >= n) break;
+    if (sh.alive) { sh.alive = false; killed++; }
+  }
+  const units = killed * b.unitSize;
+  if (side === 'probe') {
+    s.probesLostCombat += units;
+    s.probeCount = Math.max(0, s.probeCount - units);
+  } else {
+    s.driftersKilled += units;
+    s.drifterCount = Math.max(0, s.drifterCount - units);
+  }
+}
+
+function finishBattle(s: GameState, b: Battle, probesAlive: number, driftersAlive: number): void {
+  b.over = true;
+  b.timer = 0; // repurposed as the linger countdown
+  if (probesAlive > 0 && driftersAlive === 0) {
+    b.result = 'victory';
+    b.honor = Math.max(1, Math.ceil(Math.log10(probesAlive * b.unitSize + 10) * 50));
+    s.honor += b.honor;
+  } else if (driftersAlive > 0 && probesAlive === 0) {
+    b.result = 'defeat';
+  } else {
+    b.result = null;
+  }
 }
 
 // ── Swarm — updateSwarm() ─────────────────────────────────────────────────
