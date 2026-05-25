@@ -700,10 +700,11 @@ input[type="range"].price-slider::-moz-range-thumb {
 /* ── Combat canvas ──────────────────────────────────────────────── */
 .combat-canvas {
   width: 100%;
-  height: 240px;
+  height: auto;
   border: 1px solid var(--border);
-  border-radius: 3px;
-  background: #111;
+  border-radius: 4px;
+  background: #0a0c11;
+  display: block;
 }
 
 /* ── Battle list ────────────────────────────────────────────────── */

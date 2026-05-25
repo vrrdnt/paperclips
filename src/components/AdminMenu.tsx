@@ -30,6 +30,8 @@ const FIELDS: Field[] = [
   { label: 'Available matter', get: s => s.availableMatter, set: (s, v) => { s.availableMatter = v; } },
   { label: 'Unused matter', get: s => s.acquiredMatter, set: (s, v) => { s.acquiredMatter = v; } },
   { label: 'Stored power', get: s => s.storedPower, set: (s, v) => { s.storedPower = v; } },
+  { label: 'Probes', get: s => s.probeCount, set: (s, v) => { s.probeCount = v; } },
+  { label: 'Drifters', get: s => s.drifterCount, set: (s, v) => { s.drifterCount = v; } },
 ];
 
 export function AdminMenu() {
