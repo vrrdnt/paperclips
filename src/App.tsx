@@ -9,6 +9,7 @@ import { Console } from './components/Console';
 import { BusinessPanel } from './components/panels/BusinessPanel';
 import { ManufacturingPanel } from './components/panels/ManufacturingPanel';
 import { ComputingPanel } from './components/panels/ComputingPanel';
+import { QuantumPanel } from './components/panels/QuantumPanel';
 import { ProjectsPanel } from './components/panels/ProjectsPanel';
 import { InvestmentPanel } from './components/panels/InvestmentPanel';
 import { StrategyPanel } from './components/panels/StrategyPanel';
@@ -18,6 +19,7 @@ import { PowerPanel } from './components/panels/PowerPanel';
 import { SwarmPanel } from './components/panels/SwarmPanel';
 import { CombatPanel } from './components/panels/CombatPanel';
 import { DevMenu } from './components/DevMenu';
+import { AdminMenu } from './components/AdminMenu';
 import { spellf } from './game/format';
 
 export default function App() {
@@ -176,6 +178,7 @@ export default function App() {
   return (
     <div id="root">
       <DevMenu />
+      <AdminMenu />
       {/* Header */}
       <header className="app-header">
         <div className="app-header-title">
@@ -216,8 +219,9 @@ export default function App() {
               <div className="col-left">
                 <BusinessPanel snap={snap} />
                 <ComputingPanel snap={snap} />
-                <PowerPanel snap={snap} />
                 <SwarmPanel snap={snap} />
+                <QuantumPanel snap={snap} />
+                <PowerPanel snap={snap} />
               </div>
 
               <div className="col-center">
@@ -241,13 +245,14 @@ export default function App() {
 
               <div className="col-center">
                 <ComputingPanel snap={snap} />
+                <SwarmPanel snap={snap} />
+                <QuantumPanel snap={snap} />
                 <ProjectsPanel snap={snap} />
               </div>
 
               <div className="col-right">
                 <StrategyPanel snap={snap} />
                 <PowerPanel snap={snap} />
-                <SwarmPanel snap={snap} />
               </div>
             </main>
           )
@@ -260,6 +265,7 @@ export default function App() {
 
             <div className="col-center">
               <ComputingPanel snap={snap} />
+              <QuantumPanel snap={snap} />
               <ProjectsPanel snap={snap} />
             </div>
 
