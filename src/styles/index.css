@@ -703,7 +703,7 @@ input[type="range"].price-slider::-moz-range-thumb {
   height: auto;
   border: 1px solid var(--border);
   border-radius: 4px;
-  background: #0a0c11;
+  background: #8c8c8c;
   display: block;
 }
 
