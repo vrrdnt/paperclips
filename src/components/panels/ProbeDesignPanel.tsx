@@ -4,7 +4,7 @@ import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
-import { raiseProbeAttr, lowerProbeAttr, increaseProbeTrust, increaseMaxTrust, setSlider } from '../../game/actions';
+import { raiseProbeAttr, lowerProbeAttr, increaseProbeTrust, increaseMaxTrust } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
@@ -73,16 +73,6 @@ export function ProbeDesignPanel({ snap: s }: Props) {
           </React.Fragment>
         ))}
       </div>
-
-      <hr className="divider" />
-
-      <div className="stat-row">
-        <span className="stat-label">Slider (Expand ↔ Explore)</span>
-        <span className="stat-value">{s.sliderPos}</span>
-      </div>
-      <input type="range" min={0} max={200} value={s.sliderPos}
-        onChange={e => { setSlider(G, Number(e.target.value)); }}
-        style={{ width: '100%', marginTop: 4 }} />
     </SectionCard>
   );
 }

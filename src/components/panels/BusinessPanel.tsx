@@ -2,6 +2,7 @@ import React from 'react';
 import { DollarSign, TrendingUp, Paperclip } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Sparkline } from '../ui/Sparkline';
+import { Slider } from '../ui/Slider';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
 import { G } from '../../game/state';
@@ -18,7 +19,6 @@ export function BusinessPanel({ snap: s }: Props) {
   const h = useGameStore(st => st.histories);
   const hasRevTracker = s.projectFlags[42] === 1;
   const price = s.margin.toFixed(2);
-  const pricePct = ((s.margin - MIN_CLIP_PRICE) / (MAX_CLIP_PRICE - MIN_CLIP_PRICE)) * 100;
   const wireTrendUp = s.wireCost > s.wireBasePrice;
   const wireTrendDown = s.wireCost < s.wireBasePrice;
   const wireTrendChar = wireTrendUp ? '▲' : wireTrendDown ? '▼' : '–';
@@ -129,18 +129,15 @@ export function BusinessPanel({ snap: s }: Props) {
           <div className="row">
             <Btn onClick={() => { lowerPrice(G); }} disabled={s.margin <= MIN_CLIP_PRICE}>−</Btn>
             <div style={{ flex: 1 }}>
-              <input
+              <Slider
                 className="price-slider"
-                type="range"
                 min={MIN_CLIP_PRICE}
                 max={MAX_CLIP_PRICE}
                 step={0.01}
-                value={Math.min(MAX_CLIP_PRICE, Math.max(MIN_CLIP_PRICE, s.margin))}
+                value={s.margin}
+                fill
                 aria-label="Price per clip"
-                onChange={e => { setPrice(G, Number(e.target.value)); }}
-                style={{
-                  background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pricePct}%, var(--panel2) ${pricePct}%, var(--panel2) 100%)`,
-                }}
+                onInput={v => { setPrice(G, v); }}
               />
             </div>
             <Btn onClick={() => { raisePrice(G); }} disabled={s.margin >= MAX_CLIP_PRICE}>+</Btn>

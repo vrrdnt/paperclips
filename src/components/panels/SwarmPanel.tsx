@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
+import { Slider } from '../ui/Slider';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
@@ -51,18 +52,14 @@ export function SwarmPanel({ snap: s }: Props) {
         <div className="stat-row" style={{ marginBottom: 4 }}>
           <span className="stat-label">{s.spaceFlag === 1 ? 'Probe focus' : 'Drone focus'}</span>
         </div>
-        <input
+        <Slider
           className="price-slider"
-          type="range"
           min={0}
           max={200}
-          step={1}
-          value={Math.min(200, Math.max(0, s.sliderPos))}
+          value={s.sliderPos}
+          fill
           aria-label="Swarm work vs think balance"
-          onChange={e => { G.sliderPos = Number(e.target.value); }}
-          style={{
-            background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${s.sliderPos / 2}%, var(--panel2) ${s.sliderPos / 2}%, var(--panel2) 100%)`,
-          }}
+          onInput={v => { G.sliderPos = v; }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
           <span>Work</span>

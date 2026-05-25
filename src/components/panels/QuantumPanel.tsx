@@ -182,7 +182,7 @@ function ParticleMark({ particle, phase, active, positive, abs }: {
   );
 }
 
-function QChip({ value, index, active }: { value: number; index: number; active: boolean }) {
+const QChip = React.memo(function QChip({ value, index, active }: { value: number; index: number; active: boolean }) {
   const particle = PARTICLE_CHANNELS[index % PARTICLE_CHANNELS.length];
   const v = clamp(value, -1, 1);
   const positive = Math.max(0, v);
@@ -238,7 +238,13 @@ function QChip({ value, index, active }: { value: number; index: number; active:
       <span className="qchip-label">{particle.symbol}</span>
     </div>
   );
-}
+}, (a, b) =>
+  a.index === b.index &&
+  a.active === b.active &&
+  // The chip wave only needs to repaint when its value shifts perceptibly;
+  // quantizing skips most of the per-tick re-renders of these heavy SVGs.
+  Math.round(a.value * 20) === Math.round(b.value * 20),
+);
 
 export function QuantumPanel({ snap: s }: Props) {
   if (s.qFlag !== 1) return null;

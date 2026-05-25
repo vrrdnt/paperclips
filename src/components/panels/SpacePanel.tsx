@@ -144,7 +144,7 @@ export function SpacePanel({ snap: s }: Props) {
         <SectionCard title="Space Exploration" icon={<Globe size={14} />}>
           <div className="stat-row">
             <span className="stat-label">Universe explored</span>
-            <span className="stat-value">{s.colonized.toFixed(4)}%</span>
+            <span className="stat-value">{s.colonized.toFixed(12)}%</span>
           </div>
 
           <div style={{ marginTop: 8 }}>
