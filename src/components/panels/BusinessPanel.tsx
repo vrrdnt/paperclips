@@ -63,30 +63,40 @@ export function BusinessPanel({ snap: s }: Props) {
             {s.factoryFlag === 1 && (
               <>
                 <hr className="divider" />
-                {s.factoryLevel < 50 && (
+                {/* In space, probes build factories — show the count only. */}
+                {s.spaceFlag === 1 ? (
                   <div className="stat-row">
-                    <span className="stat-label">Next upgrade at</span>
-                    <span className="stat-value dim">
-                      {s.factoryLevel < 10 ? 10 : s.factoryLevel < 20 ? 20 : 50} factories
-                    </span>
+                    <span className="stat-label">Factories</span>
+                    <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
                   </div>
+                ) : (
+                  <>
+                    {s.factoryLevel < 50 && (
+                      <div className="stat-row">
+                        <span className="stat-label">Next upgrade at</span>
+                        <span className="stat-value dim">
+                          {s.factoryLevel < 10 ? 10 : s.factoryLevel < 20 ? 20 : 50} factories
+                        </span>
+                      </div>
+                    )}
+                    <div className="stat-row">
+                      <span className="stat-label">Factories</span>
+                      <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
+                    </div>
+                    <div className="row" style={{ marginTop: 4 }}>
+                      <Btn onClick={() => { makeFactory(G); }}
+                        disabled={s.unusedClips < s.factoryCost}>
+                        Build ({spellf(s.factoryCost)})
+                      </Btn>
+                      {s.factoryLevel > 0 && (
+                        <Btn onClick={() => { factoryReboot(G); }}
+                          title={`+${spellf(s.factoryBill)} clips`}>
+                          Disassemble All
+                        </Btn>
+                      )}
+                    </div>
+                  </>
                 )}
-                <div className="stat-row">
-                  <span className="stat-label">Clip Factories</span>
-                  <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
-                </div>
-                <div className="row" style={{ marginTop: 4 }}>
-                  <Btn onClick={() => { makeFactory(G); }}
-                    disabled={s.unusedClips < s.factoryCost}>
-                    Build ({spellf(s.factoryCost)})
-                  </Btn>
-                  {s.factoryLevel > 0 && (
-                    <Btn onClick={() => { factoryReboot(G); }}
-                      title={`+${spellf(s.factoryBill)} clips`}>
-                      Disassemble All
-                    </Btn>
-                  )}
-                </div>
               </>
             )}
           </>

@@ -22,7 +22,8 @@ function batteryBulkCost(level: number, qty: number): number {
 }
 
 export function PowerPanel({ snap: s }: Props) {
-  if (!s.projectFlags[127]) return null;
+  // Power is a terrestrial concern: shown once the grid is online, gone once probes take over in space.
+  if (!s.projectFlags[127] || s.spaceFlag === 1) return null;
 
   const production  = s.farmLevel * s.farmRate;
   const factoryDraw = s.factoryLevel * s.factoryPowerRate;
