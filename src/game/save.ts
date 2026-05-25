@@ -27,6 +27,26 @@ export function saveGame(s: GameState): void {
 
 type WholeLevelKey = 'factoryLevel' | 'harvesterLevel' | 'wireDroneLevel';
 type PartialSpawnKey = 'partialFactorySpawn' | 'partialHarvesterSpawn' | 'partialWireDroneSpawn';
+type ProbeAttrKey =
+  | 'probeSpeed'
+  | 'probeNav'
+  | 'probeRep'
+  | 'probeHaz'
+  | 'probeFac'
+  | 'probeHarv'
+  | 'probeWire'
+  | 'probeCombat';
+
+const PROBE_ATTR_KEYS: ProbeAttrKey[] = [
+  'probeSpeed',
+  'probeNav',
+  'probeRep',
+  'probeHaz',
+  'probeFac',
+  'probeHarv',
+  'probeWire',
+  'probeCombat',
+];
 
 function finiteNonNegative(value: number): number {
   return isFinite(value) ? Math.max(0, value) : 0;
@@ -43,10 +63,25 @@ function normalizeWholeLevel(s: GameState, levelKey: WholeLevelKey, partialKey: 
   s[partialKey] = pending - wholePending;
 }
 
+function normalizeProbeDesign(s: GameState): void {
+  if (s.projectFlags[131] !== 1) {
+    s.probeCombat = 0;
+  }
+
+  for (const key of PROBE_ATTR_KEYS) {
+    s[key] = Math.floor(finiteNonNegative(s[key]));
+  }
+
+  s.probeTrust = Math.floor(finiteNonNegative(s.probeTrust));
+  s.probeTrustUsed = PROBE_ATTR_KEYS.reduce((total, key) => total + s[key], 0);
+  s.probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
+}
+
 export function hydrateGameState(loaded: Partial<GameState>): GameState {
   const initial = makeInitialState();
   const merged = { ...initial, ...loaded };
   normalizeArtifactState(merged);
+  normalizeProbeDesign(merged);
 
   normalizeWholeLevel(merged, 'factoryLevel', 'partialFactorySpawn');
   normalizeWholeLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
