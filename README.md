@@ -1,17 +1,16 @@
-# Universal Paperclips — Fan Reskin
+# Universal Paperclips
 
-A non-commercial fan reskin of **[Universal Paperclips](https://www.decisionproblem.com/paperclips/)** by Frank Lantz and the NYU Game Center.
+A non-commercial modernization of **[Universal Paperclips](https://www.decisionproblem.com/paperclips/)** by Frank Lantz and the NYU Game Center.
 
 > **All game design, mechanics, writing, and progression are the original work of Frank Lantz.**
-> This project changes nothing about how the game plays — it only updates the presentation.
 
 ---
 
 ## What this is
 
-The original Universal Paperclips runs as a single-page HTML/JavaScript file with a minimal interface. This reskin rebuilds the front-end using a modern stack while keeping the gameplay byte-for-byte identical to the original:
+The original Universal Paperclips runs as a single-page HTML/JavaScript file with a minimal interface. This reskin rebuilds the front-end using a modern stack while aiming to keep the gameplay identical to the original:
 
-- **Same mechanics** — clippers, wire, ops, trust, yomi, projects, space, swarm, combat, end-game sequence
+- **Same mechanics** — clippers, wire, ops, trust, yomi, projects, space, swarm, combat, end-game sequence, artifacts
 - **Same numbers** — all costs, rates, probabilities, and formulas match the original
 - **Modern UI** — responsive 3-column layout, mobile-friendly touch targets, dark monochromatic theme, stock sparkline charts
 
