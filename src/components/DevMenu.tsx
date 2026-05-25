@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DEV_SAVES } from '../devSaves';
 import { G } from '../game/state';
 import { hydrateGameState, saveGame } from '../game/save';

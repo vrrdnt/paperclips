@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { G, Ship } from '../../game/state';
 
 // Logical drawing space; the backing store is scaled up for crisp pixels.

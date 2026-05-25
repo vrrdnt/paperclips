@@ -1,4 +1,3 @@
-import React from 'react';
 import { Cpu, Brain, Lightbulb } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';

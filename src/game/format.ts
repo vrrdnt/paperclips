@@ -41,7 +41,3 @@ export function formatTime(ms: number): string {
   const h = Math.floor(m / 60);
   return `${h} hours`;
 }
-
-export function probeCost(unusedClips: number): string {
-  return spellf(Math.pow(10, 17));
-}

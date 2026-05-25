@@ -1,4 +1,3 @@
-import React from 'react';
 import { DollarSign, TrendingUp, Paperclip } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Sparkline } from '../ui/Sparkline';

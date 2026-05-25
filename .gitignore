@@ -1,3 +1,10 @@
 node_modules/
 dist/
 *.png
+
+# Local original-script references; keep out of the published app repo.
+combat.js
+globals.js
+interface.css
+main.js
+projects.js

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Shield } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { CombatCanvas } from './CombatCanvas';

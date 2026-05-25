@@ -482,17 +482,6 @@ export function batteryReboot(s: GameState): void {
 }
 
 // ── Swarm ─────────────────────────────────────────────────────────────────
-export function feedSwarm(s: GameState): void {
-  const cost = s.synchCost;
-  if (s.swarmStatus === 0) return;
-  s.swarmStatus = Math.max(0, s.swarmStatus - 1);
-  displayMessage(s, 'Swarm fed');
-}
-
-export function teachSwarm(s: GameState): void {
-  displayMessage(s, 'Swarm taught');
-}
-
 export function entertainSwarm(s: GameState): void {
   if (s.creativity < s.entertainCost) return;
   s.creativity -= s.entertainCost;
