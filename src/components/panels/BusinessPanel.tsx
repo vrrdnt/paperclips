@@ -45,7 +45,7 @@ export function BusinessPanel({ snap: s }: Props) {
               <span className="stat-value">{formatWithCommas(s.clipRate, 1)}/s</span>
             </div>
             <div style={{ marginTop: 8 }}>
-              <Btn variant="primary" full onClick={() => { clipClick(G); }}>
+              <Btn variant="primary" full holdRepeat onClick={() => { clipClick(G); }}>
                 Make Paperclip
               </Btn>
             </div>
@@ -86,7 +86,7 @@ export function BusinessPanel({ snap: s }: Props) {
                       <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
                     </div>
                     <div className="row" style={{ marginTop: 4 }}>
-                      <Btn onClick={() => { makeFactory(G); }}
+                      <Btn holdRepeat onClick={() => { makeFactory(G); }}
                         disabled={s.unusedClips < s.factoryCost}>
                         Build ({spellf(s.factoryCost)})
                       </Btn>
@@ -129,7 +129,7 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value">${price}</span>
           </div>
           <div className="row">
-            <Btn onClick={() => { lowerPrice(G); }} disabled={s.margin <= MIN_CLIP_PRICE}>−</Btn>
+            <Btn holdRepeat onClick={() => { lowerPrice(G); }} disabled={s.margin <= MIN_CLIP_PRICE}>−</Btn>
             <div style={{ flex: 1 }}>
               <Slider
                 className="price-slider"
@@ -142,7 +142,7 @@ export function BusinessPanel({ snap: s }: Props) {
                 onInput={v => { setPrice(G, v); }}
               />
             </div>
-            <Btn onClick={() => { raisePrice(G); }} disabled={s.margin >= MAX_CLIP_PRICE}>+</Btn>
+            <Btn holdRepeat onClick={() => { raisePrice(G); }} disabled={s.margin >= MAX_CLIP_PRICE}>+</Btn>
           </div>
           <div className="stat-row" style={{ marginTop: 2 }}>
             <span className="stat-label">Buy chance per tick</span>
@@ -166,7 +166,7 @@ export function BusinessPanel({ snap: s }: Props) {
             </span>
           </div>
           <div className="row" style={{ marginTop: 6 }}>
-            <Btn onClick={() => { buyWire(G); }} disabled={!canBuyWire}>
+            <Btn holdRepeat onClick={() => { buyWire(G); }} disabled={!canBuyWire}>
               Buy wire (${formatWithCommas(s.wireCost)})
             </Btn>
             {s.wireBuyerFlag === 1 && (
@@ -191,7 +191,7 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value">{s.marketing.toFixed(2)}×</span>
           </div>
           <div style={{ marginTop: 6 }}>
-            <Btn onClick={() => { buyAds(G); }} disabled={s.funds < adCost}>
+            <Btn holdRepeat onClick={() => { buyAds(G); }} disabled={s.funds < adCost}>
               Advertize (${formatWithCommas(adCost)})
             </Btn>
           </div>

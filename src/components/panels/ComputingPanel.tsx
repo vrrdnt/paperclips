@@ -41,7 +41,7 @@ export function ComputingPanel({ snap: s }: Props) {
             <span className="stat-label"><Cpu size={10} /> Processors</span>
             <span className="stat-value">{s.processors}</span>
           </div>
-          <Btn onClick={() => { addProc(G); }} disabled={!canAllocateCompute}
+          <Btn holdRepeat onClick={() => { addProc(G); }} disabled={!canAllocateCompute}
             style={{ marginTop: 4, width: '100%' }}>
             +
           </Btn>
@@ -51,7 +51,7 @@ export function ComputingPanel({ snap: s }: Props) {
             <span className="stat-label"><Brain size={10} /> Memory</span>
             <span className="stat-value">{s.memory}</span>
           </div>
-          <Btn onClick={() => { addMem(G); }} disabled={!canAllocateCompute}
+          <Btn holdRepeat onClick={() => { addMem(G); }} disabled={!canAllocateCompute}
             style={{ marginTop: 4, width: '100%' }}>
             +
           </Btn>

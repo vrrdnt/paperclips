@@ -1,6 +1,9 @@
 node_modules/
 dist/
 *.png
+!public/
+!public/icons/
+!public/icons/*.png
 
 # Local original-script references; keep out of the published app repo.
 combat.js
