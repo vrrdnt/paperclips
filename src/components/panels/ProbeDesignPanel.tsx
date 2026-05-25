@@ -13,12 +13,12 @@ type Attr = 'probeSpeed' | 'probeNav' | 'probeRep' | 'probeHaz' | 'probeFac' | '
 
 const ATTRS: { key: Attr; label: string }[] = [
   { key: 'probeSpeed', label: 'Speed' },
-  { key: 'probeNav', label: 'Navigation' },
-  { key: 'probeRep', label: 'Replication' },
-  { key: 'probeHaz', label: 'Hazard' },
-  { key: 'probeFac', label: 'Factory' },
-  { key: 'probeHarv', label: 'Harvester' },
-  { key: 'probeWire', label: 'Wire Drone' },
+  { key: 'probeNav', label: 'Exploration' },
+  { key: 'probeRep', label: 'Self-Replication' },
+  { key: 'probeHaz', label: 'Hazard Remediation' },
+  { key: 'probeFac', label: 'Factory Production' },
+  { key: 'probeHarv', label: 'Harvester Probe Production' },
+  { key: 'probeWire', label: 'Wire Probe Production' },
   { key: 'probeCombat', label: 'Combat' },
 ];
 
@@ -27,6 +27,8 @@ export function ProbeDesignPanel({ snap: s }: Props) {
 
   const used = ATTRS.reduce((acc, a) => acc + (s[a.key] as number), 0);
   const available = s.probeTrust - used;
+  // Combat is only designable once the Combat project (131) is complete.
+  const visibleAttrs = ATTRS.filter(a => a.key !== 'probeCombat' || s.projectFlags[131] === 1);
   const probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
 
   return (
@@ -54,7 +56,7 @@ export function ProbeDesignPanel({ snap: s }: Props) {
       <hr className="divider" />
 
       <div className="probe-grid">
-        {ATTRS.map(({ key, label }) => (
+        {visibleAttrs.map(({ key, label }) => (
           <React.Fragment key={key}>
             <span className="probe-label">{label}</span>
             <div className="progress-bar" style={{ margin: 0 }}>
