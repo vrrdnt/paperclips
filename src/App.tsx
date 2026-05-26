@@ -188,7 +188,7 @@ export default function App() {
       <header className="app-header">
         <div className="app-header-title">
           <Paperclip size={14} />
-          Universal Paperclips
+          Paperclips
         </div>
         <div className="app-header-right">
           <span className="header-clip-count">
