@@ -307,11 +307,16 @@ export default function App() {
           </a>
           {' '}by Frank Lantz &amp; NYU Game Center.
           All game design and mechanics are their work.
-          This is a non-commercial fan reskin — not affiliated with or endorsed by the original creators.
-          {' '}·{' '}
+          This is a non-commercial fan reskin - not affiliated with or endorsed by the original creators.
+          {' '}|{' '}
           <a href="https://github.com/vrrdnt/paperclips" target="_blank" rel="noopener noreferrer"
             style={{ color: 'var(--accent)', textDecoration: 'none' }}>
             vrrdnt/paperclips
+          </a>
+          {' '}|{' '}
+          <a href="/privacy.html"
+            style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+            Privacy Policy
           </a>
         </footer>
       </div>

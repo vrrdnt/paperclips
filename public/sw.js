@@ -1,6 +1,7 @@
-const CACHE_NAME = 'paperclips-pwa-v1';
+const CACHE_NAME = 'paperclips-pwa-v2';
 const APP_SHELL = [
   '/',
+  '/privacy.html',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/icons/apple-touch-icon.png',
