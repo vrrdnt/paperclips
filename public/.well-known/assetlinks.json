@@ -1,11 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "ps.papercli.app",
       "sha256_cert_fingerprints": [
-        "8D:F8:7C:C1:3B:FB:7B:1D:83:55:06:F3:E0:A8:72:20:20:27:A7:5E:9A:56:DC:0C:89:D3:6A:5B:A0:EA:37:31"
+        "8D:F8:7C:C1:3B:FB:7B:1D:83:55:06:F3:E0:A8:72:20:20:27:A7:5E:9A:56:DC:0C:89:D3:6A:5B:A0:EA:37:31",
+        "37:47:EC:0F:42:0E:E5:ED:20:69:A0:7D:90:EC:1E:4A:BE:D3:0B:F7:0B:11:E0:2B:8F:D7:AE:69:30:80:D9:92"
       ]
     }
   }
