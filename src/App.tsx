@@ -186,9 +186,8 @@ export default function App() {
       <AdminMenu />
       {/* Header */}
       <header className="app-header">
-        <div className="app-header-title">
-          <Paperclip size={14} />
-          Paperclips
+        <div className="app-header-title" aria-label="Paperclips" title="Paperclips">
+          <Paperclip size={18} aria-hidden="true" />
         </div>
         <div className="app-header-right">
           <span className="header-clip-count">
