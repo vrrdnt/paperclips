@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Map as MapIcon, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
+import { History, Map as MapIcon, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
 import { tickBatch } from './game/loop';
@@ -21,6 +21,7 @@ import { CombatPanel } from './components/panels/CombatPanel';
 import { ArtifactsDropdown } from './components/panels/ArtifactsPanel';
 import { DevMenu } from './components/DevMenu';
 import { AdminMenu } from './components/AdminMenu';
+import { ChangelogModal } from './components/ChangelogModal';
 import { spellf } from './game/format';
 import { artifactMapUnlocked } from './game/artifacts';
 
@@ -34,6 +35,7 @@ export default function App() {
   const [showExportFallback, setShowExportFallback] = useState(false);
   const [exportText, setExportText] = useState('');
   const [showArtifactMap, setShowArtifactMap] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
   const [showHypnoTransition, setShowHypnoTransition] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const exportTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -216,6 +218,13 @@ export default function App() {
           </Btn>
           <Btn onClick={() => { setShowArtifactMap(false); setShowImport(true); }} title="Import save from clipboard">
             <Download size={13} />
+          </Btn>
+          <Btn
+            onClick={() => { setShowArtifactMap(false); setShowChangelog(true); }}
+            title="Changelog"
+            aria-label="Changelog"
+          >
+            <History size={13} />
           </Btn>
           {artifactsUnlocked && (
             <div className="artifact-header-wrap">
@@ -465,6 +474,8 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
     </div>
   );
 }
