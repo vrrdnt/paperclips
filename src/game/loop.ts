@@ -253,11 +253,11 @@ function tickMilestoneChecks(s: GameState): void {
   }
   if (s.milestoneFlag === 1 && Math.ceil(s.clips) >= 500) {
     s.milestoneFlag = 2;
-    displayMessage(s, '500 clips created');
+    displayMessage(s, `500 clips created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 2 && Math.ceil(s.clips) >= 1000) {
     s.milestoneFlag = 3;
-    displayMessage(s, '1,000 clips created');
+    displayMessage(s, `1,000 clips created in ${timeCruncher(s.ticks)}`);
   }
   // Computing + projects unlock
   if (!s.compFlag) {
@@ -270,56 +270,67 @@ function tickMilestoneChecks(s: GameState): void {
   }
   if (s.milestoneFlag === 3 && Math.ceil(s.clips) >= 10000) {
     s.milestoneFlag = 4;
-    displayMessage(s, '10,000 clips created');
+    displayMessage(s, `10,000 clips created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 4 && Math.ceil(s.clips) >= 100000) {
     s.milestoneFlag = 5;
-    displayMessage(s, '100,000 clips created');
+    displayMessage(s, `100,000 clips created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 5 && Math.ceil(s.clips) >= 1000000) {
     s.milestoneFlag = 6;
-    displayMessage(s, '1,000,000 clips created');
+    displayMessage(s, `1,000,000 clips created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 6 && s.projectFlags[35] === 1) {
     s.milestoneFlag = 7;
-    displayMessage(s, 'Full autonomy attained');
+    displayMessage(s, `Full autonomy attained in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 7 && Math.ceil(s.clips) >= 1e12) {
     s.milestoneFlag = 8;
-    displayMessage(s, 'One Trillion Clips Created');
+    displayMessage(s, `One Trillion Clips Created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 8 && Math.ceil(s.clips) >= 1e15) {
     s.milestoneFlag = 9;
-    displayMessage(s, 'One Quadrillion Clips Created');
+    displayMessage(s, `One Quadrillion Clips Created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 9 && Math.ceil(s.clips) >= 1e18) {
     s.milestoneFlag = 10;
-    displayMessage(s, 'One Quintillion Clips Created');
+    displayMessage(s, `One Quintillion Clips Created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 10 && Math.ceil(s.clips) >= 1e21) {
     s.milestoneFlag = 11;
-    displayMessage(s, 'One Sextillion Clips Created');
+    displayMessage(s, `One Sextillion Clips Created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 11 && Math.ceil(s.clips) >= 1e24) {
     s.milestoneFlag = 12;
-    displayMessage(s, 'One Septillion Clips Created');
+    displayMessage(s, `One Septillion Clips Created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 12 && Math.ceil(s.clips) >= 1e27) {
     s.milestoneFlag = 13;
-    displayMessage(s, 'One Octillion Clips Created');
+    displayMessage(s, `One Octillion Clips Created in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 13 && s.spaceFlag === 1) {
     s.milestoneFlag = 14;
-    displayMessage(s, 'Terrestrial resources fully utilized');
+    displayMessage(s, `Terrestrial resources fully utilized in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 14 && s.clips >= s.totalMatter) {
     s.milestoneFlag = 15;
-    displayMessage(s, 'Universal Paperclips achieved');
+    displayMessage(s, `Universal Paperclips achieved in ${timeCruncher(s.ticks)}`);
   }
   if (s.milestoneFlag === 14 && s.foundMatter >= s.totalMatter && s.availableMatter < 1 && s.wire < 1) {
     s.milestoneFlag = 15;
-    displayMessage(s, 'Universal Paperclips achieved');
+    displayMessage(s, `Universal Paperclips achieved in ${timeCruncher(s.ticks)}`);
   }
+}
+
+function timeCruncher(ticks: number): string {
+  const x = ticks / 100;
+  const h = Math.floor(x / 3600);
+  const m = Math.floor((x % 3600) / 60);
+  const s = Math.floor(x % 3600 % 60);
+  const hDisplay = h > 0 ? `${h}${h === 1 ? ' hour ' : ' hours '}` : '';
+  const mDisplay = m > 0 ? `${m}${m === 1 ? ' minute ' : ' minutes '}` : '';
+  const sDisplay = s > 0 ? `${s}${s === 1 ? ' second' : ' seconds'}` : '';
+  return hDisplay + mDisplay + sDisplay;
 }
 
 // ── Creativity — calculateCreativity() ───────────────────────────────────
