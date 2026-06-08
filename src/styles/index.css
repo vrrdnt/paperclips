@@ -362,6 +362,41 @@ input[type="range"].price-slider::-moz-range-thumb {
   border: 1px solid var(--border2);
 }
 
+.slider-mobile-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  touch-action: pan-y;
+}
+
+.slider-mobile-control .btn {
+  flex: 0 0 42px;
+  min-width: 42px;
+}
+
+.slider-mobile-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 10px;
+  color: var(--text);
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.slider-mobile-control.is-readout .slider-mobile-value {
+  min-height: 36px;
+}
+
 /* ── Console ────────────────────────────────────────────────────── */
 .console-panel {
   background: var(--console-bg);
