@@ -69,7 +69,7 @@ export function BusinessPanel({ snap: s }: Props) {
                 {s.spaceFlag === 1 ? (
                   <div className="stat-row">
                     <span className="stat-label">Factories</span>
-                    <span className="stat-value">{formatWithCommas(s.factoryLevel)}</span>
+                    <span className="stat-value">{spellf(s.factoryLevel)}</span>
                   </div>
                 ) : (
                   <>
