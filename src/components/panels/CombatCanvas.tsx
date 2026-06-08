@@ -22,9 +22,9 @@ export function CombatCanvas() {
       if (!sh.alive) {
         if (sh.framesDead < 10) {
           ctx!.fillStyle = '#ffffff';
-          if (sh.framesDead <= 1) {
+          if (sh.framesDead < 1) {
             ctx!.fillRect(sh.x - 3, sh.y - 3, 7, 7);
-          } else if (sh.framesDead <= 2) {
+          } else if (sh.framesDead < 2) {
             ctx!.fillRect(sh.x - 1, sh.y - 1, 3, 3);
           }
           ctx!.fillRect(sh.x + sh.framesDead, sh.y + sh.framesDead, 1, 1);
