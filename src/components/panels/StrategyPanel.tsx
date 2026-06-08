@@ -95,7 +95,7 @@ export function StrategyPanel({ snap: s }: Props) {
   const [animMatchup, setAnimMatchup] = useState<[string, string] | null>(null);
   const [running, setRunning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevCountRef = useRef(s.tourneyCount);
+  const prevCountRef = useRef(s.tourneyCount - ((s.currentTournament?.pendingYomi ?? 0) > 0 ? 1 : 0));
 
   // Keep picked valid when new strategies are unlocked
   const stratCount = s.strategies.length;

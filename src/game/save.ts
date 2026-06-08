@@ -15,8 +15,8 @@ interface PrestigeState {
   usedArtifactTriggers: string[];
 }
 
-export function toSaveableState(s: GameState): Omit<GameState, 'currentTournament' | 'readouts' | 'tourneyResult'> {
-  const { currentTournament, readouts, tourneyResult, ...saveable } = s;
+export function toSaveableState(s: GameState): Omit<GameState, 'readouts'> {
+  const { readouts, ...saveable } = s;
   return saveable;
 }
 
@@ -118,6 +118,37 @@ function normalizeTournamentState(s: GameState): void {
   s.vMovePrev = s.vMovePrev === 2 ? 2 : 1;
 }
 
+function normalizeCurrentTournament(s: GameState): void {
+  const ct = s.currentTournament;
+  if (!ct) {
+    s.currentTournament = null;
+    return;
+  }
+
+  const validPayoff =
+    Array.isArray(ct.payoff) &&
+    ct.payoff.length >= 2 &&
+    Array.isArray(ct.payoff[0]) &&
+    Array.isArray(ct.payoff[1]);
+  const validChoiceNames = Array.isArray(ct.choiceNames) && ct.choiceNames.length >= 2;
+  const validResults = Array.isArray(ct.results);
+  if (!validPayoff || !validChoiceNames || !validResults) {
+    s.currentTournament = null;
+    return;
+  }
+
+  ct.stratH = String(ct.stratH || s.selectedStrategy || 'RANDOM');
+  ct.stratV = String(ct.stratV || '');
+  ct.payoff = [
+    [finiteNumber(ct.payoff[0][0]), finiteNumber(ct.payoff[0][1])],
+    [finiteNumber(ct.payoff[1][0]), finiteNumber(ct.payoff[1][1])],
+  ];
+  ct.choiceNames = [String(ct.choiceNames[0] || 'A'), String(ct.choiceNames[1] || 'B')];
+  ct.totalRounds = Math.floor(finiteNonNegative(finiteNumber(ct.totalRounds)));
+  ct.results = ct.results.map(result => String(result));
+  ct.pendingYomi = Math.floor(finiteNonNegative(finiteNumber(ct.pendingYomi)));
+}
+
 function normalizeDemandBoost(s: GameState): void {
   const projectBoost =
     (s.projectFlags[37] === 1 ? 5 : 1) *
@@ -165,6 +196,7 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   const merged = { ...initial, ...loaded };
   normalizeArtifactState(merged);
   normalizeTournamentState(merged);
+  normalizeCurrentTournament(merged);
   normalizeProbeDesign(merged);
   normalizeBattles(merged);
   normalizeBattleNameNumbers(merged, loaded as LegacySavedState);
@@ -179,8 +211,7 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   mergePartialSpawnLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
   mergePartialSpawnLevel(merged, 'wireDroneLevel', 'partialWireDroneSpawn');
 
-  merged.currentTournament = null;
-  merged.tourneyResult = initial.tourneyResult;
+  if (typeof merged.tourneyResult !== 'string') merged.tourneyResult = initial.tourneyResult;
   merged.readouts = reconstructReadoutsFromProjectFlags(merged);
   if ((!merged.battleName || !merged.battleScale) && merged.battles.length > 0) {
     const activeBattle = merged.battles.find(b => !b.over) ?? merged.battles[0];
