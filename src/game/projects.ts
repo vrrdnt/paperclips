@@ -616,8 +616,6 @@ export const ALL_PROJECTS: Project[] = [
       s.megaClipperLevel = 0;
       s.nanoWire = s.wire;
       s.humanFlag = 0;
-      s.investmentEngineFlag = 0;
-      s.wireBuyerFlag = 0;
       // Projects 219 and 1002 (project40b) auto-hide since their triggers require humanFlag === 1.
     },
   },
