@@ -89,7 +89,7 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
 export function StrategyPanel({ snap: s }: Props) {
   if (!s.strategyEngineFlag) return null;
 
-  const [picked, setPicked] = useState(s.strategies[0] || 'RANDOM');
+  const [picked, setPicked] = useState(s.selectedStrategy || s.strategies[0] || 'RANDOM');
   const [flash, setFlash] = useState<Cell | null>(null);
   const [animRound, setAnimRound] = useState(0);
   const [animMatchup, setAnimMatchup] = useState<[string, string] | null>(null);
@@ -100,7 +100,11 @@ export function StrategyPanel({ snap: s }: Props) {
   // Keep picked valid when new strategies are unlocked
   const stratCount = s.strategies.length;
   useEffect(() => {
-    if (!s.strategies.includes(picked)) setPicked(s.strategies[0] ?? 'RANDOM');
+    if (!s.strategies.includes(picked)) {
+      const next = s.strategies[0] ?? 'RANDOM';
+      G.selectedStrategy = next;
+      setPicked(next);
+    }
   }, [stratCount]);
 
   const ct = s.currentTournament;
@@ -167,7 +171,14 @@ export function StrategyPanel({ snap: s }: Props) {
       <hr className="divider" />
 
       <div className="col" style={{ gap: 6 }}>
-        <select className="strat-select" value={picked} onChange={e => setPicked(e.target.value)}>
+        <select
+          className="strat-select"
+          value={picked}
+          onChange={e => {
+            G.selectedStrategy = e.target.value;
+            setPicked(e.target.value);
+          }}
+        >
           {s.strategies.map(name => (
             <option key={name} value={name}>{name}</option>
           ))}
