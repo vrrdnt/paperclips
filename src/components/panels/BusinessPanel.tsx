@@ -118,7 +118,7 @@ export function BusinessPanel({ snap: s }: Props) {
                 <span className="stat-label">Revenue rate</span>
                 <span className="stat-value">${formatWithCommas(s.avgRev, 2)}/s</span>
               </div>
-              <div style={{ marginTop: 3 }}><Sparkline data={h.revenue} /></div>
+              <div style={{ marginTop: 4 }}><Sparkline data={h.revenue} valuePrefix="$" /></div>
             </div>
           )}
 
@@ -167,7 +167,11 @@ export function BusinessPanel({ snap: s }: Props) {
                 <span style={{ color: wireTrendColor, fontSize: 10 }}>{wireTrendChar}</span>
               </span>
             </div>
-            {hasRevTracker && <div style={{ marginTop: 3 }}><Sparkline data={h.wireCost} /></div>}
+            {hasRevTracker && (
+              <div style={{ marginTop: 4 }}>
+                <Sparkline data={h.wireCost} invertTrend valuePrefix="$" />
+              </div>
+            )}
           </div>
           <div className="row" style={{ marginTop: 6 }}>
             <Btn holdRepeat onClick={() => { buyWire(G); }} disabled={!canBuyWire}>
