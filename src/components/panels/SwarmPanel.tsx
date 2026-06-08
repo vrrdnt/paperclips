@@ -57,6 +57,7 @@ export function SwarmPanel({ snap: s }: Props) {
           max={200}
           value={s.sliderPos}
           fill
+          mobileStep={5}
           aria-label="Swarm work vs think balance"
           onInput={v => { G.sliderPos = v; }}
         />

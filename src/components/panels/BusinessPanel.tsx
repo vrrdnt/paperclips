@@ -138,6 +138,8 @@ export function BusinessPanel({ snap: s }: Props) {
                 step={0.01}
                 value={s.margin}
                 fill
+                mobileMode="readout"
+                valueLabel={price}
                 aria-label="Price per clip"
                 onInput={v => { setPrice(G, v); }}
               />
