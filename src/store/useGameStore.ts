@@ -8,10 +8,8 @@ const HISTORY_SAMPLE_EVERY = 10; // setSnap runs every 100ms, so 150 samples is 
 
 export interface Histories {
   clipRate:      number[];
-  avgRev:        number[];
-  funds:         number[];
-  wire:          number[];
-  clipmakerRate: number[];
+  revenue:       number[];
+  wireCost:      number[];
   portfolio:     number[];
 }
 
@@ -21,7 +19,7 @@ function append(arr: number[], val: number): number[] {
 }
 
 const emptyHistories = (): Histories => ({
-  clipRate: [], avgRev: [], funds: [], wire: [], clipmakerRate: [], portfolio: [],
+  clipRate: [], revenue: [], wireCost: [], portfolio: [],
 });
 
 interface GameStore {
@@ -45,10 +43,8 @@ export const useGameStore = create<GameStore>(set => ({
       historySampleTick,
       histories: shouldSample ? {
         clipRate:      append(prev.histories.clipRate,      s.clipRate),
-        avgRev:        append(prev.histories.avgRev,        s.avgRev),
-        funds:         append(prev.histories.funds,         s.funds),
-        wire:          append(prev.histories.wire,          s.wire),
-        clipmakerRate: append(prev.histories.clipmakerRate, s.clipmakerRate),
+        revenue:       append(prev.histories.revenue,       s.funds),
+        wireCost:      append(prev.histories.wireCost,      s.wireCost),
         portfolio:     append(prev.histories.portfolio,     s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0)),
       } : prev.histories,
     };

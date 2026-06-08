@@ -32,6 +32,7 @@
 html {
   background: var(--bg);
   min-height: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -39,6 +40,10 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #root {
@@ -46,6 +51,16 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* ── Layout ─────────────────────────────────────────────────────── */
@@ -1101,8 +1116,11 @@ input[type="range"] {
   background: var(--panel2);
   border-radius: 3px;
   outline: none;
-  touch-action: pan-x;
+  touch-action: pan-y;
   cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 input[type="range"]::-webkit-slider-thumb {

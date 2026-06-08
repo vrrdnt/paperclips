@@ -118,7 +118,7 @@ export function BusinessPanel({ snap: s }: Props) {
                 <span className="stat-label">Revenue rate</span>
                 <span className="stat-value">${formatWithCommas(s.avgRev, 2)}/s</span>
               </div>
-              <div style={{ marginTop: 3 }}><Sparkline data={h.avgRev} /></div>
+              <div style={{ marginTop: 3 }}><Sparkline data={h.revenue} /></div>
             </div>
           )}
 
@@ -151,19 +151,21 @@ export function BusinessPanel({ snap: s }: Props) {
 
           <hr className="divider" />
 
-          <div className={hasRevTracker ? 'stat-with-graph' : ''}>
+          <div>
             <div className="stat-row">
               <span className="stat-label">Wire</span>
               <span className="stat-value">{spellf(s.wire)}</span>
             </div>
-            {hasRevTracker && <div style={{ marginTop: 3 }}><Sparkline data={h.wire} /></div>}
           </div>
-          <div className="stat-row" style={{ marginTop: hasRevTracker ? 4 : 0 }}>
-            <span className="stat-label">Wire cost</span>
-            <span className="stat-value">
-              ${formatWithCommas(s.wireCost)}&nbsp;
-              <span style={{ color: wireTrendColor, fontSize: 10 }}>{wireTrendChar}</span>
-            </span>
+          <div className={hasRevTracker ? 'stat-with-graph' : ''} style={{ marginTop: hasRevTracker ? 4 : 0 }}>
+            <div className="stat-row">
+              <span className="stat-label">Wire cost</span>
+              <span className="stat-value">
+                ${formatWithCommas(s.wireCost)}&nbsp;
+                <span style={{ color: wireTrendColor, fontSize: 10 }}>{wireTrendChar}</span>
+              </span>
+            </div>
+            {hasRevTracker && <div style={{ marginTop: 3 }}><Sparkline data={h.wireCost} /></div>}
           </div>
           <div className="row" style={{ marginTop: 6 }}>
             <Btn holdRepeat onClick={() => { buyWire(G); }} disabled={!canBuyWire}>
