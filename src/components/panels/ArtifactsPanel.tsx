@@ -190,7 +190,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
                   <span className="artifact-cell-mark">{isCurrent ? 'x' : isCompleted ? '.' : ''}</span>
                   {cellArtifacts[0] && (
                     <span className="artifact-cell-icon">
-                      <ArtifactGlyph id={cellArtifacts[0].id} size={10} />
+                      <ArtifactGlyph id={cellArtifacts[0].id} size={28} />
                     </span>
                   )}
                 </button>
