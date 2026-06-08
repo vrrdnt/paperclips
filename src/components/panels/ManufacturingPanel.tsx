@@ -5,11 +5,15 @@ import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import { makeClipper, makeMegaClipper } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
+import { A, activeArtifactMultiplier } from '../../game/artifacts';
 
 interface Props { snap: DisplaySnapshot; }
 
 export function ManufacturingPanel({ snap: s }: Props) {
   if (!s.autoClipperFlag || !s.humanFlag) return null;
+
+  const autoClipperRate = s.clipperBoost * activeArtifactMultiplier(s, A.WURTZITE_FANG) * s.clipmakerLevel;
+  const megaClipperRate = s.megaClipperBoost * activeArtifactMultiplier(s, A.LONSDALEITE_CLAW) * s.megaClipperLevel * 500;
 
   return (
     <SectionCard title="Manufacturing" icon={<Settings size={14} />}>
@@ -20,7 +24,7 @@ export function ManufacturingPanel({ snap: s }: Props) {
       </div>
       <div className="stat-row">
         <span className="stat-label">Rate</span>
-        <span className="stat-value">{formatWithCommas(s.clipmakerRate, 1)}/s</span>
+        <span className="stat-value">{formatWithCommas(autoClipperRate, 1)}/s</span>
       </div>
       <div style={{ marginTop: 6 }}>
         <Btn holdRepeat onClick={() => { makeClipper(G); }} disabled={s.funds < s.clipperCost}>
@@ -35,6 +39,10 @@ export function ManufacturingPanel({ snap: s }: Props) {
           <div className="stat-row">
             <span className="stat-label">MegaClippers</span>
             <span className="stat-value">{s.megaClipperLevel}</span>
+          </div>
+          <div className="stat-row">
+            <span className="stat-label">Rate</span>
+            <span className="stat-value">{formatWithCommas(megaClipperRate, 1)}/s</span>
           </div>
           <div style={{ marginTop: 6 }}>
             <Btn holdRepeat onClick={() => { makeMegaClipper(G); }} disabled={s.funds < s.megaClipperCost}>
