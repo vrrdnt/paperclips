@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paperclips-pwa-v2';
+const CACHE_NAME = 'paperclips-pwa-v4';
 const APP_SHELL = [
   '/',
   '/privacy.html',
@@ -12,8 +12,7 @@ const APP_SHELL = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+    precacheAppShell()
       .then(() => self.skipWaiting())
   );
 });
@@ -26,6 +25,12 @@ self.addEventListener('activate', event => {
         .map(name => caches.delete(name))))
       .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'CACHE_URLS') return;
+  const urls = Array.isArray(event.data.urls) ? event.data.urls : [];
+  event.waitUntil(cacheUrls(urls));
 });
 
 self.addEventListener('fetch', event => {
@@ -48,6 +53,47 @@ self.addEventListener('fetch', event => {
     event.respondWith(cacheFirst(request));
   }
 });
+
+async function precacheAppShell() {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.addAll(APP_SHELL);
+
+  const response = await fetch(new Request('/', { cache: 'reload' }));
+  await cache.put('/', response.clone());
+
+  const html = await response.text();
+  await Promise.all(getDocumentAssetUrls(html).map(url => (
+    cache.add(new Request(url, { cache: 'reload' }))
+  )));
+}
+
+function getDocumentAssetUrls(html) {
+  const urls = new Set();
+  const attrPattern = /\b(?:src|href)=["']([^"']+)["']/g;
+  let match;
+
+  while ((match = attrPattern.exec(html))) {
+    const parsed = new URL(match[1], self.location.origin);
+    if (parsed.origin === self.location.origin && parsed.pathname.startsWith('/assets/')) {
+      urls.add(parsed.pathname + parsed.search);
+    }
+  }
+
+  return Array.from(urls);
+}
+
+async function cacheUrls(urls) {
+  const cache = await caches.open(CACHE_NAME);
+  await Promise.all(urls.map(async url => {
+    try {
+      const parsed = new URL(url, self.location.origin);
+      if (parsed.origin !== self.location.origin) return;
+      await cache.add(new Request(parsed.href, { cache: 'reload' }));
+    } catch {
+      // A single optional asset should not prevent the rest of the app shell from caching.
+    }
+  }));
+}
 
 async function networkFirst(request, fallbackUrl) {
   const cache = await caches.open(CACHE_NAME);
