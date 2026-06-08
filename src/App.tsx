@@ -27,6 +27,7 @@ import { artifactMapUnlocked } from './game/artifacts';
 
 export default function App() {
   const setSnap = useGameStore(st => st.setSnap);
+  const resetHistories = useGameStore(st => st.resetHistories);
   const snap = useGameStore(st => st.snap);
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
@@ -44,6 +45,7 @@ export default function App() {
   useEffect(() => {
     const saved = loadGame();
     Object.assign(G, saved);
+    resetHistories(G);
     setSnap(G);
     resetTickClock();
 
@@ -125,6 +127,7 @@ export default function App() {
     setShowArtifactMap(false);
     const fresh = resetAllProgress();
     Object.assign(G, fresh);
+    resetHistories(G);
     setSnap(G);
   }
 
@@ -198,6 +201,7 @@ export default function App() {
       const loaded = JSON.parse(decoded);
       const merged = hydrateGameState(loaded);
       Object.assign(G, merged);
+      resetHistories(G);
       setSnap(G);
       saveGame(G);
       setShowImport(false);

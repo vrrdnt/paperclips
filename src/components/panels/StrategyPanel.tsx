@@ -87,9 +87,6 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
 }
 
 export function StrategyPanel({ snap: s }: Props) {
-  if (!s.strategyEngineFlag) return null;
-  if (s.dismantle >= 4) return null;
-
   const [picked, setPicked] = useState(s.selectedStrategy || s.strategies[0] || 'RANDOM');
   const [flash, setFlash] = useState<Cell | null>(null);
   const [animRound, setAnimRound] = useState(0);
@@ -101,6 +98,7 @@ export function StrategyPanel({ snap: s }: Props) {
   // Keep picked valid when new strategies are unlocked
   const stratCount = s.strategies.length;
   useEffect(() => {
+    if (!s.strategyEngineFlag || s.dismantle >= 4) return;
     if (!s.strategies.includes(picked)) {
       const next = s.strategies[0] ?? 'RANDOM';
       G.selectedStrategy = next;
@@ -112,6 +110,7 @@ export function StrategyPanel({ snap: s }: Props) {
   const tournamentRunning = running || (ct?.pendingYomi ?? 0) > 0;
 
   useEffect(() => {
+    if (!s.strategyEngineFlag || s.dismantle >= 4) return;
     if (s.tourneyCount !== prevCountRef.current && ct) {
       prevCountRef.current = s.tourneyCount;
       startAnimation(ct.payoff, ct.totalRounds, [...s.strategies]);
@@ -119,6 +118,9 @@ export function StrategyPanel({ snap: s }: Props) {
   }, [s.tourneyCount]);
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  if (!s.strategyEngineFlag) return null;
+  if (s.dismantle >= 4) return null;
 
   function startAnimation(payoff: number[][], totalRounds: number, strategies: string[]) {
     if (timerRef.current) clearTimeout(timerRef.current);

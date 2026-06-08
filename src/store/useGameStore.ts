@@ -3,8 +3,8 @@ import { GameState } from '../game/state';
 
 export type DisplaySnapshot = Readonly<GameState>;
 
-const HISTORY_LEN = 150;
-const HISTORY_SAMPLE_EVERY = 10; // setSnap runs every 100ms, so 150 samples is about 2m30s.
+const HISTORY_LEN = 80;
+const HISTORY_SAMPLE_EVERY = 1; // setSnap runs every 100ms, so 80 samples is about 8s.
 
 export interface Histories {
   clipRate:      number[];
@@ -22,11 +22,30 @@ const emptyHistories = (): Histories => ({
   clipRate: [], revenue: [], wireCost: [], portfolio: [],
 });
 
+function seedHistories(s: GameState): Histories {
+  return {
+    clipRate: [s.clipRate],
+    revenue: [s.funds],
+    wireCost: [s.wireCost],
+    portfolio: [s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0)],
+  };
+}
+
+function appendSnapshot(histories: Histories, s: GameState): Histories {
+  return {
+    clipRate:      append(histories.clipRate,      s.clipRate),
+    revenue:       append(histories.revenue,       s.funds),
+    wireCost:      append(histories.wireCost,      s.wireCost),
+    portfolio:     append(histories.portfolio,     s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0)),
+  };
+}
+
 interface GameStore {
   snap: DisplaySnapshot | null;
   histories: Histories;
   historySampleTick: number;
   setSnap: (s: GameState) => void;
+  resetHistories: (s: GameState) => void;
 }
 
 export const useGameStore = create<GameStore>(set => ({
@@ -41,12 +60,11 @@ export const useGameStore = create<GameStore>(set => ({
     return {
       snap: { ...s },
       historySampleTick,
-      histories: shouldSample ? {
-        clipRate:      append(prev.histories.clipRate,      s.clipRate),
-        revenue:       append(prev.histories.revenue,       s.funds),
-        wireCost:      append(prev.histories.wireCost,      s.wireCost),
-        portfolio:     append(prev.histories.portfolio,     s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0)),
-      } : prev.histories,
+      histories: shouldSample ? appendSnapshot(prev.histories, s) : prev.histories,
     };
+  }),
+  resetHistories: (s: GameState) => set({
+    histories: seedHistories(s),
+    historySampleTick: 0,
   }),
 }));

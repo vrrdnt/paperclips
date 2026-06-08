@@ -17,8 +17,8 @@ const RISK_OPTIONS = [
 ] as const;
 
 export function InvestmentPanel({ snap: s }: Props) {
-  if (!s.investmentEngineFlag || !s.humanFlag) return null;
   const h = useGameStore(st => st.histories);
+  if (!s.investmentEngineFlag || !s.humanFlag) return null;
 
   const invested = s.stocks.reduce((a, st) => a + st.val, 0);
   const portfolio = s.bankroll + invested;
