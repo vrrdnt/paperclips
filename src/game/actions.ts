@@ -371,7 +371,6 @@ function markRunArtifactTriggerUsed(s: GameState, id: ArtifactId): void {
 // ── Disassemble (reboot) ──────────────────────────────────────────────────
 export function factoryReboot(s: GameState): void {
   s.unusedClips += s.factoryBill;
-  s.clips += s.factoryBill;
   s.factoryLevel = 0;
   s.factoryBill = 0;
   s.factoryCost = 100_000_000;
@@ -379,7 +378,6 @@ export function factoryReboot(s: GameState): void {
 
 export function harvesterReboot(s: GameState): void {
   s.unusedClips += s.harvesterBill;
-  s.clips += s.harvesterBill;
   s.harvesterLevel = 0;
   s.harvesterBill = 0;
   s.harvesterCost = 1_000_000;
@@ -387,7 +385,6 @@ export function harvesterReboot(s: GameState): void {
 
 export function wireDroneReboot(s: GameState): void {
   s.unusedClips += s.wireDroneBill;
-  s.clips += s.wireDroneBill;
   s.wireDroneLevel = 0;
   s.wireDroneBill = 0;
   s.wireDroneCost = 1_000_000;
@@ -395,7 +392,6 @@ export function wireDroneReboot(s: GameState): void {
 
 export function farmReboot(s: GameState): void {
   s.unusedClips += s.farmBill;
-  s.clips += s.farmBill;
   s.farmLevel = 0;
   s.farmBill = 0;
   s.farmCost = 10_000_000;
@@ -403,7 +399,6 @@ export function farmReboot(s: GameState): void {
 
 export function batteryReboot(s: GameState): void {
   s.unusedClips += s.batteryBill;
-  s.clips += s.batteryBill;
   s.batteryLevel = 0;
   s.batteryBill = 0;
   s.batteryCost = 1_000_000;
