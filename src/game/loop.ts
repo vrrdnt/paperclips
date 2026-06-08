@@ -19,11 +19,21 @@ const DRONE_SPAWN_COST  = 2_000_000;   // drones cost 2M clips each
 
 // ── Timestamp-based batch driver ──────────────────────────────────────────
 let lastTickTime = 0;
+const MAX_CONTIGUOUS_ELAPSED_MS = 500;
+const MAX_BATCH_TICKS = 25;
+
+export function resetTickClock(now = Date.now()): void {
+  lastTickTime = now;
+}
 
 export function tickBatch(s: GameState, now = Date.now()): void {
   if (lastTickTime === 0) { lastTickTime = now; return; }
-  const elapsed = Math.min(now - lastTickTime, 30_000);
-  const count = Math.floor(elapsed / 10);
+  const elapsed = now - lastTickTime;
+  if (elapsed > MAX_CONTIGUOUS_ELAPSED_MS) {
+    resetTickClock(now);
+    return;
+  }
+  const count = Math.min(Math.floor(elapsed / 10), MAX_BATCH_TICKS);
   if (count > 0) {
     lastTickTime += count * 10;
     for (let i = 0; i < count; i++) tick(s);
