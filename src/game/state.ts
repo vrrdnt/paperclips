@@ -120,6 +120,8 @@ export interface GameState {
   investRisk: 'low' | 'med' | 'hi';
   stockGainThreshold: number;
   sellDelay: number;
+  ledger: number;
+  stockReportCounter: number;
   // ── Yomi / Honor / Trust ──────────────────────────────────────────────────
   yomi: number;
   honor: number;
@@ -323,7 +325,7 @@ export function makeInitialState(): GameState {
 
     bankroll: 0, stocks: [], investLevel: 0, investUpgradeCost: 100,
     portfolioSize: 5, investRisk: 'med',
-    stockGainThreshold: 0.5, sellDelay: 0,
+    stockGainThreshold: 0.5, sellDelay: 0, ledger: 0, stockReportCounter: 0,
 
     yomi: 0, honor: 0, maxTrust: 20, maxTrustCost: 91117.99,
 

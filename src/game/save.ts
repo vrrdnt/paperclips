@@ -1,4 +1,4 @@
-import { GameState, makeInitialState } from './state';
+import { GameState, makeInitialState, Stock } from './state';
 import { reconstructReadoutsFromProjectFlags } from './projectReadouts';
 import { normalizeArtifactState } from './artifacts';
 import { normalizeSelectedStrategy } from './tournament';
@@ -28,6 +28,11 @@ export function saveGame(s: GameState): void {
 
 type WholeLevelKey = 'factoryLevel' | 'harvesterLevel' | 'wireDroneLevel';
 type PartialSpawnKey = 'partialFactorySpawn' | 'partialHarvesterSpawn' | 'partialWireDroneSpawn';
+type LegacySavedState = Partial<GameState> & {
+  maxPort?: number;
+  riskiness?: number;
+};
+type LegacyStock = Stock & { total?: number };
 type ProbeAttrKey =
   | 'probeSpeed'
   | 'probeNav'
@@ -51,6 +56,11 @@ const PROBE_ATTR_KEYS: ProbeAttrKey[] = [
 
 function finiteNonNegative(value: number): number {
   return isFinite(value) ? Math.max(0, value) : 0;
+}
+
+function finiteNumber(value: unknown, fallback = 0): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 function mergePartialSpawnLevel(s: GameState, levelKey: WholeLevelKey, partialKey: PartialSpawnKey): void {
@@ -105,6 +115,29 @@ function normalizeDemandBoost(s: GameState): void {
   }
 }
 
+function normalizeInvestmentState(s: GameState, loaded: LegacySavedState): void {
+  if (!Array.isArray(s.stocks)) s.stocks = [];
+
+  for (const st of s.stocks as LegacyStock[]) {
+    st.price = finiteNonNegative(finiteNumber(st.price));
+    st.prevPrice = finiteNonNegative(finiteNumber(st.prevPrice, st.price));
+    st.amount = finiteNonNegative(finiteNumber(st.amount));
+    st.profit = finiteNumber(st.profit);
+    st.age = finiteNonNegative(finiteNumber(st.age));
+    st.val = finiteNonNegative(finiteNumber(st.val, finiteNumber(st.total, st.price * st.amount)));
+    st.priceHistory = Array.isArray(st.priceHistory)
+      ? st.priceHistory.map(v => finiteNonNegative(finiteNumber(v))).slice(-20)
+      : [st.price];
+  }
+
+  if (!loaded.investRisk && Number.isFinite(loaded.riskiness)) {
+    s.investRisk = loaded.riskiness === 7 ? 'low' : loaded.riskiness === 1 ? 'hi' : 'med';
+  }
+  s.portfolioSize = Math.max(5, finiteNumber(s.portfolioSize), finiteNumber(loaded.maxPort), s.stocks.length);
+  s.ledger = finiteNumber(s.ledger);
+  s.stockReportCounter = finiteNonNegative(finiteNumber(s.stockReportCounter));
+}
+
 export function hydrateGameState(loaded: Partial<GameState>): GameState {
   const initial = makeInitialState();
   const merged = { ...initial, ...loaded };
@@ -113,6 +146,7 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   normalizeProbeDesign(merged);
   normalizeBattles(merged);
   normalizeDemandBoost(merged);
+  normalizeInvestmentState(merged, loaded as LegacySavedState);
 
   mergePartialSpawnLevel(merged, 'factoryLevel', 'partialFactorySpawn');
   mergePartialSpawnLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');

@@ -138,12 +138,14 @@ export function qComp(s: GameState): void {
 
 // ── Investments ───────────────────────────────────────────────────────────
 export function investDeposit(s: GameState): void {
-  let amount = Math.floor(s.funds);
+  const funds = Math.floor(s.funds);
+  let amount = funds;
   if (hasActiveArtifact(s, A.MARTINGALES_DEMON) && runArtifactTriggerUnused(s, A.MARTINGALES_DEMON)) {
     amount *= 2;
     markRunArtifactTriggerUsed(s, A.MARTINGALES_DEMON);
     displayMessage(s, "Martingale's Demon doubled your first deposit");
   }
+  s.ledger -= funds;
   s.bankroll += amount;
   s.funds = 0;
 }
@@ -155,6 +157,7 @@ export function investWithdraw(s: GameState): void {
     markRunArtifactTriggerUsed(s, A.MUNGERS_REGRET);
     displayMessage(s, "Munger's Regret doubled your first withdrawal");
   }
+  s.ledger += amount;
   s.funds += amount;
   s.bankroll = 0;
 }

@@ -2,6 +2,7 @@ import { GameState, Battle, Ship } from './state';
 import { saveGame } from './save';
 import { A, activeArtifactMultiplier, effectiveProbeAttr, hasActiveArtifact } from './artifacts';
 import { normalizeSelectedStrategy, simulateTournament } from './tournament';
+import { formatWithCommas } from './format';
 
 // ── Constants (verbatim from main.js / globals.js) ────────────────────────
 const PROBE_BASE_COST   = Math.pow(10, 17);        // probeCost
@@ -134,9 +135,9 @@ export function tick(s: GameState): void {
   if (s.ticks % 100 === 0 && s.humanFlag) tickInvestmentShop(s);
 
   // Investment update + sell every 2500ms (250 ticks) — original 2500ms interval
-  if (s.ticks % 250 === 0 && s.humanFlag) {
-    tickInvestmentUpdate(s);
+  if (s.ticks % 250 === 0) {
     tickInvestmentSell(s);
+    if (s.humanFlag) tickInvestmentUpdate(s);
   }
 
   // Auto-save every 2500ms
@@ -144,6 +145,8 @@ export function tick(s: GameState): void {
 
   // Keep nanoWire display alias in sync (nanoWire == wire in original)
   s.nanoWire = s.wire;
+
+  tickInvestmentReport(s);
 
   // Update probe trust cost whenever in space phase
   if (s.spaceFlag) {
@@ -1119,11 +1122,21 @@ function tickInvestmentUpdate(s: GameState): void {
 // sellStock — every 2500ms
 function tickInvestmentSell(s: GameState): void {
   s.sellDelay++;
-  if (s.stocks.length > 0 && s.sellDelay >= 5 && Math.random() <= 0.3) {
+  if (s.stocks.length > 0 && s.sellDelay >= 5 && Math.random() <= 0.3 && s.humanFlag) {
     const sold = s.stocks.splice(0, 1)[0];
     s.bankroll += sold.val;
     s.sellDelay = 0;
   }
+}
+
+function tickInvestmentReport(s: GameState): void {
+  if (!s.investmentEngineFlag) return;
+  s.stockReportCounter++;
+  if (s.stockReportCounter < 10000) return;
+
+  const portTotal = s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0);
+  displayMessage(s, `Lifetime investment revenue report: $${formatWithCommas(s.ledger + portTotal)}`);
+  s.stockReportCounter = 0;
 }
 
 // ── Auto-tourney ──────────────────────────────────────────────────────────
