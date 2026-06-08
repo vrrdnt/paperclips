@@ -37,10 +37,22 @@ export function Slider({
   const [local, setLocal] = useState(value);
   const [isCoarsePointer, setIsCoarsePointer] = useState(getIsCoarsePointer);
   const draggingRef = useRef(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const editingRef = useRef(false);
+  const touchTapRef = useRef({ active: false, x: 0, y: 0, moved: false });
+  const clamped = Math.min(max, Math.max(min, local));
+  const pct = max > min ? ((clamped - min) / (max - min)) * 100 : 0;
+  const ariaLabel = rest['aria-label'];
+  const displayValue = valueLabel ?? formatSliderValue(clamped, step);
+  const [draftValue, setDraftValue] = useState(displayValue);
 
   useEffect(() => {
     if (!draggingRef.current) setLocal(value);
   }, [value]);
+
+  useEffect(() => {
+    if (!editingRef.current) setDraftValue(displayValue);
+  }, [displayValue]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
@@ -51,8 +63,6 @@ export function Slider({
     return () => query.removeEventListener?.('change', updatePointerType);
   }, []);
 
-  const clamped = Math.min(max, Math.max(min, local));
-  const pct = max > min ? ((clamped - min) / (max - min)) * 100 : 0;
   const fillStyle = fill
     ? { background: `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--panel2) ${pct}%, var(--panel2) 100%)` }
     : undefined;
@@ -63,8 +73,69 @@ export function Slider({
     onInput(nextValue);
   }
 
-  const ariaLabel = rest['aria-label'];
-  const displayValue = valueLabel ?? formatSliderValue(clamped, step);
+  function handleValueTextChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const nextText = e.target.value;
+    setDraftValue(nextText);
+    const parsed = parseSliderInput(nextText);
+    if (parsed !== null) commit(parsed);
+  }
+
+  function handleValueFocus() {
+    editingRef.current = true;
+  }
+
+  function handleValueBlur() {
+    editingRef.current = false;
+    setDraftValue(valueLabel ?? formatSliderValue(clamped, step));
+  }
+
+  function handleInputPointerDown(e: React.PointerEvent<HTMLInputElement>) {
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+    touchTapRef.current = { active: true, x: e.clientX, y: e.clientY, moved: false };
+    e.preventDefault();
+  }
+
+  function handleInputPointerMove(e: React.PointerEvent<HTMLInputElement>) {
+    const tap = touchTapRef.current;
+    if (!tap.active) return;
+    if (Math.abs(e.clientX - tap.x) > 8 || Math.abs(e.clientY - tap.y) > 8) {
+      tap.moved = true;
+    }
+  }
+
+  function handleInputPointerUp(e: React.PointerEvent<HTMLInputElement>) {
+    const tap = touchTapRef.current;
+    if (!tap.active) return;
+    e.preventDefault();
+    touchTapRef.current = { active: false, x: 0, y: 0, moved: false };
+    if (tap.moved) return;
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }
+
+  function handleInputPointerCancel() {
+    touchTapRef.current = { active: false, x: 0, y: 0, moved: false };
+  }
+
+  function mobileValueInput() {
+    return (
+      <input
+        ref={inputRef}
+        className="slider-mobile-value slider-mobile-value-input"
+        type="text"
+        inputMode={step < 1 ? 'decimal' : 'numeric'}
+        value={draftValue}
+        aria-label={ariaLabel ? `${ariaLabel} value` : undefined}
+        onChange={handleValueTextChange}
+        onFocus={handleValueFocus}
+        onBlur={handleValueBlur}
+        onPointerDown={handleInputPointerDown}
+        onPointerMove={handleInputPointerMove}
+        onPointerUp={handleInputPointerUp}
+        onPointerCancel={handleInputPointerCancel}
+      />
+    );
+  }
 
   if (isCoarsePointer) {
     const mobileClass = [
@@ -76,7 +147,7 @@ export function Slider({
     if (mobileMode === 'readout') {
       return (
         <div className={mobileClass} style={style} aria-label={ariaLabel}>
-          <span className="slider-mobile-value">{displayValue}</span>
+          {mobileValueInput()}
         </div>
       );
     }
@@ -85,7 +156,7 @@ export function Slider({
     return (
       <div className={mobileClass} role="group" aria-label={ariaLabel} style={style}>
         <Btn holdRepeat onClick={() => commit(clamped - increment)} disabled={clamped <= min}>-</Btn>
-        <span className="slider-mobile-value" aria-live="polite">{displayValue}</span>
+        {mobileValueInput()}
         <Btn holdRepeat onClick={() => commit(clamped + increment)} disabled={clamped >= max}>+</Btn>
       </div>
     );
@@ -124,6 +195,13 @@ function snapToStep(value: number, min: number, max: number, step: number): numb
 function formatSliderValue(value: number, step: number): string {
   const precision = countDecimals(step);
   return precision > 0 ? value.toFixed(precision) : Math.round(value).toString();
+}
+
+function parseSliderInput(value: string): number | null {
+  const normalized = value.trim().replace(/,/g, '');
+  if (!normalized || normalized === '-' || normalized === '.' || normalized === '-.') return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function countDecimals(value: number): number {

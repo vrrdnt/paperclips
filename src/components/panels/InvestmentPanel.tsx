@@ -5,6 +5,7 @@ import { Btn } from '../ui/Btn';
 import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import { investDeposit, investWithdraw, investUpgrade } from '../../game/actions';
+import { saveGame } from '../../game/save';
 import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
@@ -90,10 +91,10 @@ export function InvestmentPanel({ snap: s }: Props) {
 
       {/* Deposit / Withdraw */}
       <div className="row" style={{ marginTop: 6 }}>
-        <Btn style={{ flex: 1 }} onClick={() => { investDeposit(G); }} disabled={s.funds <= 0}>
+        <Btn style={{ flex: 1 }} onClick={() => { investDeposit(G); saveGame(G); }} disabled={s.funds <= 0}>
           Deposit All
         </Btn>
-        <Btn style={{ flex: 1 }} onClick={() => { investWithdraw(G); }} disabled={s.bankroll <= 0}>
+        <Btn style={{ flex: 1 }} onClick={() => { investWithdraw(G); saveGame(G); }} disabled={s.bankroll <= 0}>
           Withdraw
         </Btn>
       </div>

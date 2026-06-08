@@ -54,10 +54,23 @@ export default function App() {
       }
       setSnap(G);
     }, 100);
+    const persistOnSuspend = () => saveGame(G);
+    const persistOnHidden = () => {
+      if (document.visibilityState === 'hidden') persistOnSuspend();
+    };
+
+    document.addEventListener('visibilitychange', persistOnHidden);
+    document.addEventListener('freeze', persistOnSuspend);
+    window.addEventListener('pagehide', persistOnSuspend);
+    window.addEventListener('beforeunload', persistOnSuspend);
 
     return () => {
       clearInterval(gameTimer);
       clearInterval(displayTimer);
+      document.removeEventListener('visibilitychange', persistOnHidden);
+      document.removeEventListener('freeze', persistOnSuspend);
+      window.removeEventListener('pagehide', persistOnSuspend);
+      window.removeEventListener('beforeunload', persistOnSuspend);
     };
   }, []);
 
