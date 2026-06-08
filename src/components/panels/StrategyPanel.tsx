@@ -5,6 +5,7 @@ import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
 import { runTourney, toggleAutoTourney, collectTourneyYomi } from '../../game/actions';
+import { saveGame } from '../../game/save';
 import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
@@ -177,7 +178,10 @@ export function StrategyPanel({ snap: s }: Props) {
             onClick={() => {
               if (tournamentRunning) return;
               runTourney(G, picked);
-              if (G.currentTournament) setRunning(true);
+              if (G.currentTournament) {
+                setRunning(true);
+                saveGame(G);
+              }
             }}
             disabled={tournamentRunning || s.operations < s.newTourneyCost}
           >
