@@ -19,12 +19,15 @@ function droneBulkCost(baseLevel: number, qty: number): number {
 }
 
 export function SpacePanel({ snap: s }: Props) {
-  const showUniverse  = s.spaceFlag === 1;
-  const showHarvesters= !s.humanFlag && s.harvesterFlag === 1;
-  const showWireDrones= !s.humanFlag && s.wireDroneFlag === 1;
+  const hideSpaceExploration = s.dismantle >= 1 && s.endTimer1 >= 150;
+  const hideWireProduction = s.dismantle >= 2;
+  const showUniverse  = s.spaceFlag === 1 && !hideSpaceExploration;
+  const showRecoveredWire = s.spaceFlag === 1 && hideWireProduction;
+  const showHarvesters= !s.humanFlag && s.harvesterFlag === 1 && !hideWireProduction;
+  const showWireDrones= !s.humanFlag && s.wireDroneFlag === 1 && !hideWireProduction;
   const showInfra     = showHarvesters || showWireDrones;
 
-  if (!showUniverse && !showInfra) return null;
+  if (!showUniverse && !showInfra && !showRecoveredWire) return null;
 
   return (
     <>
@@ -135,6 +138,15 @@ export function SpacePanel({ snap: s }: Props) {
               )}
             </>
           )}
+        </SectionCard>
+      )}
+
+      {showRecoveredWire && (
+        <SectionCard title="Wire" icon={<Cable size={14} />}>
+          <div className="stat-row">
+            <span className="stat-label">Recovered wire</span>
+            <span className="stat-value">{formatWithCommas(s.wire)}</span>
+          </div>
         </SectionCard>
       )}
 

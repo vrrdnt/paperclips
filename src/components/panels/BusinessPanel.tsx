@@ -25,6 +25,8 @@ export function BusinessPanel({ snap: s }: Props) {
   const wireTrendDown = s.wireCost < s.wireBasePrice;
   const wireTrendChar = wireTrendUp ? '▲' : wireTrendDown ? '▼' : '–';
   const wireTrendColor = wireTrendUp ? 'var(--danger)' : wireTrendDown ? 'var(--success)' : 'var(--text-muted)';
+  const showPostHumanRate = s.humanFlag === 0 && s.dismantle < 3;
+  const showFactorySection = s.factoryFlag === 1 && !(s.spaceFlag === 1 && s.dismantle >= 3);
 
   return (
     <>
@@ -54,15 +56,17 @@ export function BusinessPanel({ snap: s }: Props) {
 
         {s.humanFlag === 0 && (
           <>
-            <div className="stat-row">
-              <span className="stat-label">Clips/sec</span>
-              <span className="stat-value">{spellf(s.clipRate)}</span>
-            </div>
+            {showPostHumanRate && (
+              <div className="stat-row">
+                <span className="stat-label">Clips/sec</span>
+                <span className="stat-value">{spellf(s.clipRate)}</span>
+              </div>
+            )}
             <div className="stat-row">
               <span className="stat-label">Unused clips</span>
               <span className="stat-value">{spellf(s.unusedClips)}</span>
             </div>
-            {s.factoryFlag === 1 && (
+            {showFactorySection && (
               <>
                 <hr className="divider" />
                 {/* In space, probes build factories — show the count only. */}

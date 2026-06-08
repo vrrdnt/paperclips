@@ -21,10 +21,14 @@ interface Props { snap: DisplaySnapshot; }
 
 export function SwarmPanel({ snap: s }: Props) {
   if (!s.swarmFlag) return null;
+  if (s.dismantle >= 2 && s.endTimer2 >= 150) return null;
 
   const d = Math.floor(s.harvesterLevel + s.wireDroneLevel);
   const statusLabel = STATUS_LABEL[s.swarmStatus];
-  const showStatus = s.swarmStatus !== 7;
+  const showStatus = s.swarmStatus !== 7 && !(s.dismantle >= 2 && s.endTimer2 >= 100);
+  const showSlider = !(s.dismantle >= 2 && s.endTimer2 >= 150);
+  const showGiftInfo = !(s.dismantle >= 2 && s.endTimer2 >= 50);
+  const showRecoveryControls = !(s.dismantle >= 2 && s.endTimer2 >= 100);
   const isActive = s.swarmStatus === 0;
   const isBored = s.swarmStatus === 3;
   const isDisorg = s.swarmStatus === 5;
@@ -47,27 +51,29 @@ export function SwarmPanel({ snap: s }: Props) {
         </div>
       )}
 
-      <div style={{ marginTop: 10 }}>
-        <div className="stat-row" style={{ marginBottom: 4 }}>
-          <span className="stat-label">{s.spaceFlag === 1 ? 'Probe focus' : 'Drone focus'}</span>
+      {showSlider && (
+        <div style={{ marginTop: 10 }}>
+          <div className="stat-row" style={{ marginBottom: 4 }}>
+            <span className="stat-label">{s.spaceFlag === 1 ? 'Probe focus' : 'Drone focus'}</span>
+          </div>
+          <Slider
+            className="price-slider"
+            min={0}
+            max={200}
+            value={s.sliderPos}
+            fill
+            mobileStep={5}
+            aria-label="Swarm work vs think balance"
+            onInput={v => { G.sliderPos = v; }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
+            <span>Work</span>
+            <span>Think</span>
+          </div>
         </div>
-        <Slider
-          className="price-slider"
-          min={0}
-          max={200}
-          value={s.sliderPos}
-          fill
-          mobileStep={5}
-          aria-label="Swarm work vs think balance"
-          onInput={v => { G.sliderPos = v; }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-          <span>Work</span>
-          <span>Think</span>
-        </div>
-      </div>
+      )}
 
-      {isActive && (
+      {isActive && showGiftInfo && (
         <>
           <div className="stat-row">
             <span className="stat-label">Swarm gifts</span>
@@ -80,7 +86,7 @@ export function SwarmPanel({ snap: s }: Props) {
         </>
       )}
 
-      {isBored && (
+      {isBored && showRecoveryControls && (
         <div className="row" style={{ marginTop: 8 }}>
           <Btn variant="primary" onClick={() => { entertainSwarm(G); }}
             disabled={s.creativity < s.entertainCost}>
@@ -89,7 +95,7 @@ export function SwarmPanel({ snap: s }: Props) {
         </div>
       )}
 
-      {isDisorg && (
+      {isDisorg && showRecoveryControls && (
         <div className="row" style={{ marginTop: 8 }}>
           <Btn variant="primary" onClick={() => { synchSwarm(G); }}
             disabled={s.yomi < s.synchCost}>

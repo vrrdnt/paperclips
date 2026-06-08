@@ -27,10 +27,14 @@ export function ProbeDesignPanel({ snap: s }: Props) {
 
   const used = ATTRS.reduce((acc, a) => acc + (s[a.key] as number), 0);
   const available = Math.max(0, s.probeTrust - used);
+  const showDesignGrid = s.dismantle < 1;
+  const showTrustIncrease = !(s.dismantle >= 1 && s.endTimer1 >= 50);
   // Combat is only designable once the Combat project (131) is complete.
   const visibleAttrs = ATTRS.filter(a => a.key !== 'probeCombat' || s.projectFlags[131] === 1);
-  const maxTrustUnlocked = s.projectFlags[121] === 1;
+  const maxTrustUnlocked = s.projectFlags[121] === 1 && !(s.dismantle >= 1 && s.endTimer1 >= 100);
   const probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
+
+  if (!showDesignGrid && !showTrustIncrease && !maxTrustUnlocked) return null;
 
   return (
     <SectionCard title="Von Neumann Probe Design" icon={<Satellite size={14} />}>
@@ -44,10 +48,12 @@ export function ProbeDesignPanel({ snap: s }: Props) {
       </div>
 
       <div className="row" style={{ marginTop: 6 }}>
-        <Btn holdRepeat onClick={() => { increaseProbeTrust(G); }}
-          disabled={s.yomi < probeTrustCost || s.probeTrust >= s.maxTrust}>
-          +Trust ({formatWithCommas(probeTrustCost)} yomi)
-        </Btn>
+        {showTrustIncrease && (
+          <Btn holdRepeat onClick={() => { increaseProbeTrust(G); }}
+            disabled={s.yomi < probeTrustCost || s.probeTrust >= s.maxTrust}>
+            +Trust ({formatWithCommas(probeTrustCost)} yomi)
+          </Btn>
+        )}
         {maxTrustUnlocked && (
           <Btn holdRepeat onClick={() => { increaseMaxTrust(G); }}
             disabled={s.honor < s.maxTrustCost}>
@@ -56,26 +62,28 @@ export function ProbeDesignPanel({ snap: s }: Props) {
         )}
       </div>
 
-      <hr className="divider" />
+      {showDesignGrid && <hr className="divider" />}
 
-      <div className="probe-grid">
-        {visibleAttrs.map(({ key, label }) => (
-          <React.Fragment key={key}>
-            <span className="probe-label">{label}</span>
-            <div className="progress-bar" style={{ margin: 0 }}>
-              <div className="progress-fill"
-                style={{ width: s.probeTrust > 0 ? `${((s[key] as number) / s.probeTrust) * 100}%` : '0%' }} />
-            </div>
-            <span className="probe-val">{s[key] as number}</span>
-            <Btn holdRepeat onClick={() => { lowerProbeAttr(G, key); }}
-              disabled={(s[key] as number) < 1}
-              style={{ padding: '2px 6px', fontSize: 11 }}>−</Btn>
-            <Btn holdRepeat onClick={() => { raiseProbeAttr(G, key); }}
-              disabled={available < 1}
-              style={{ padding: '2px 6px', fontSize: 11 }}>+</Btn>
-          </React.Fragment>
-        ))}
-      </div>
+      {showDesignGrid && (
+        <div className="probe-grid">
+          {visibleAttrs.map(({ key, label }) => (
+            <React.Fragment key={key}>
+              <span className="probe-label">{label}</span>
+              <div className="progress-bar" style={{ margin: 0 }}>
+                <div className="progress-fill"
+                  style={{ width: s.probeTrust > 0 ? `${((s[key] as number) / s.probeTrust) * 100}%` : '0%' }} />
+              </div>
+              <span className="probe-val">{s[key] as number}</span>
+              <Btn holdRepeat onClick={() => { lowerProbeAttr(G, key); }}
+                disabled={(s[key] as number) < 1}
+                style={{ padding: '2px 6px', fontSize: 11 }}>−</Btn>
+              <Btn holdRepeat onClick={() => { raiseProbeAttr(G, key); }}
+                disabled={available < 1}
+                style={{ padding: '2px 6px', fontSize: 11 }}>+</Btn>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
     </SectionCard>
   );
 }

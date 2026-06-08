@@ -30,8 +30,10 @@ function battleRatio(clips: number, drifters: number): string {
 
 export function CombatPanel({ snap: s }: Props) {
   if (!s.battleFlag) return null;
+  if (s.dismantle >= 1 && s.endTimer1 >= 190) return null;
 
   const active = s.battles.find(b => !b.over) ?? s.battles[0];
+  const showCanvas = !(s.dismantle >= 1 && s.endTimer1 >= 175);
   const battleName = active?.name || s.battleName || 'Drifter Attack';
   const battleScale = active?.scale || s.battleScale || originalBattleScale(s);
   const initialClips = active?.initialClipProbes ?? active?.clipProbes ?? 0;
@@ -49,7 +51,7 @@ export function CombatPanel({ snap: s }: Props) {
           </span>
         )}
       </div>
-      <CombatCanvas />
+      {showCanvas && <CombatCanvas />}
       {active?.result && (
         <div className={`battle-outcome-row ${active.result}`}>
           <span>{active.result === 'victory' ? 'Victory' : 'Defeat'}</span>

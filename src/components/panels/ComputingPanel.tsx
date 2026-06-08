@@ -10,11 +10,13 @@ interface Props { snap: DisplaySnapshot; }
 
 export function ComputingPanel({ snap: s }: Props) {
   if (!s.compFlag) return null;
+  if (s.dismantle >= 7) return null;
 
   const opsPct = s.memory > 0 ? Math.min(100, (s.operations / (s.memory * 1000)) * 100) : 0;
   const trustAvailable = Math.max(0, s.trust - (s.processors + s.memory));
   const allocationAvailable = s.humanFlag === 1 ? trustAvailable : s.swarmGifts;
   const canAllocateCompute = trustAvailable > 0 || s.swarmGifts > 0;
+  const showProcessorDisplay = s.dismantle < 6;
 
   return (
     <SectionCard title="Computing" icon={<Cpu size={14} />}>
@@ -36,16 +38,18 @@ export function ComputingPanel({ snap: s }: Props) {
       </div>
 
       <div className="row" style={{ marginTop: 4 }}>
-        <div style={{ flex: 1 }}>
-          <div className="stat-row">
-            <span className="stat-label"><Cpu size={10} /> Processors</span>
-            <span className="stat-value">{s.processors}</span>
+        {showProcessorDisplay && (
+          <div style={{ flex: 1 }}>
+            <div className="stat-row">
+              <span className="stat-label"><Cpu size={10} /> Processors</span>
+              <span className="stat-value">{s.processors}</span>
+            </div>
+            <Btn holdRepeat onClick={() => { addProc(G); }} disabled={!canAllocateCompute}
+              style={{ marginTop: 4, width: '100%' }}>
+              +
+            </Btn>
           </div>
-          <Btn holdRepeat onClick={() => { addProc(G); }} disabled={!canAllocateCompute}
-            style={{ marginTop: 4, width: '100%' }}>
-            +
-          </Btn>
-        </div>
+        )}
         <div style={{ flex: 1 }}>
           <div className="stat-row">
             <span className="stat-label"><Brain size={10} /> Memory</span>

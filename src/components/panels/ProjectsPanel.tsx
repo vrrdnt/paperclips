@@ -46,6 +46,7 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
 
 export function ProjectsPanel({ snap: s }: Props) {
   if (!s.projectsFlag) return null;
+  if (s.dismantle >= 7) return null;
 
   const activeProjects = getActiveProjects(G)
     .map((project) => ({
