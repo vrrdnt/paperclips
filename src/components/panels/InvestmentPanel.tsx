@@ -33,7 +33,7 @@ export function InvestmentPanel({ snap: s }: Props) {
       </div>
       {h.portfolio.length >= 2 && (
         <div style={{ marginTop: 4, marginBottom: 4 }}>
-          <Sparkline data={h.portfolio} height={32} />
+          <Sparkline data={h.portfolio} height={38} valuePrefix="$" />
         </div>
       )}
 
