@@ -6,6 +6,7 @@ import { formatWithCommas } from './format';
 
 // ── Constants (verbatim from main.js / globals.js) ────────────────────────
 const PROBE_BASE_COST   = Math.pow(10, 17);        // probeCost
+const PROBE_GROWTH_CAP  = 999999999999999999999999999999999999999999999999;
 const PROBE_X_BASE_RATE = 1_750_000_000_000_000_000; // probeXBaseRate
 const PROBE_REP_RATE    = 0.00005;   // probeRepBaseRate
 const PROBE_HAZ_RATE    = 0.01;      // probeHazBaseRate
@@ -72,7 +73,7 @@ export function tick(s: GameState): void {
   if (s.factoryLevel > 0 && s.dismantle < 4) {
     const fbst = s.factoryBoost > 1 ? s.factoryBoost * s.factoryLevel : 1;
     const artifactBoost = activeArtifactMultiplier(s, A.QUARK_GLUON_HEART);
-    clipClick(s, s.powMod * fbst * s.factoryLevel * s.factoryRate * artifactBoost);
+    clipClick(s, s.powMod * fbst * Math.floor(s.factoryLevel) * s.factoryRate * artifactBoost);
   }
 
   // Space probe functions — only when spaceFlag==1
@@ -117,8 +118,9 @@ export function tick(s: GameState): void {
   // Auto-tourney
   if (s.autoTourneyFlag && s.autoTourneyStatus) tickAutoTourney(s);
 
-  // End-game timers
-  if (s.dismantle >= 1) tickEndGame(s);
+  // End-game timers increment from project flags in the original, before
+  // the first disassembly step sets dismantle to 1.
+  tickEndGame(s);
 
   // Timed events — wire price + sales every 100ms (10 ticks)
   if (s.ticks % 10 === 0) {
@@ -493,6 +495,7 @@ function spawnWireDrones(s: GameState): void {
 function spawnProbes(s: GameState): void {
   const probeRep = effectiveProbeAttr(s, s.probeRep, A.LABYRINTH_THREAD);
   let nextGen = s.probeCount * PROBE_REP_RATE * probeRep;
+  if (s.probeCount >= PROBE_GROWTH_CAP) nextGen = 0;
 
   if (nextGen > 0 && nextGen < 1) {
     s.partialProbeSpawn += nextGen;
@@ -923,6 +926,7 @@ function clamp(value: number, min: number, max: number): number {
 
 // ── Swarm — updateSwarm() ─────────────────────────────────────────────────
 function tickSwarm(s: GameState): void {
+  if (!isFinite(s.swarmGifts) || s.swarmGifts < 0) s.swarmGifts = 0;
   const d = Math.floor(s.harvesterLevel + s.wireDroneLevel);
 
   // Boredom: triggered by no harvestable matter with drones idle
@@ -967,16 +971,6 @@ function tickSwarm(s: GameState): void {
   if (s.boredomFlag === 1) s.swarmStatus = 3;
   if (s.disorgFlag === 1) s.swarmStatus = 5;
 
-  // Gift generation (active swarm only)
-  if (s.swarmStatus === 0 && d > 1) {
-    s.giftBitGenerationRate = Math.log(d) * (s.sliderPos / 100) *
-      activeArtifactMultiplier(s, A.TRUE_LEXICON);
-    if (s.giftBitGenerationRate > 0) {
-      s.giftBits += s.giftBitGenerationRate;
-      s.giftCountdown = (s.giftPeriod - s.giftBits) / s.giftBitGenerationRate;
-    }
-  }
-
   if (s.giftCountdown <= 0) {
     s.nextGift = Math.round(Math.log10(d) * s.sliderPos / 100);
     if (s.nextGift <= 0) s.nextGift = 1;
@@ -985,6 +979,16 @@ function tickSwarm(s: GameState): void {
       displayMessage(s, `The swarm has generated a gift of ${s.nextGift} additional computational capacity`);
     }
     s.giftBits = 0;
+  }
+
+  // Gift generation (active swarm only)
+  if (s.swarmStatus === 0 && d > 1) {
+    s.giftBitGenerationRate = Math.log(d) * (s.sliderPos / 100) *
+      activeArtifactMultiplier(s, A.TRUE_LEXICON);
+    if (s.giftBitGenerationRate > 0) {
+      s.giftBits += s.giftBitGenerationRate;
+      s.giftCountdown = (s.giftPeriod - s.giftBits) / s.giftBitGenerationRate;
+    }
   }
 }
 
