@@ -88,6 +88,7 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
 
 export function StrategyPanel({ snap: s }: Props) {
   if (!s.strategyEngineFlag) return null;
+  if (s.dismantle >= 4) return null;
 
   const [picked, setPicked] = useState(s.selectedStrategy || s.strategies[0] || 'RANDOM');
   const [flash, setFlash] = useState<Cell | null>(null);
