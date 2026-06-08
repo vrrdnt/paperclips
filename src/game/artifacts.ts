@@ -184,11 +184,8 @@ export function completeCurrentMapCell(s: GameState): MapCompletion {
   const sim = currentSim(s);
   const key = mapKey(world, sim);
   const artifacts = artifactsAt(world, sim);
-  const canComplete = !(world === MAP_SIZE && sim === MAP_SIZE);
-  const newlyCompleted = canComplete && !s.completedMapCells.includes(key);
-  const newlyCollectedArtifacts = canComplete
-    ? artifacts.filter(artifact => !s.collectedArtifacts.includes(artifact.id))
-    : [];
+  const newlyCompleted = !s.completedMapCells.includes(key);
+  const newlyCollectedArtifacts = artifacts.filter(artifact => !s.collectedArtifacts.includes(artifact.id));
 
   if (newlyCompleted) s.completedMapCells.push(key);
   for (const artifact of newlyCollectedArtifacts) s.collectedArtifacts.push(artifact.id);
