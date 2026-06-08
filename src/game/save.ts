@@ -93,6 +93,18 @@ function normalizeTournamentState(s: GameState): void {
   s.vMovePrev = s.vMovePrev === 2 ? 2 : 1;
 }
 
+function normalizeDemandBoost(s: GameState): void {
+  const projectBoost =
+    (s.projectFlags[37] === 1 ? 5 : 1) *
+    (s.projectFlags[38] === 1 ? 10 : 1);
+  const prestigeBoost = 1 + finitePrestige(s.prestigeU) * 0.1;
+  const bakedPrestigeBoost = projectBoost * prestigeBoost;
+
+  if (s.prestigeU > 0 && Math.abs(s.demandBoost - bakedPrestigeBoost) < 1e-9) {
+    s.demandBoost = projectBoost;
+  }
+}
+
 export function hydrateGameState(loaded: Partial<GameState>): GameState {
   const initial = makeInitialState();
   const merged = { ...initial, ...loaded };
@@ -100,6 +112,7 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   normalizeTournamentState(merged);
   normalizeProbeDesign(merged);
   normalizeBattles(merged);
+  normalizeDemandBoost(merged);
 
   mergePartialSpawnLevel(merged, 'factoryLevel', 'partialFactorySpawn');
   mergePartialSpawnLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
@@ -144,9 +157,6 @@ export function resetGame(): GameState {
   s.activeArtifacts = prestige.activeArtifacts;
   s.usedArtifactTriggers = prestige.usedArtifactTriggers;
   normalizeArtifactState(s);
-  // Apply prestige bonuses
-  if (prestige.u > 0) s.demandBoost = 1 + prestige.u * 0.1;
-  if (prestige.s > 0) s.creativitySpeed = 1 + prestige.s * 0.1;
   return s;
 }
 
