@@ -118,6 +118,112 @@ textarea {
   flex-shrink: 0;
 }
 
+/* Modal shell */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background: rgba(0,0,0,0.7);
+}
+
+.changelog-modal {
+  width: min(560px, 100%);
+  max-height: min(78vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+
+.changelog-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.changelog-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.changelog-subtitle {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.changelog-list {
+  overflow: auto;
+  padding: 12px;
+}
+
+.changelog-entry {
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.changelog-entry:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.changelog-entry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.changelog-version {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.changelog-date,
+.changelog-commits {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.changelog-entry-title {
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.changelog-commits {
+  margin-top: 3px;
+  font-family: 'Consolas', monospace;
+}
+
+.changelog-entry ul {
+  margin: 7px 0 0 15px;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.changelog-entry li + li {
+  margin-top: 5px;
+}
+
 /* Hide clip count text on very small screens — it's also shown in the panel */
 @media (max-width: 380px) {
   .header-clip-count { display: none; }
