@@ -8,10 +8,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.2.0',
+    date: '2026-06-08',
+    title: 'Gameplay parity polish',
+    commits: '5f70ab0..2ddc3bd',
+    changes: [
+      'Matched more original-game behavior for AutoTourney results, final artifact map cells, project reveal order, tournament matchup order, swarm gifts, fractional probe replication, combat explosion timing, and large-number precision.',
+    ],
+  },
+  {
     version: '2.1.0',
     date: '2026-06-08',
     title: 'In-app changelog',
-    commits: 'after 8b09aa5',
+    commits: 'fce22b0',
     changes: [
       'Added a top-menu changelog button and backfilled version history from the project commit log.',
     ],
