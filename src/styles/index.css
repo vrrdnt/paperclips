@@ -482,6 +482,38 @@ textarea {
   bottom: 2px;
 }
 
+.sparkline-candle {
+  color: #d0cdc4;
+}
+
+.sparkline-candle.is-up {
+  color: #63c66f;
+}
+
+.sparkline-candle.is-down {
+  color: #d86660;
+}
+
+.sparkline-candle.is-flat {
+  color: #d0cdc4;
+}
+
+.sparkline-candle-wick {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.72;
+}
+
+.sparkline-candle-body {
+  fill: currentColor;
+  stroke: rgba(12,12,12,0.7);
+  stroke-width: 0.45;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.9;
+}
+
 @media (min-width: 900px) {
   .stat-row { padding: 1px 0; }
   .stat-label { font-size: 11px; }

@@ -7,6 +7,8 @@ interface Props {
   valuePrefix?: string;
 }
 
+const FLAT_EPSILON = 1e-9;
+
 export function Sparkline({ data, yMax, height = 32, invertTrend = false, valuePrefix = '' }: Props) {
   if (data.length < 2) return <div style={{ width: '100%', height }} />;
 
@@ -27,22 +29,56 @@ export function Sparkline({ data, yMax, height = 32, invertTrend = false, valueP
   const plotBottom = height - 7;
   const plotHeight = Math.max(1, plotBottom - plotTop);
   const midY = plotTop + plotHeight / 2;
+  const step = (vw - p * 2) / (data.length - 1);
+  const candleWidth = Math.max(0.28, Math.min(1.25, step * 0.62));
 
-  const pts = data.map((v, i) => {
+  const points = data.map((v, i) => {
     const x = (i / (data.length - 1)) * (vw - p * 2) + p;
     const normalized = Math.max(0, Math.min(1, (v - floor) / range));
     const y = plotBottom - normalized * plotHeight;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
+    return { x, y, value: v };
+  });
+
+  const candles = points.slice(1).map((point, index) => {
+    const previous = points[index];
+    const delta = point.value - previous.value;
+    const flat = Math.abs(delta) <= Math.max(FLAT_EPSILON, Math.abs(previous.value) * FLAT_EPSILON);
+    const adjustedDelta = invertTrend ? -delta : delta;
+    const trendClass = flat ? 'flat' : adjustedDelta > 0 ? 'up' : 'down';
+    const x = (previous.x + point.x) / 2;
+    const rawHeight = Math.abs(point.y - previous.y);
+    const bodyHeight = flat ? 0.8 : Math.max(rawHeight, 1.2);
+    const bodyY = flat ? point.y - bodyHeight / 2 : Math.min(point.y, previous.y);
+
+    return (
+      <g key={`${index}-${point.value}`} className={`sparkline-candle is-${trendClass}`}>
+        <line
+          className="sparkline-candle-wick"
+          x1={x}
+          y1={previous.y}
+          x2={x}
+          y2={point.y}
+        />
+        <rect
+          className="sparkline-candle-body"
+          x={x - candleWidth / 2}
+          y={bodyY}
+          width={candleWidth}
+          height={bodyHeight}
+          rx={0.08}
+        />
+      </g>
+    );
+  });
 
   const trend = data[data.length - 1] - data[0];
   const adjustedTrend = invertTrend ? -trend : trend;
-  const stroke = adjustedTrend > 0 ? '#50b050' : adjustedTrend < 0 ? '#c05050' : '#777777';
+  const latestTrendClass = Math.abs(adjustedTrend) <= FLAT_EPSILON ? 'flat' : adjustedTrend > 0 ? 'up' : 'down';
   const minLabel = `${valuePrefix}${formatAxisValue(floor)}`;
   const maxLabel = `${valuePrefix}${formatAxisValue(ceil)}`;
 
   return (
-    <div className="sparkline" style={{ height }}>
+    <div className={`sparkline is-${latestTrendClass}`} style={{ height }}>
       <svg
         width="100%"
         height={height}
@@ -53,15 +89,7 @@ export function Sparkline({ data, yMax, height = 32, invertTrend = false, valueP
         <line className="sparkline-axis" x1={p} y1={plotTop} x2={vw - p} y2={plotTop} />
         <line className="sparkline-axis sparkline-axis-mid" x1={p} y1={midY} x2={vw - p} y2={midY} />
         <line className="sparkline-axis" x1={p} y1={plotBottom} x2={vw - p} y2={plotBottom} />
-        <polyline
-          points={pts}
-          fill="none"
-          stroke={stroke}
-          strokeWidth="1.7"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-        />
+        {candles}
       </svg>
       <span className="sparkline-axis-label is-max">{maxLabel}</span>
       <span className="sparkline-axis-label is-min">{minLabel}</span>
