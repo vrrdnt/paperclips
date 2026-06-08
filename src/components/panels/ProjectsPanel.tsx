@@ -17,6 +17,7 @@ interface ProjectButtonProps {
 function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
   const revealKey = `project:${p.id}`;
   const { isHighlighted, acknowledgeReveal } = useRevealHighlight(revealKey);
+  const title = typeof p.title === 'function' ? p.title(s) : p.title;
   const priceTag = typeof p.priceTag === 'function' ? p.priceTag(s) : p.priceTag;
 
   return (
@@ -32,7 +33,7 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
         disabled={!canAfford}
         onClick={() => { p.effect(G); }}
       >
-        <span className="project-btn-title">{p.title}</span>
+        <span className="project-btn-title">{title}</span>
         <span className="project-btn-price">{priceTag}</span>
         <span className="project-btn-desc">{p.description}</span>
       </Btn>
