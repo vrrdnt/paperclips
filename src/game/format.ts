@@ -26,7 +26,7 @@ export function spellf(n: number): string {
 
   if (group < SUFFIXES.length) {
     const val = n / Math.pow(10, group * 3);
-    return val.toFixed(3) + ' ' + SUFFIXES[group];
+    return val.toFixed(1) + ' ' + SUFFIXES[group];
   }
 
   // Scientific notation fallback
