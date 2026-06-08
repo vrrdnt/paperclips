@@ -546,6 +546,7 @@ const DRIFTER_COMBAT = 1.75;
 const WAR_TRIGGER = 1_000_000;
 const MAX_BATTLES = 1;
 const BATTLE_FRAME_MS = 16;
+const QUANTUM_DISASSEMBLY_WIRE_TICKS = new Set([10, 60, 100, 130, 150, 160, 165, 169, 172, 174]);
 let battleFrameAccumulator = 0;
 
 const BATTLE_NAMES = [
@@ -1191,6 +1192,11 @@ function tickAutoTourney(s: GameState): void {
 
 // End-game timers increment from individual project flags, matching the original.
 function tickEndGame(s: GameState): void {
+  if (s.dismantle >= 5) {
+    for (let i = 0; i < s.qChips.length; i++) s.qChips[i] = 0.5;
+    if (QUANTUM_DISASSEMBLY_WIRE_TICKS.has(s.endTimer4)) s.wire += 1;
+  }
+
   if (s.projectFlags[148]) s.endTimer1++;
   if (s.projectFlags[211]) s.endTimer2++;
   if (s.projectFlags[212]) s.endTimer3++;

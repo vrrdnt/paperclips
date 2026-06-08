@@ -248,6 +248,7 @@ const QChip = React.memo(function QChip({ value, index, active }: { value: numbe
 
 export function QuantumPanel({ snap: s }: Props) {
   if (s.qFlag !== 1) return null;
+  if (s.dismantle >= 5 && s.endTimer4 >= 250) return null;
 
   const activeQChips = s.qChips.slice(0, s.nextQchip);
   const qSum = activeQChips.reduce((sum, v) => sum + v, 0);
@@ -280,9 +281,11 @@ export function QuantumPanel({ snap: s }: Props) {
       {/* Sine waveform */}
       <QWave chips={s.qChips} activeCount={s.nextQchip} />
 
-      <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} holdRepeat onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
-        Quantum Compute
-      </Btn>
+      {s.dismantle < 5 && (
+        <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} holdRepeat onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
+          Quantum Compute
+        </Btn>
+      )}
     </SectionCard>
   );
 }
