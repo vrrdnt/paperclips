@@ -70,6 +70,7 @@ export interface GameState {
   clipsSold: number;
   avgRev: number;
   income: number;
+  prevIncome: number;
   incomeTracker: number[];
   ticks: number;
   marketing: number;
@@ -305,7 +306,7 @@ export function makeInitialState(): GameState {
     clipRateTracker: 0, clipmakerRate: 0, clipmakerLevel: 0, clipmakerLevel2: 0,
     clipperCost: 5, unsoldClips: 0, funds: 0, margin: 0.25,
     wire: 1000, wireCost: 20, adCost: 100, demand: 5, clipsSold: 0,
-    avgRev: 0, income: 0, incomeTracker: [0], ticks: 0,
+    avgRev: 0, income: 0, prevIncome: 0, incomeTracker: [0], ticks: 0,
     marketing: 1, marketingLvl: 1,
 
     processors: 1, memory: 1, operations: 0, standardOps: 0,

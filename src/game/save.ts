@@ -31,6 +31,7 @@ type PartialSpawnKey = 'partialFactorySpawn' | 'partialHarvesterSpawn' | 'partia
 type LegacySavedState = Partial<GameState> & {
   maxPort?: number;
   riskiness?: number;
+  prevIncome?: number;
 };
 type LegacyStock = Stock & { total?: number };
 type ProbeAttrKey =
@@ -115,6 +116,13 @@ function normalizeDemandBoost(s: GameState): void {
   }
 }
 
+function normalizeMarketingCost(s: GameState): void {
+  const wrongFormulaCost = Math.pow(2, s.marketingLvl) * 100;
+  if (s.marketingLvl > 1 && Math.abs(s.adCost - wrongFormulaCost) < 1e-9) {
+    s.adCost = Math.floor(s.adCost / 2);
+  }
+}
+
 function normalizeInvestmentState(s: GameState, loaded: LegacySavedState): void {
   if (!Array.isArray(s.stocks)) s.stocks = [];
 
@@ -146,7 +154,11 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   normalizeProbeDesign(merged);
   normalizeBattles(merged);
   normalizeDemandBoost(merged);
+  normalizeMarketingCost(merged);
   normalizeInvestmentState(merged, loaded as LegacySavedState);
+  if (!Number.isFinite((loaded as LegacySavedState).prevIncome)) {
+    merged.prevIncome = finiteNumber(merged.income);
+  }
 
   mergePartialSpawnLevel(merged, 'factoryLevel', 'partialFactorySpawn');
   mergePartialSpawnLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');

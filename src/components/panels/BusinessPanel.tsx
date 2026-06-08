@@ -8,7 +8,7 @@ import { G } from '../../game/state';
 import {
   clipClick, buyWire, lowerPrice, raisePrice, setPrice, buyAds, toggleWireBuyer,
   makeFactory, factoryReboot, effectiveAdCost,
-  MIN_CLIP_PRICE, MAX_CLIP_PRICE,
+  MIN_CLIP_PRICE, PRICE_SLIDER_MAX,
 } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
 import { A, hasActiveArtifact } from '../../game/artifacts';
@@ -135,17 +135,18 @@ export function BusinessPanel({ snap: s }: Props) {
               <Slider
                 className="price-slider"
                 min={MIN_CLIP_PRICE}
-                max={MAX_CLIP_PRICE}
+                max={Math.max(PRICE_SLIDER_MAX, s.margin)}
                 step={0.01}
                 value={s.margin}
                 fill
                 mobileMode="readout"
+                allowAboveMax
                 valueLabel={price}
                 aria-label="Price per clip"
                 onInput={v => { setPrice(G, v); }}
               />
             </div>
-            <Btn holdRepeat onClick={() => { raisePrice(G); }} disabled={s.margin >= MAX_CLIP_PRICE}>+</Btn>
+            <Btn holdRepeat onClick={() => { raisePrice(G); }}>+</Btn>
           </div>
           <div className="stat-row" style={{ marginTop: 2 }}>
             <span className="stat-label">Public demand</span>

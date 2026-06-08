@@ -16,7 +16,7 @@ import {
 import { normalizeSelectedStrategy, simulateTournament } from './tournament';
 
 export const MIN_CLIP_PRICE = 0.01;
-export const MAX_CLIP_PRICE = 3.00;
+export const PRICE_SLIDER_MAX = 3.00;
 
 // ── Clips ─────────────────────────────────────────────────────────────────
 export function clipClick(s: GameState, n = 1): void {
@@ -70,12 +70,11 @@ export function lowerPrice(s: GameState): void {
 }
 
 export function raisePrice(s: GameState): void {
-  if (s.margin >= MAX_CLIP_PRICE) return;
   setPrice(s, s.margin + 0.01);
 }
 
 export function setPrice(s: GameState, price: number): void {
-  const next = Math.max(MIN_CLIP_PRICE, Math.min(MAX_CLIP_PRICE, price));
+  const next = Math.max(MIN_CLIP_PRICE, price);
   s.margin = Math.round(next * 100) / 100;
 }
 
@@ -85,7 +84,7 @@ export function buyAds(s: GameState): void {
   s.funds -= cost;
   s.marketingLvl++;
   s.marketing = Math.pow(1.1, s.marketingLvl - 1);
-  s.adCost = Math.pow(2, s.marketingLvl) * 100;
+  s.adCost = Math.floor(s.adCost * 2);
   displayMessage(s, `Marketing level increased to ${s.marketingLvl}`);
 }
 
