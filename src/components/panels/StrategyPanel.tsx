@@ -133,9 +133,20 @@ export function StrategyPanel({ snap: s }: Props) {
       return CELLS[3];
     }
 
-    // Original tournament includes every ordered pair, including self-matchups.
+    // Match the original pickStrats order, including self-matchups.
     const pairs: [string, string][] = [];
-    for (const h of strategies) for (const v of strategies) pairs.push([h, v]);
+    let stratCounter = 0;
+    for (let roundNum = 0; roundNum < totalRounds; roundNum++) {
+      let h = 0;
+      let v = roundNum;
+      if (roundNum >= strategies.length) {
+        stratCounter++;
+        if (stratCounter >= strategies.length) stratCounter -= strategies.length;
+        h = Math.floor(roundNum / strategies.length);
+        v = stratCounter;
+      }
+      pairs.push([strategies[h], strategies[v]]);
+    }
 
     const TOTAL_ROUNDS = Math.min(totalRounds, pairs.length || 1);
     // Each pairing plays 10 moves at 100ms each → one full second per pairing, like the original.
