@@ -69,7 +69,7 @@ export function SpacePanel({ snap: s }: Props) {
             <>
               <div className="stat-row">
                 <span className="stat-label">{showUniverse ? 'Harvester Probes' : 'Harvester Drones'}</span>
-                <span className="stat-value">{formatWithCommas(s.harvesterLevel)}</span>
+                <span className="stat-value">{showUniverse ? spellf(s.harvesterLevel) : formatWithCommas(s.harvesterLevel)}</span>
               </div>
               {!showUniverse && (
                 <div className="row" style={{ marginTop: 4 }}>
@@ -105,7 +105,7 @@ export function SpacePanel({ snap: s }: Props) {
             <>
               <div className="stat-row" style={{ marginTop: showHarvesters ? 6 : 0 }}>
                 <span className="stat-label">{showUniverse ? 'Wire Probes' : 'Wire Drones'}</span>
-                <span className="stat-value">{formatWithCommas(s.wireDroneLevel)}</span>
+                <span className="stat-value">{showUniverse ? spellf(s.wireDroneLevel) : formatWithCommas(s.wireDroneLevel)}</span>
               </div>
               {!showUniverse && (
                 <div className="row" style={{ marginTop: 4 }}>

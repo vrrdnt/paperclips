@@ -29,7 +29,9 @@ export function PowerPanel({ snap: s }: Props) {
   const factoryDraw = s.factoryLevel * s.factoryPowerRate;
   const droneDraw   = (s.harvesterLevel + s.wireDroneLevel) * s.dronePowerRate;
   const consumption = factoryDraw + droneDraw;
-  const performance = Math.round(s.powMod * 100);
+  const performance = s.factoryLevel === 0 && s.harvesterLevel === 0 && s.wireDroneLevel === 0
+    ? 0
+    : Math.round(s.powMod * 100);
   const cap         = s.batteryLevel * s.batterySize;
   const storedPct   = cap > 0 ? Math.min(100, (s.storedPower / cap) * 100) || 0 : 0;
 
