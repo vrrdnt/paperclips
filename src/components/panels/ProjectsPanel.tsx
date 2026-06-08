@@ -3,7 +3,7 @@ import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { G } from '../../game/state';
-import { getActiveProjects, Project } from '../../game/projects';
+import { clearActiveProject, getActiveProjects, Project } from '../../game/projects';
 import { useRevealHighlight } from '../ui/useRevealHighlight';
 
 interface Props { snap: DisplaySnapshot; }
@@ -31,7 +31,10 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
       <Btn
         className="project-btn"
         disabled={!canAfford}
-        onClick={() => { p.effect(G); }}
+        onClick={() => {
+          p.effect(G);
+          clearActiveProject(G, p.id);
+        }}
       >
         <span className="project-btn-title">{title}</span>
         <span className="project-btn-price">{priceTag}</span>
@@ -44,7 +47,7 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
 export function ProjectsPanel({ snap: s }: Props) {
   if (!s.projectsFlag) return null;
 
-  const activeProjects = getActiveProjects(s)
+  const activeProjects = getActiveProjects(G)
     .map((project, index) => ({
       project,
       index,

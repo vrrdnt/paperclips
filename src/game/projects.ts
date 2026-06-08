@@ -1685,8 +1685,36 @@ export const ALL_PROJECTS: Project[] = [
   },
 ];
 
+function ensureProjectLists(s: GameState): void {
+  if (!Array.isArray(s.activeProjectIds)) s.activeProjectIds = [];
+  if (!Array.isArray(s.hiddenProjectIds)) s.hiddenProjectIds = [];
+}
+
+function canRevealProject(s: GameState, p: Project): boolean {
+  return !s.projectFlags[p.id] && !s.hiddenProjectIds.includes(p.id);
+}
+
+export function clearActiveProject(s: GameState, projectId: number): void {
+  ensureProjectLists(s);
+  s.activeProjectIds = s.activeProjectIds.filter(id => id !== projectId);
+}
+
 export function getActiveProjects(s: GameState): Project[] {
-  return ALL_PROJECTS.filter(
-    (p) => !s.projectFlags[p.id] && !s.hiddenProjectIds.includes(p.id) && p.trigger(s),
-  );
+  ensureProjectLists(s);
+
+  for (const p of ALL_PROJECTS) {
+    if (canRevealProject(s, p) && !s.activeProjectIds.includes(p.id) && p.trigger(s)) {
+      s.activeProjectIds.push(p.id);
+    }
+  }
+
+  const knownIds = new Set(ALL_PROJECTS.map(p => p.id));
+  const seenIds = new Set<number>();
+  s.activeProjectIds = s.activeProjectIds.filter(id => {
+    if (!knownIds.has(id) || seenIds.has(id)) return false;
+    seenIds.add(id);
+    return !s.projectFlags[id] && !s.hiddenProjectIds.includes(id);
+  });
+
+  return ALL_PROJECTS.filter(p => s.activeProjectIds.includes(p.id));
 }
