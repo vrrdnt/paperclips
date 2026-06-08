@@ -20,11 +20,11 @@ export interface TournamentSimulation {
 
 const CHOICE_PAIRS: [string, string][] = [
   ['cooperate', 'defect'], ['swerve', 'straight'], ['macro', 'micro'],
-  ['fight', 'back down'], ['bet', 'fold'], ['raise', 'lower'],
+  ['fight', 'back_down'], ['bet', 'fold'], ['raise_price', 'lower_price'],
   ['opera', 'football'], ['go', 'stay'], ['heads', 'tails'],
   ['particle', 'wave'], ['discrete', 'continuous'], ['peace', 'war'],
   ['search', 'evaluate'], ['lead', 'follow'], ['accept', 'reject'],
-  ['attack', 'decay'],
+  ['accept', 'deny'], ['attack', 'decay'],
 ];
 
 export function normalizeSelectedStrategy(s: GameState): string {
