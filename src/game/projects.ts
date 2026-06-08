@@ -1294,7 +1294,7 @@ export const ALL_PROJECTS: Project[] = [
     trigger: (s) =>
       s.spaceFlag === 1 &&
       s.probeCount === 0 &&
-      s.unusedClips < s.probeTrustCost &&
+      s.unusedClips < Math.pow(10, 17) &&
       s.milestoneFlag < 15,
     cost: (s) => s.memory >= 10,
     effect: (s) => {
@@ -1648,6 +1648,7 @@ export const ALL_PROJECTS: Project[] = [
     trigger: (s) => s.operations <= -10000,
     cost: (s) => s.operations <= -10000,
     effect: (s) => {
+      if (!window.confirm('Are you sure you want to restart?')) return;
       s.standardOps += 10000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.projectFlags[217] = 1;

@@ -127,12 +127,17 @@ export interface GameState {
   maxTrustCost: number;
   // ── Strategy ──────────────────────────────────────────────────────────────
   strategies: string[];
+  selectedStrategy: string;
   autoTourneyFlag: number;
   autoTourneyStatus: number;
   yomiBoost: number;
   tourneyResult: string;
   newTourneyCost: number;
   tourneyCount: number;
+  hMove: number;
+  vMove: number;
+  hMovePrev: number;
+  vMovePrev: number;
   currentTournament: {
     stratH: string; stratV: string;
     payoff: number[][];
@@ -321,9 +326,10 @@ export function makeInitialState(): GameState {
 
     yomi: 0, honor: 0, maxTrust: 20, maxTrustCost: 91117.99,
 
-    strategies: ['RANDOM'], autoTourneyFlag: 0, autoTourneyStatus: 1,
+    strategies: ['RANDOM'], selectedStrategy: 'RANDOM', autoTourneyFlag: 0, autoTourneyStatus: 1,
     yomiBoost: 1, tourneyResult: 'Pick strategy, run tournament, gain yomi',
-    newTourneyCost: 1000, tourneyCount: 0, currentTournament: null,
+    newTourneyCost: 1000, tourneyCount: 0,
+    hMove: 1, vMove: 1, hMovePrev: 1, vMovePrev: 1, currentTournament: null,
 
     compFlag: 0, projectsFlag: 0, autoClipperFlag: 0, megaClipperFlag: 0,
     revPerSecFlag: 0, strategyEngineFlag: 0, investmentEngineFlag: 0,

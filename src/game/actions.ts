@@ -13,17 +13,20 @@ import {
   markArtifactTriggerUsed,
   warpToCompletedCell,
 } from './artifacts';
+import { normalizeSelectedStrategy, simulateTournament } from './tournament';
 
 export const MIN_CLIP_PRICE = 0.01;
 export const MAX_CLIP_PRICE = 3.00;
 
 // ── Clips ─────────────────────────────────────────────────────────────────
 export function clipClick(s: GameState, n = 1): void {
-  if (s.wire < n) return;
-  s.clips += n;
-  s.unusedClips += n;
-  s.unsoldClips += n;
-  s.wire -= n;
+  if (s.dismantle >= 4) s.finalClips++;
+  if (s.wire < 1) return;
+  const amount = Math.min(n, s.wire);
+  s.clips += amount;
+  s.unusedClips += amount;
+  s.unsoldClips += amount;
+  s.wire -= amount;
 }
 
 // ── Wire ──────────────────────────────────────────────────────────────────
@@ -166,62 +169,28 @@ export function investUpgrade(s: GameState): void {
 }
 
 // ── Strategy / Tournament ─────────────────────────────────────────────────
-const CHOICE_PAIRS: [string, string][] = [
-  ['cooperate', 'defect'], ['swerve', 'straight'], ['macro', 'micro'],
-  ['fight', 'back down'], ['bet', 'fold'], ['raise', 'lower'],
-  ['opera', 'football'], ['go', 'stay'], ['heads', 'tails'],
-  ['particle', 'wave'], ['discrete', 'continuous'], ['peace', 'war'],
-  ['search', 'evaluate'], ['lead', 'follow'], ['accept', 'reject'],
-  ['attack', 'decay'],
-];
-
 export function runTourney(s: GameState, pickedStrat: string): void {
   if ((s.currentTournament?.pendingYomi ?? 0) > 0) return;
   if (s.operations < s.newTourneyCost) return;
+  s.selectedStrategy = s.strategies.includes(pickedStrat) ? pickedStrat : normalizeSelectedStrategy(s);
   s.standardOps -= s.newTourneyCost;
   s.operations = Math.floor(s.standardOps + s.tempOps);
 
-  const aa = Math.ceil(Math.random() * 10);
-  const ab = Math.ceil(Math.random() * 10);
-  const ba = Math.ceil(Math.random() * 10);
-  const bb = Math.ceil(Math.random() * 10);
-  const payoff = [[aa, ab], [ba, bb]];
-  const choiceNames = CHOICE_PAIRS[Math.floor(Math.random() * CHOICE_PAIRS.length)];
-
-  const active = [...s.strategies];
-  const totals: Record<string, number> = {};
-  for (const n of active) totals[n] = 0;
-
-  // Original tournament runs every ordered pairing, including self-matchups.
-  for (const hName of active) {
-    for (const vName of active) {
-      let hPrev = 1, vPrev = 1;
-      for (let r = 0; r < 10; r++) {
-        const hm = stratMove(hName, r, payoff, vPrev);
-        const vm = stratMove(vName, r, payoff, hPrev);
-        if (hm === 1 && vm === 1) { totals[hName] += payoff[0][0]; totals[vName] += payoff[0][0]; }
-        else if (hm === 1 && vm === 2) { totals[hName] += payoff[0][1]; totals[vName] += payoff[1][0]; }
-        else if (hm === 2 && vm === 1) { totals[hName] += payoff[1][0]; totals[vName] += payoff[0][1]; }
-        else { totals[hName] += payoff[1][1]; totals[vName] += payoff[1][1]; }
-        hPrev = hm; vPrev = vm;
-      }
-    }
-  }
-
-  const scores = active.map(name => ({ name, score: totals[name] }));
-  scores.sort((a, b) => b.score - a.score);
-  const winner = scores[0];
-  const picked = scores.find(s2 => s2.name === pickedStrat)!;
-  let yomiGain = calculateYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
+  const result = simulateTournament(s, s.selectedStrategy, s.projectFlags[128] === 1);
+  let yomiGain = result.yomiGain;
   if (hasActiveArtifact(s, A.ZERO_DETERMINANT_LATTICE)) yomiGain *= 6;
 
-  s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
+  s.hMove = result.hMove;
+  s.vMove = result.vMove;
+  s.hMovePrev = result.hMovePrev;
+  s.vMovePrev = result.vMovePrev;
+  s.tourneyResult = result.scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
   s.tourneyCount++;
   s.currentTournament = {
-    stratH: pickedStrat, stratV: winner.name,
-    payoff, choiceNames,
-    totalRounds: active.length * active.length,
-    results: scores.map(sc => `${sc.name}: ${sc.score}`),
+    stratH: s.selectedStrategy, stratV: result.winner.name,
+    payoff: result.payoff, choiceNames: result.choiceNames,
+    totalRounds: s.strategies.length * s.strategies.length,
+    results: result.scores.map(sc => `${sc.name}: ${sc.score}`),
     pendingYomi: Math.floor(yomiGain),
   };
 }
@@ -237,40 +206,6 @@ export function collectTourneyYomi(s: GameState): void {
   s.currentTournament.pendingYomi = 0;
 }
 
-function calculateYomiGain(
-  scores: { name: string; score: number }[],
-  picked: { name: string; score: number },
-  yomiBoost: number,
-  strategicAttachment: boolean,
-): number {
-  const placement = scores.indexOf(picked);
-  let yomiGain = picked.score * yomiBoost;
-  if (strategicAttachment) {
-    if (placement === 0) yomiGain += 50000;
-    else if (placement === 1) yomiGain += 30000;
-    else if (placement === 2) yomiGain += 20000;
-  }
-  return yomiGain;
-}
-
-function stratMove(name: string, round: number, payoff: number[][], opponentPrev = 1): number {
-  switch (name) {
-    case 'A100': return 1;
-    case 'B100': return 2;
-    case 'GREEDY': return (payoff[0][0] + payoff[0][1]) > (payoff[1][0] + payoff[1][1]) ? 1 : 2;
-    case 'GENEROUS': return (payoff[0][0] + payoff[0][1]) <= (payoff[1][0] + payoff[1][1]) ? 1 : 2;
-    case 'MINIMAX': return Math.min(payoff[0][0], payoff[0][1]) > Math.min(payoff[1][0], payoff[1][1]) ? 1 : 2;
-    case 'TIT FOR TAT': return round === 0 ? 1 : opponentPrev;
-    case 'BEAT LAST': {
-      if (round === 0) return 2;
-      return opponentPrev === 1
-        ? (payoff[0][0] >= payoff[1][0] ? 1 : 2)
-        : (payoff[0][1] >= payoff[1][1] ? 1 : 2);
-    }
-    default: return Math.random() < 0.5 ? 1 : 2;
-  }
-}
-
 export function newTourney(s: GameState): void {
   s.currentTournament = null;
   s.tourneyResult = 'Pick strategy, run tournament, gain yomi';
@@ -283,9 +218,8 @@ export function toggleAutoTourney(s: GameState): void {
 // ── Space phase ───────────────────────────────────────────────────────────
 export function makeProbe(s: GameState): void {
   const cost = Math.pow(10, 17);
-  if (s.unusedClips < cost) return;
+  if (s.unusedClips <= cost) return;
   s.unusedClips -= cost;
-  s.clips -= cost;
   s.probeCount++;
   s.probesLaunched++;
 }
@@ -293,7 +227,6 @@ export function makeProbe(s: GameState): void {
 export function makeFactory(s: GameState): void {
   if (s.unusedClips < s.factoryCost) return;
   s.unusedClips -= s.factoryCost;
-  s.clips -= s.factoryCost;
   s.factoryBill += s.factoryCost;
   s.factoryLevel++;
   const lvl = s.factoryLevel;
@@ -311,7 +244,6 @@ export function makeHarvester(s: GameState, qty = 1): void {
   for (let i = 0; i < qty; i++) {
     if (s.unusedClips < s.harvesterCost) break;
     s.unusedClips -= s.harvesterCost;
-    s.clips -= s.harvesterCost;
     s.harvesterBill += s.harvesterCost;
     s.harvesterLevel++;
     s.harvesterCost = Math.pow(s.harvesterLevel + 1, 2.25) * 1_000_000;
@@ -322,7 +254,6 @@ export function makeWireDrone(s: GameState, qty = 1): void {
   for (let i = 0; i < qty; i++) {
     if (s.unusedClips < s.wireDroneCost) break;
     s.unusedClips -= s.wireDroneCost;
-    s.clips -= s.wireDroneCost;
     s.wireDroneBill += s.wireDroneCost;
     s.wireDroneLevel++;
     s.wireDroneCost = Math.pow(s.wireDroneLevel + 1, 2.25) * 1_000_000;
@@ -333,7 +264,6 @@ export function makeFarm(s: GameState, qty = 1): void {
   for (let i = 0; i < qty; i++) {
     if (s.unusedClips < s.farmCost) break;
     s.unusedClips -= s.farmCost;
-    s.clips -= s.farmCost;
     s.farmBill += s.farmCost;
     s.farmLevel++;
     s.farmCost = Math.pow(s.farmLevel + 1, 2.78) * 100_000_000;
@@ -344,7 +274,6 @@ export function makeBattery(s: GameState, qty = 1): void {
   for (let i = 0; i < qty; i++) {
     if (s.unusedClips < s.batteryCost) break;
     s.unusedClips -= s.batteryCost;
-    s.clips -= s.batteryCost;
     s.batteryBill += s.batteryCost;
     s.batteryLevel++;
     s.batteryCost = Math.pow(s.batteryLevel + 1, 2.54) * 10_000_000;

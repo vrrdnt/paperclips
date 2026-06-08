@@ -1,6 +1,7 @@
 import { GameState, Battle, Ship } from './state';
 import { saveGame } from './save';
 import { A, activeArtifactMultiplier, effectiveProbeAttr, hasActiveArtifact } from './artifacts';
+import { normalizeSelectedStrategy, simulateTournament } from './tournament';
 
 // ── Constants (verbatim from main.js / globals.js) ────────────────────────
 const PROBE_BASE_COST   = Math.pow(10, 17);        // probeCost
@@ -443,61 +444,46 @@ function encounterHazards(s: GameState): void {
   }
 }
 
-function spawnWholeUnits(
+function spawnProbeBuiltUnits(
   s: GameState,
   rawAmount: number,
   unitCost: number,
-  partial: number,
-): { amount: number; partial: number } {
+): number {
   if (!isFinite(rawAmount) || rawAmount <= 0) {
-    return { amount: 0, partial: isFinite(partial) ? partial : 0 };
+    return 0;
   }
 
-  const pending = Math.max(0, (isFinite(partial) ? partial : 0) + rawAmount);
-  const desired = Math.floor(pending);
-  const nextPartial = pending - desired;
-  if (desired < 1) return { amount: 0, partial: nextPartial };
-
-  const affordable = Math.max(0, Math.floor(s.unusedClips / unitCost));
-  const amount = Math.min(desired, affordable);
+  let amount = rawAmount;
+  if (amount * unitCost > s.unusedClips) amount = Math.floor(s.unusedClips / unitCost);
   s.unusedClips -= amount * unitCost;
-  return { amount, partial: nextPartial };
+  return amount;
 }
 
 // ── Probe-spawned factories ───────────────────────────────────────────────
 function spawnFactories(s: GameState): void {
-  const spawned = spawnWholeUnits(
+  s.factoryLevel += spawnProbeBuiltUnits(
     s,
     s.probeCount * PROBE_FAC_RATE * s.probeFac,
     FAC_SPAWN_COST,
-    s.partialFactorySpawn,
   );
-  s.partialFactorySpawn = spawned.partial;
-  s.factoryLevel += spawned.amount;
 }
 
 // ── Probe-spawned harvester drones ────────────────────────────────────────
 function spawnHarvesters(s: GameState): void {
-  const spawned = spawnWholeUnits(
+  s.harvesterLevel += spawnProbeBuiltUnits(
     s,
     s.probeCount * PROBE_HARV_RATE * s.probeHarv,
     DRONE_SPAWN_COST,
-    s.partialHarvesterSpawn,
   );
-  s.partialHarvesterSpawn = spawned.partial;
-  s.harvesterLevel += spawned.amount;
 }
 
 // ── Probe-spawned wire drones ─────────────────────────────────────────────
 function spawnWireDrones(s: GameState): void {
-  const spawned = spawnWholeUnits(
+  s.wireDroneLevel += spawnProbeBuiltUnits(
     s,
     s.probeCount * PROBE_WIRE_RATE * s.probeWire,
     DRONE_SPAWN_COST,
-    s.partialWireDroneSpawn,
   );
-  s.partialWireDroneSpawn = spawned.partial;
-  s.wireDroneLevel += spawned.amount;
 }
 
 // ── Probe replication — spawnProbes() ────────────────────────────────────
@@ -1143,33 +1129,6 @@ function tickInvestmentSell(s: GameState): void {
 // ── Auto-tourney ──────────────────────────────────────────────────────────
 let autoTourneyTimer = 0;
 
-const AUTO_CHOICE_PAIRS: [string, string][] = [
-  ['cooperate', 'defect'], ['swerve', 'straight'], ['macro', 'micro'],
-  ['fight', 'back down'], ['bet', 'fold'], ['raise', 'lower'],
-  ['opera', 'football'], ['go', 'stay'], ['heads', 'tails'],
-  ['particle', 'wave'], ['discrete', 'continuous'], ['peace', 'war'],
-  ['search', 'evaluate'], ['lead', 'follow'], ['accept', 'reject'],
-  ['attack', 'decay'],
-];
-
-function autoStratMove(name: string, round: number, payoff: number[][], opponentPrev = 1): number {
-  switch (name) {
-    case 'A100': return 1;
-    case 'B100': return 2;
-    case 'GREEDY': return (payoff[0][0] + payoff[0][1]) > (payoff[1][0] + payoff[1][1]) ? 1 : 2;
-    case 'GENEROUS': return (payoff[0][0] + payoff[0][1]) <= (payoff[1][0] + payoff[1][1]) ? 1 : 2;
-    case 'MINIMAX': return Math.min(payoff[0][0], payoff[0][1]) > Math.min(payoff[1][0], payoff[1][1]) ? 1 : 2;
-    case 'TIT FOR TAT': return round === 0 ? 1 : opponentPrev;
-    case 'BEAT LAST': {
-      if (round === 0) return 2;
-      return opponentPrev === 1
-        ? (payoff[0][0] >= payoff[1][0] ? 1 : 2)
-        : (payoff[0][1] >= payoff[1][1] ? 1 : 2);
-    }
-    default: return Math.random() < 0.5 ? 1 : 2;
-  }
-}
-
 function tickAutoTourney(s: GameState): void {
   if ((s.currentTournament?.pendingYomi ?? 0) > 0) return;
   autoTourneyTimer++;
@@ -1183,66 +1142,25 @@ function tickAutoTourney(s: GameState): void {
   s.standardOps -= s.newTourneyCost;
   s.operations = Math.floor(s.standardOps + s.tempOps);
 
-  const aa = Math.ceil(Math.random() * 10);
-  const ab = Math.ceil(Math.random() * 10);
-  const ba = Math.ceil(Math.random() * 10);
-  const bb = Math.ceil(Math.random() * 10);
-  const payoff = [[aa, ab], [ba, bb]];
-  const choiceNames = AUTO_CHOICE_PAIRS[Math.floor(Math.random() * AUTO_CHOICE_PAIRS.length)];
-
-  const active = [...s.strategies];
-  const totals: Record<string, number> = {};
-  for (const n of active) totals[n] = 0;
-
-  for (const hName of active) {
-    for (const vName of active) {
-      let hPrev = 1, vPrev = 1;
-      for (let r = 0; r < 10; r++) {
-        const hm = autoStratMove(hName, r, payoff, vPrev);
-        const vm = autoStratMove(vName, r, payoff, hPrev);
-        if (hm === 1 && vm === 1) { totals[hName] += payoff[0][0]; totals[vName] += payoff[0][0]; }
-        else if (hm === 1 && vm === 2) { totals[hName] += payoff[0][1]; totals[vName] += payoff[1][0]; }
-        else if (hm === 2 && vm === 1) { totals[hName] += payoff[1][0]; totals[vName] += payoff[0][1]; }
-        else { totals[hName] += payoff[1][1]; totals[vName] += payoff[1][1]; }
-        hPrev = hm; vPrev = vm;
-      }
-    }
-  }
-
-  const scores = active.map(name => ({ name, score: totals[name] }));
-  scores.sort((a, b) => b.score - a.score);
-  const winner = scores[0];
-  const pickedStrat = s.strategies[0] ?? 'RANDOM';
-  const picked = scores.find(sc => sc.name === pickedStrat) ?? scores[0];
-  let yomiGain = calculateAutoYomiGain(scores, picked, s.yomiBoost, s.projectFlags[128] === 1);
+  const pickedStrat = normalizeSelectedStrategy(s);
+  const result = simulateTournament(s, pickedStrat, s.projectFlags[128] === 1);
+  let yomiGain = result.yomiGain;
   if (hasActiveArtifact(s, A.ZERO_DETERMINANT_LATTICE)) yomiGain *= 6;
 
+  s.hMove = result.hMove;
+  s.vMove = result.vMove;
+  s.hMovePrev = result.hMovePrev;
+  s.vMovePrev = result.vMovePrev;
   s.yomi += Math.floor(yomiGain);
   s.tourneyCount++;
   s.currentTournament = {
-    stratH: pickedStrat, stratV: winner.name,
-    payoff, choiceNames,
-    totalRounds: active.length * active.length,
-    results: scores.map(sc => `${sc.name}: ${sc.score}`),
+    stratH: pickedStrat, stratV: result.winner.name,
+    payoff: result.payoff, choiceNames: result.choiceNames,
+    totalRounds: s.strategies.length * s.strategies.length,
+    results: result.scores.map(sc => `${sc.name}: ${sc.score}`),
     pendingYomi: 0,
   };
-  s.tourneyResult = scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
-}
-
-function calculateAutoYomiGain(
-  scores: { name: string; score: number }[],
-  picked: { name: string; score: number },
-  yomiBoost: number,
-  strategicAttachment: boolean,
-): number {
-  const placement = scores.indexOf(picked);
-  let yomiGain = picked.score * yomiBoost;
-  if (strategicAttachment) {
-    if (placement === 0) yomiGain += 50000;
-    else if (placement === 1) yomiGain += 30000;
-    else if (placement === 2) yomiGain += 20000;
-  }
-  return yomiGain;
+  s.tourneyResult = result.scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
 }
 
 // End-game timers increment from individual project flags, matching the original.

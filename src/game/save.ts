@@ -1,6 +1,7 @@
 import { GameState, makeInitialState } from './state';
 import { reconstructReadoutsFromProjectFlags } from './projectReadouts';
 import { normalizeArtifactState } from './artifacts';
+import { normalizeSelectedStrategy } from './tournament';
 
 const KEY = 'upc_v2';
 const PRESTIGE_KEY = 'upc_v2_prestige';
@@ -52,15 +53,9 @@ function finiteNonNegative(value: number): number {
   return isFinite(value) ? Math.max(0, value) : 0;
 }
 
-function normalizeWholeLevel(s: GameState, levelKey: WholeLevelKey, partialKey: PartialSpawnKey): void {
-  const level = finiteNonNegative(s[levelKey]);
-  const partial = finiteNonNegative(s[partialKey]);
-  const wholeLevel = Math.floor(level);
-  const pending = partial + (level - wholeLevel);
-  const wholePending = Math.floor(pending);
-
-  s[levelKey] = wholeLevel + wholePending;
-  s[partialKey] = pending - wholePending;
+function mergePartialSpawnLevel(s: GameState, levelKey: WholeLevelKey, partialKey: PartialSpawnKey): void {
+  s[levelKey] = finiteNonNegative(s[levelKey]) + finiteNonNegative(s[partialKey]);
+  s[partialKey] = 0;
 }
 
 function normalizeProbeDesign(s: GameState): void {
@@ -90,16 +85,25 @@ function normalizeBattles(s: GameState): void {
   }
 }
 
+function normalizeTournamentState(s: GameState): void {
+  normalizeSelectedStrategy(s);
+  s.hMove = s.hMove === 2 ? 2 : 1;
+  s.vMove = s.vMove === 2 ? 2 : 1;
+  s.hMovePrev = s.hMovePrev === 2 ? 2 : 1;
+  s.vMovePrev = s.vMovePrev === 2 ? 2 : 1;
+}
+
 export function hydrateGameState(loaded: Partial<GameState>): GameState {
   const initial = makeInitialState();
   const merged = { ...initial, ...loaded };
   normalizeArtifactState(merged);
+  normalizeTournamentState(merged);
   normalizeProbeDesign(merged);
   normalizeBattles(merged);
 
-  normalizeWholeLevel(merged, 'factoryLevel', 'partialFactorySpawn');
-  normalizeWholeLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
-  normalizeWholeLevel(merged, 'wireDroneLevel', 'partialWireDroneSpawn');
+  mergePartialSpawnLevel(merged, 'factoryLevel', 'partialFactorySpawn');
+  mergePartialSpawnLevel(merged, 'harvesterLevel', 'partialHarvesterSpawn');
+  mergePartialSpawnLevel(merged, 'wireDroneLevel', 'partialWireDroneSpawn');
 
   merged.currentTournament = null;
   merged.tourneyResult = initial.tourneyResult;
