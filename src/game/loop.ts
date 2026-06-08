@@ -519,8 +519,6 @@ function spawnProbes(s: GameState): void {
     if (s.partialProbeSpawn >= 1) {
       nextGen = 1;
       s.partialProbeSpawn = 0;
-    } else {
-      return;
     }
   }
 

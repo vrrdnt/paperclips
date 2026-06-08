@@ -149,7 +149,7 @@ export function SpacePanel({ snap: s }: Props) {
           <div style={{ marginTop: 8 }}>
             <Btn variant="primary" full holdRepeat
               onClick={() => { makeProbe(G); }}
-              disabled={s.unusedClips < Math.pow(10, 17)}>
+              disabled={s.unusedClips <= Math.pow(10, 17)}>
               <Rocket size={13} />
               Launch Probe ({spellf(Math.pow(10, 17))} clips)
             </Btn>
