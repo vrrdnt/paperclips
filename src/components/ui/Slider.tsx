@@ -13,6 +13,7 @@ interface SliderProps {
   mobileMode?: 'stepper' | 'readout';
   mobileStep?: number;
   valueLabel?: string;
+  allowAboveMax?: boolean;
   'aria-label'?: string;
 }
 
@@ -32,6 +33,7 @@ export function Slider({
   mobileMode = 'stepper',
   mobileStep,
   valueLabel,
+  allowAboveMax = false,
   ...rest
 }: SliderProps) {
   const [local, setLocal] = useState(value);
@@ -68,7 +70,7 @@ export function Slider({
     : undefined;
 
   function commit(next: number) {
-    const nextValue = snapToStep(next, min, max, step);
+    const nextValue = snapToStep(next, min, max, step, allowAboveMax);
     setLocal(nextValue);
     onInput(nextValue);
   }
@@ -157,7 +159,7 @@ export function Slider({
       <div className={mobileClass} role="group" aria-label={ariaLabel} style={style}>
         <Btn holdRepeat onClick={() => commit(clamped - increment)} disabled={clamped <= min}>-</Btn>
         {mobileValueInput()}
-        <Btn holdRepeat onClick={() => commit(clamped + increment)} disabled={clamped >= max}>+</Btn>
+        <Btn holdRepeat onClick={() => commit(clamped + increment)} disabled={!allowAboveMax && clamped >= max}>+</Btn>
       </div>
     );
   }
@@ -186,10 +188,11 @@ function getIsCoarsePointer(): boolean {
   return window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 }
 
-function snapToStep(value: number, min: number, max: number, step: number): number {
-  const bounded = Math.min(max, Math.max(min, value));
+function snapToStep(value: number, min: number, max: number, step: number, allowAboveMax: boolean): number {
+  const bounded = allowAboveMax ? Math.max(min, value) : Math.min(max, Math.max(min, value));
   const snapped = min + Math.round((bounded - min) / step) * step;
-  return Number(Math.min(max, Math.max(min, snapped)).toFixed(countDecimals(step) + 2));
+  const finalValue = allowAboveMax ? Math.max(min, snapped) : Math.min(max, Math.max(min, snapped));
+  return Number(finalValue.toFixed(countDecimals(step) + 2));
 }
 
 function formatSliderValue(value: number, step: number): string {

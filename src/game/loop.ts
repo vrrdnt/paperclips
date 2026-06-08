@@ -1012,7 +1012,9 @@ function tickSales(s: GameState): void {
 // ── Revenue — calculateRev() ──────────────────────────────────────────────
 // Called every 1000ms (ticks % 100 === 0). Mirrors original secTimer logic.
 function tickRevenue(s: GameState): void {
-  s.incomeTracker.push(s.income);
+  const incomeLastSecond = Math.round((s.income - s.prevIncome) * 100) / 100;
+  s.prevIncome = s.income;
+  s.incomeTracker.push(incomeLastSecond);
   if (s.incomeTracker.length > 10) s.incomeTracker.splice(0, 1);
   let sum = 0;
   for (let i = 0; i < s.incomeTracker.length; i++) {
@@ -1027,7 +1029,6 @@ function tickRevenue(s: GameState): void {
   } else {
     s.avgRev = chanceOfPurchase * 0.7 * Math.pow(s.demand, 1.15) * s.margin * 10;
   }
-  s.income = 0;
 }
 
 // ── Investments ───────────────────────────────────────────────────────────
