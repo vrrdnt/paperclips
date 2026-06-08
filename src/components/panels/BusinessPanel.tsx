@@ -113,15 +113,16 @@ export function BusinessPanel({ snap: s }: Props) {
             <span className="stat-value-lg">${formatWithCommas(s.funds, 2)}</span>
           </div>
           {hasRevTracker && (
-            <div className="stat-with-graph">
-              <div className="stat-row">
-                <span className="stat-label">Revenue rate</span>
-                <span className="stat-value">${formatWithCommas(s.avgRev, 2)}/s</span>
-              </div>
-              <div style={{ marginTop: 4 }}><Sparkline data={h.revenue} valuePrefix="$" /></div>
+            <div style={{ marginTop: 4 }}>
+              <Sparkline data={h.revenue} height={38} valuePrefix="$" />
             </div>
           )}
-
+          {hasRevTracker && (
+            <div className="stat-row" style={{ marginTop: 4 }}>
+              <span className="stat-label">Revenue rate</span>
+              <span className="stat-value">${formatWithCommas(s.avgRev, 2)}/s</span>
+            </div>
+          )}
           <hr className="divider" />
 
           <div className="stat-row" style={{ marginBottom: 4 }}>
@@ -169,7 +170,7 @@ export function BusinessPanel({ snap: s }: Props) {
             </div>
             {hasRevTracker && (
               <div style={{ marginTop: 4 }}>
-                <Sparkline data={h.wireCost} invertTrend valuePrefix="$" />
+                <Sparkline data={h.wireCost} height={38} invertTrend valuePrefix="$" />
               </div>
             )}
           </div>
