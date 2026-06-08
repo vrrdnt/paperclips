@@ -1414,8 +1414,7 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= s.driftKingMessageCost;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.projectFlags[147] = 1;
-      // Dismiss the Reject option too
-      s.projectFlags[148] = 1;
+      if (!s.hiddenProjectIds.includes(148)) s.hiddenProjectIds.push(148);
     },
   },
 
@@ -1430,8 +1429,7 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= s.driftKingMessageCost;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.projectFlags[148] = 1;
-      // Dismiss the Accept option too
-      s.projectFlags[147] = 1;
+      if (!s.hiddenProjectIds.includes(147)) s.hiddenProjectIds.push(147);
     },
   },
 
@@ -1691,6 +1689,6 @@ export const ALL_PROJECTS: Project[] = [
 
 export function getActiveProjects(s: GameState): Project[] {
   return ALL_PROJECTS.filter(
-    (p) => !s.projectFlags[p.id] && p.trigger(s),
+    (p) => !s.projectFlags[p.id] && !s.hiddenProjectIds.includes(p.id) && p.trigger(s),
   );
 }

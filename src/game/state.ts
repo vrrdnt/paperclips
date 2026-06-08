@@ -288,6 +288,7 @@ export interface GameState {
   // ── Projects ──────────────────────────────────────────────────────────────
   projectFlags: Record<number, number>;
   activeProjectIds: number[];
+  hiddenProjectIds: number[];
   // ── Misc ──────────────────────────────────────────────────────────────────
   transaction: number;
   blinkCounter: number;
@@ -381,7 +382,7 @@ export function makeInitialState(): GameState {
     endTimer4: 0, endTimer5: 0, endTimer6: 0, finalClips: 0,
 
     readouts: ['Welcome to Universal Paperclips'],
-    projectFlags: {}, activeProjectIds: [],
+    projectFlags: {}, activeProjectIds: [], hiddenProjectIds: [],
     transaction: 1, blinkCounter: 0, testFlag: 0, clipCountCrunched: 0,
   };
 }
