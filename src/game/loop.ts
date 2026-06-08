@@ -393,9 +393,12 @@ function acquireMatter(s: GameState): void {
   let mtr = s.powMod * dbsth * Math.floor(s.harvesterLevel) *
     s.harvesterRate * activeArtifactMultiplier(s, A.EXOTHERMIC_DECOMPOSITION);
   mtr = mtr * ((200 - s.sliderPos) / 100);
-  s.mps = mtr * 100;
-  if (s.availableMatter <= 0) return;
+  if (s.availableMatter <= 0) {
+    s.mps = 0;
+    return;
+  }
   if (mtr > s.availableMatter) mtr = s.availableMatter;
+  s.mps = mtr * 100;
   s.availableMatter -= mtr;
   s.acquiredMatter += mtr;
 }
@@ -403,13 +406,16 @@ function acquireMatter(s: GameState): void {
 // ── Wire drone processing — processMatter() ───────────────────────────────
 // Wire drones convert acquiredMatter → wire (same variable as original).
 function processMatter(s: GameState): void {
-  if (s.acquiredMatter <= 0) return;
+  if (s.acquiredMatter <= 0) {
+    s.wpps = 0;
+    return;
+  }
   const dbstw = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.wireDroneLevel) : 1;
   let a = s.powMod * dbstw * Math.floor(s.wireDroneLevel) *
     s.wireDroneRate * activeArtifactMultiplier(s, A.FROTH_RECOVERY);
   a = a * ((200 - s.sliderPos) / 100);
-  s.wpps = a * 100;
   if (a > s.acquiredMatter) a = s.acquiredMatter;
+  s.wpps = a * 100;
   s.acquiredMatter -= a;
   s.wire += a;
 }
