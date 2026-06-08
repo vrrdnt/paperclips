@@ -4,6 +4,7 @@ dist/
 !public/
 !public/icons/
 !public/icons/*.png
+.codex-remote-attachments/
 
 # Signing keys and Play upload credentials.
 *.keystore
