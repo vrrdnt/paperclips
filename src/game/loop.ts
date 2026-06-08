@@ -1168,6 +1168,8 @@ function tickInvestmentReport(s: GameState): void {
 let autoTourneyTimer = 0;
 
 function tickAutoTourney(s: GameState): void {
+  // Original AutoTourney advances only from an existing results screen.
+  if (!s.currentTournament) return;
   if ((s.currentTournament?.pendingYomi ?? 0) > 0) return;
   autoTourneyTimer++;
   // Original cadence: a tournament plays out at 1s per round (rounds = strats^2)
