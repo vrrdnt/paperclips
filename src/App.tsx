@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { History, Map as MapIcon, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
-import { tickBatch } from './game/loop';
+import { resetTickClock, tickBatch } from './game/loop';
 import { hydrateGameState, loadGame, saveGame, resetGame, resetAllProgress, savePrestigeState, toSaveableState } from './game/save';
 import { Btn } from './components/ui/Btn';
 import { Console } from './components/Console';
@@ -45,8 +45,12 @@ export default function App() {
     const saved = loadGame();
     Object.assign(G, saved);
     setSnap(G);
+    resetTickClock();
 
-    const gameTimer = setInterval(() => { tickBatch(G); }, 50);
+    const gameTimer = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      tickBatch(G);
+    }, 50);
     const displayTimer = setInterval(() => {
       if (G.resetFlag === 1) {
         savePrestigeState(G);
@@ -56,22 +60,29 @@ export default function App() {
       }
       setSnap(G);
     }, 100);
-    const persistOnSuspend = () => saveGame(G);
-    const persistOnHidden = () => {
+    const resetOnResume = () => resetTickClock();
+    const persistOnSuspend = () => {
+      saveGame(G);
+      resetTickClock();
+    };
+    const persistOnVisibilityChange = () => {
       if (document.visibilityState === 'hidden') persistOnSuspend();
+      else resetOnResume();
     };
 
-    document.addEventListener('visibilitychange', persistOnHidden);
+    document.addEventListener('visibilitychange', persistOnVisibilityChange);
     document.addEventListener('freeze', persistOnSuspend);
     window.addEventListener('pagehide', persistOnSuspend);
+    window.addEventListener('pageshow', resetOnResume);
     window.addEventListener('beforeunload', persistOnSuspend);
 
     return () => {
       clearInterval(gameTimer);
       clearInterval(displayTimer);
-      document.removeEventListener('visibilitychange', persistOnHidden);
+      document.removeEventListener('visibilitychange', persistOnVisibilityChange);
       document.removeEventListener('freeze', persistOnSuspend);
       window.removeEventListener('pagehide', persistOnSuspend);
+      window.removeEventListener('pageshow', resetOnResume);
       window.removeEventListener('beforeunload', persistOnSuspend);
     };
   }, []);
