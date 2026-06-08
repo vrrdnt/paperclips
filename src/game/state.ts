@@ -169,6 +169,7 @@ export interface GameState {
   battleId: number;
   battleName: string;
   battleScale: number;
+  battleNameNumbers: number[];
   bonusHonor: number;
   qFlag: number;
   swarmFlag: number;
@@ -253,6 +254,7 @@ export interface GameState {
   disorgFlag: number;
   disorgMsg: number;
   synchCost: number;
+  threnodyTitle: string;
   threnodyCost: number;
   entertainCost: number;
   boredomLevel: number;
@@ -339,7 +341,8 @@ export function makeInitialState(): GameState {
     revPerSecFlag: 0, strategyEngineFlag: 0, investmentEngineFlag: 0,
     humanFlag: 1, trustFlag: 1, creationFlag: 0, wireProductionFlag: 0,
     spaceFlag: 0, factoryFlag: 0, harvesterFlag: 0, wireDroneFlag: 0,
-    battleFlag: 0, battleId: 0, battleName: '', battleScale: 0, bonusHonor: 0,
+    battleFlag: 0, battleId: 0, battleName: '', battleScale: 0,
+    battleNameNumbers: Array(105).fill(1), bonusHonor: 0,
     qFlag: 0, swarmFlag: 0, milestoneFlag: 0,
     egoFlag: 0, tothFlag: 0, wireBuyerFlag: 0, safetyProjectOn: false,
 
@@ -369,7 +372,7 @@ export function makeInitialState(): GameState {
     giftPeriod: 125_000, giftCountdown: 125_000, giftBits: 0, giftBitGenerationRate: 0,
     elapsedTime: 0,
     disorgCounter: 0, disorgFlag: 0, disorgMsg: 0,
-    synchCost: 5000, threnodyCost: 50_000,
+    synchCost: 5000, threnodyTitle: 'Durenstein 1', threnodyCost: 50_000,
     entertainCost: 10_000, boredomLevel: 0, boredomFlag: 0, boredomMsg: 0,
 
     qClock: 0, qChipCost: 10_000, nextQchip: 0, qFade: 1,

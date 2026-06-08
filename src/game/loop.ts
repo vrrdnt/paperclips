@@ -568,8 +568,6 @@ const BATTLE_NAMES = [
   'Vauchamps', 'Vimeiro', 'Vitoria', 'Wagram', 'Waterloo', 'Wavre', 'Wertingen',
   'Zaragoza',
 ];
-const battleNameNumbers = BATTLE_NAMES.map(() => 1);
-
 type BattleGrid = Ship[][][];
 
 // checkForBattles / createBattle from combat.js.
@@ -598,7 +596,7 @@ function createBattle(s: GameState): void {
   if (rightShips > 200) rightShips = 200;
 
   s.battleId = (s.battleId || 0) + 1;
-  const name = s.projectFlags[121] === 1 ? generateBattleName() : `Drifter Attack ${s.battleId}`;
+  const name = s.projectFlags[121] === 1 ? generateBattleName(s) : `Drifter Attack ${s.battleId}`;
   s.battleName = name;
   s.battleScale = unitSize;
 
@@ -627,10 +625,13 @@ function createBattle(s: GameState): void {
   });
 }
 
-function generateBattleName(): string {
+function generateBattleName(s: GameState): string {
+  if (!Array.isArray(s.battleNameNumbers)) s.battleNameNumbers = BATTLE_NAMES.map(() => 1);
+  while (s.battleNameNumbers.length < BATTLE_NAMES.length) s.battleNameNumbers.push(1);
   const x = Math.floor(Math.random() * BATTLE_NAMES.length);
-  const name = `${BATTLE_NAMES[x]} ${battleNameNumbers[x]}`;
-  battleNameNumbers[x]++;
+  const suffix = Number.isFinite(s.battleNameNumbers[x]) ? s.battleNameNumbers[x] : 1;
+  const name = `${BATTLE_NAMES[x]} ${suffix}`;
+  s.battleNameNumbers[x] = suffix + 1;
   return name;
 }
 
@@ -905,6 +906,7 @@ function applyBattleHonor(s: GameState, b: Battle): void {
     s.bonusHonor = 0;
     b.honor = -b.leftShips;
     s.honor += b.honor;
+    s.threnodyTitle = b.name;
   } else if (b.result === 'victory') {
     b.honor = b.rightShips + (s.bonusHonor || 0);
     s.honor += b.honor;

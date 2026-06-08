@@ -15,7 +15,7 @@ import {
 
 export interface Project {
   id: number;
-  title: string;
+  title: string | ((s: GameState) => string);
   priceTag: string | ((s: GameState) => string);
   description: string;
   trigger: (s: GameState) => boolean;
@@ -1251,7 +1251,7 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 133,
-    title: 'Threnody for the Heroes ',
+    title: (s) => `Threnody for the Heroes of ${s.threnodyTitle} `,
     priceTag: (s) => `(${s.threnodyCost.toLocaleString()} creat, ${(2 * (s.threnodyCost / 5)).toLocaleString()} yomi)`,
     description: 'Gain 10,000 honor  ',
     trigger: (s) =>

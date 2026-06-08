@@ -32,6 +32,7 @@ type LegacySavedState = Partial<GameState> & {
   maxPort?: number;
   riskiness?: number;
   prevIncome?: number;
+  battleNumbers?: number[];
 };
 type LegacyStock = Stock & { total?: number };
 type ProbeAttrKey =
@@ -54,6 +55,7 @@ const PROBE_ATTR_KEYS: ProbeAttrKey[] = [
   'probeWire',
   'probeCombat',
 ];
+const BATTLE_NAME_COUNT = 105;
 
 function finiteNonNegative(value: number): number {
   return isFinite(value) ? Math.max(0, value) : 0;
@@ -94,6 +96,18 @@ function normalizeBattles(s: GameState): void {
     b.initialClipProbes = finiteNonNegative(b.initialClipProbes || b.clipProbes);
     b.initialDrifterProbes = finiteNonNegative(b.initialDrifterProbes || b.drifterProbes);
   }
+}
+
+function normalizeBattleNameNumbers(s: GameState, loaded: LegacySavedState): void {
+  const saved = Array.isArray(loaded.battleNameNumbers)
+    ? loaded.battleNameNumbers
+    : Array.isArray(loaded.battleNumbers)
+      ? loaded.battleNumbers
+      : s.battleNameNumbers;
+  s.battleNameNumbers = Array.from({ length: BATTLE_NAME_COUNT }, (_, i) => {
+    const value = Number(saved?.[i]);
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : 1;
+  });
 }
 
 function normalizeTournamentState(s: GameState): void {
@@ -153,6 +167,7 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   normalizeTournamentState(merged);
   normalizeProbeDesign(merged);
   normalizeBattles(merged);
+  normalizeBattleNameNumbers(merged, loaded as LegacySavedState);
   normalizeDemandBoost(merged);
   normalizeMarketingCost(merged);
   normalizeInvestmentState(merged, loaded as LegacySavedState);
