@@ -147,8 +147,8 @@ export function BusinessPanel({ snap: s }: Props) {
             <Btn holdRepeat onClick={() => { raisePrice(G); }} disabled={s.margin >= MAX_CLIP_PRICE}>+</Btn>
           </div>
           <div className="stat-row" style={{ marginTop: 2 }}>
-            <span className="stat-label">Buy chance per tick</span>
-            <span className="stat-value dim">{Math.min(s.demand, 100).toFixed(0)}%</span>
+            <span className="stat-label">Public demand</span>
+            <span className="stat-value dim">{formatWithCommas(s.demand * 10, 0)}</span>
           </div>
 
           <hr className="divider" />
