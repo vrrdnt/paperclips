@@ -48,12 +48,10 @@ export function ProjectsPanel({ snap: s }: Props) {
   if (!s.projectsFlag) return null;
 
   const activeProjects = getActiveProjects(G)
-    .map((project, index) => ({
+    .map((project) => ({
       project,
-      index,
       canAfford: project.cost(s),
-    }))
-    .sort((a, b) => Number(b.canAfford) - Number(a.canAfford) || a.index - b.index);
+    }));
 
   return (
     <SectionCard title="Projects" icon={<FlaskConical size={14} />}>
