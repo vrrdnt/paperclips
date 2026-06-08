@@ -56,8 +56,16 @@ export default function App() {
     const displayTimer = setInterval(() => {
       if (G.resetFlag === 1) {
         savePrestigeState(G);
-        resetGame();
-        window.location.reload();
+        const fresh = resetGame();
+        Object.assign(G, fresh);
+        resetHistories(G);
+        setSnap(G);
+        saveGame(G);
+        resetTickClock();
+        setShowArtifactMap(false);
+        setShowImport(false);
+        setShowExportFallback(false);
+        setShowHypnoTransition(false);
         return;
       }
       setSnap(G);
