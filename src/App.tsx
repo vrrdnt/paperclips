@@ -33,6 +33,7 @@ export default function App() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
   const [exportCopied, setExportCopied] = useState(false);
+  const [saveConfirmed, setSaveConfirmed] = useState(false);
   const [showExportFallback, setShowExportFallback] = useState(false);
   const [exportText, setExportText] = useState('');
   const [showArtifactMap, setShowArtifactMap] = useState(false);
@@ -41,6 +42,7 @@ export default function App() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const exportTextareaRef = useRef<HTMLTextAreaElement>(null);
   const prevHumanFlag = useRef<number | null>(null);
+  const saveFeedbackTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const saved = loadGame();
@@ -125,6 +127,12 @@ export default function App() {
     }
   }, [showExportFallback]);
 
+  useEffect(() => () => {
+    if (saveFeedbackTimeoutRef.current !== null) {
+      window.clearTimeout(saveFeedbackTimeoutRef.current);
+    }
+  }, []);
+
   if (!snap) return <div style={{ padding: 24, color: 'var(--text-dim)' }}>Loading…</div>;
 
   const postHuman = snap.humanFlag === 0;
@@ -141,6 +149,14 @@ export default function App() {
 
   function handleSave() {
     saveGame(G);
+    setSaveConfirmed(true);
+    if (saveFeedbackTimeoutRef.current !== null) {
+      window.clearTimeout(saveFeedbackTimeoutRef.current);
+    }
+    saveFeedbackTimeoutRef.current = window.setTimeout(() => {
+      setSaveConfirmed(false);
+      saveFeedbackTimeoutRef.current = null;
+    }, 1600);
   }
 
   function fallbackCopyText(text: string): boolean {
@@ -231,7 +247,12 @@ export default function App() {
           <span className="header-clip-count">
             {spellf(snap.clips)} clips
           </span>
-          <Btn onClick={handleSave} title="Save game">
+          <Btn
+            className={saveConfirmed ? 'header-save-btn is-saved' : 'header-save-btn'}
+            onClick={handleSave}
+            title={saveConfirmed ? 'Game saved' : 'Save game'}
+            aria-label={saveConfirmed ? 'Game saved' : 'Save game'}
+          >
             <Save size={13} />
           </Btn>
           <Btn onClick={handleExport} title="Copy save to clipboard"

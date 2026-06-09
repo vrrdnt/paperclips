@@ -424,6 +424,13 @@ textarea {
 .btn-danger { border-color: var(--danger); color: #e08080; }
 .btn-success { border-color: var(--success); color: #80c080; }
 
+.btn.header-save-btn.is-saved {
+  color: #b9e8b9;
+  border-color: rgba(80, 160, 80, 0.95);
+  background: linear-gradient(to bottom, rgba(80, 130, 80, 0.45) 0%, rgba(42, 74, 42, 0.45) 100%);
+  box-shadow: 0 0 0 1px rgba(80, 160, 80, 0.35), 0 0 14px rgba(80, 160, 80, 0.32);
+}
+
 .drone-build-controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) repeat(3, 64px);
