@@ -941,7 +941,15 @@ function battleEndTimer(s: GameState): number {
 }
 
 function allBattleShips(b: Battle): Ship[] {
-  return [...b.probeShips, ...b.drifterShips];
+  const ships: Ship[] = [];
+  const maxShips = Math.max(b.probeShips.length, b.drifterShips.length);
+  for (let i = 0; i < maxShips; i++) {
+    // Original combat.js starts with the right-side team, then alternates sides
+    // so array position does not favor one combatant.
+    if (i < b.drifterShips.length) ships.push(b.drifterShips[i]);
+    if (i < b.probeShips.length) ships.push(b.probeShips[i]);
+  }
+  return ships;
 }
 
 function countAlive(ships: Ship[]): number {

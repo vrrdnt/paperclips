@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { G, Ship } from '../../game/state';
+import { G, Battle, Ship } from '../../game/state';
 
 // Logical drawing space; the backing store is scaled up for crisp pixels.
 const W = 310;
@@ -38,9 +38,13 @@ export function CombatCanvas() {
       ctx!.fillRect(sh.x - 1, sh.y - 1, 2, 2);
     }
 
-    function drawShips(ships: Ship[], color: string) {
-      for (const sh of ships) {
-        drawShip(sh, color);
+    function drawBattleShips(battle: Battle) {
+      const maxShips = Math.max(battle.probeShips.length, battle.drifterShips.length);
+      for (let i = 0; i < maxShips; i++) {
+        const drifter = battle.drifterShips[i];
+        const probe = battle.probeShips[i];
+        if (drifter) drawShip(drifter, '#000000');
+        if (probe) drawShip(probe, '#ffffff');
       }
     }
 
@@ -52,8 +56,7 @@ export function CombatCanvas() {
       ctx!.fillRect(0, 0, W, H);
 
       if (battle) {
-        drawShips(battle.probeShips, '#ffffff');
-        drawShips(battle.drifterShips, '#000000');
+        drawBattleShips(battle);
       }
     }
 
