@@ -592,9 +592,11 @@ type BattleGrid = Ship[][][];
 
 // checkForBattles / createBattle from combat.js.
 function tickCombat(s: GameState): void {
-  if (s.drifterCount > WAR_TRIGGER && s.probeCount > 0 && s.battles.length < MAX_BATTLES) {
+  const activeBattles = s.battles.filter(b => !b.over).length;
+  if (s.drifterCount > WAR_TRIGGER && s.probeCount > 0 && activeBattles < MAX_BATTLES) {
     if (Math.random() * 100 >= 50) {
       if (!s.battleFlag) s.battleFlag = 1;
+      s.battles = s.battles.filter(b => !b.over);
       createBattle(s);
     }
   }
@@ -692,9 +694,9 @@ function stepBattles(s: GameState): void {
     s.battleScale = b.scale || b.unitSize;
 
     if (b.over) {
-      ageDeadShips(b);
+      const grid = updateBattleGrid(b);
+      moveBattleShips(b, grid);
       b.endDelay++;
-      if (b.endDelay >= battleEndTimer(s)) s.battles.splice(i, 1);
       continue;
     }
 
@@ -757,12 +759,6 @@ function moveBattleShips(b: Battle, grid: BattleGrid): void {
       continue;
     }
     moveSingleBattleShip(p, centroid, grid);
-  }
-}
-
-function ageDeadShips(b: Battle): void {
-  for (const p of allBattleShips(b)) {
-    if (!p.alive && p.framesDead < 10) p.framesDead++;
   }
 }
 
@@ -907,7 +903,7 @@ function checkForBattleEnd(s: GameState, b: Battle): boolean {
       applyBattleHonor(s, b);
     }
     b.endDelay++;
-    return b.endDelay >= battleEndTimer(s);
+    return false;
   }
 
   if (probesAlive <= 4 || driftersAlive <= 4) {
@@ -934,10 +930,6 @@ function applyBattleHonor(s: GameState, b: Battle): void {
   }
 
   b.honorApplied = true;
-}
-
-function battleEndTimer(s: GameState): number {
-  return s.projectFlags[121] === 1 ? 200 : 100;
 }
 
 function allBattleShips(b: Battle): Ship[] {
