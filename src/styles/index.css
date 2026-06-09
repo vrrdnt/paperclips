@@ -424,6 +424,49 @@ textarea {
 .btn-danger { border-color: var(--danger); color: #e08080; }
 .btn-success { border-color: var(--success); color: #80c080; }
 
+.drone-build-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, 64px);
+  gap: 6px;
+  margin-top: 4px;
+  align-items: stretch;
+}
+
+.drone-build-controls .btn {
+  width: 100%;
+  min-width: 0;
+}
+
+.drone-build-primary {
+  overflow: hidden;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.drone-build-cost {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  opacity: 0.86;
+}
+
+.drone-disassemble-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 420px) {
+  .drone-build-controls {
+    grid-template-columns: minmax(98px, 1.7fr) repeat(3, minmax(48px, 0.8fr));
+  }
+}
+
 /* ── Stat rows ──────────────────────────────────────────────────── */
 .stat-row {
   display: flex;
