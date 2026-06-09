@@ -27,6 +27,7 @@ export function Btn({
   onPointerCancel,
   onLostPointerCapture,
   onPointerLeave,
+  onPointerMove,
   ...rest
 }: Props) {
   const cls = [
@@ -39,6 +40,9 @@ export function Btn({
   const repeatDelayRef = useRef<number | null>(null);
   const repeatIntervalRef = useRef<number | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const holdStartedRef = useRef(false);
+  const canceledTapRef = useRef(false);
+  const pointerStartRef = useRef<{ id: number; x: number; y: number; type: string } | null>(null);
   const suppressClickRef = useRef(false);
   const internalClickRef = useRef(false);
   const clickRef = useRef(onClick);
@@ -76,6 +80,18 @@ export function Btn({
     }, 350);
   }, []);
 
+  function finishPointer() {
+    clearRepeat();
+    pointerStartRef.current = null;
+    if (holdStartedRef.current || canceledTapRef.current) {
+      scheduleSuppressReset();
+    } else {
+      suppressClickRef.current = false;
+    }
+    holdStartedRef.current = false;
+    canceledTapRef.current = false;
+  }
+
   function fireClick() {
     if (disabledRef.current || !clickRef.current || !buttonRef.current) return;
     internalClickRef.current = true;
@@ -96,20 +112,32 @@ export function Btn({
       return;
     }
 
-    suppressClickRef.current = true;
+    holdStartedRef.current = false;
+    canceledTapRef.current = false;
+    suppressClickRef.current = false;
+    pointerStartRef.current = {
+      id: e.pointerId,
+      x: e.clientX,
+      y: e.clientY,
+      type: e.pointerType,
+    };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
       // Some browsers skip pointer capture for synthetic or already-released pointers.
     }
 
-    fireClick();
     clearRepeat();
+    const effectiveDelay = e.pointerType === 'touch' || e.pointerType === 'pen'
+      ? Math.max(delayRef.current, 650)
+      : delayRef.current;
     repeatDelayRef.current = window.setTimeout(() => {
       if (disabledRef.current || !repeatRef.current || !clickRef.current) {
         clearRepeat();
         return;
       }
+      holdStartedRef.current = true;
+      suppressClickRef.current = true;
       fireClick();
       repeatIntervalRef.current = window.setInterval(() => {
         if (disabledRef.current || !repeatRef.current || !clickRef.current) {
@@ -118,32 +146,42 @@ export function Btn({
         }
         fireClick();
       }, intervalMsRef.current);
-    }, delayRef.current);
+    }, effectiveDelay);
   }
 
   function handlePointerUp(e: React.PointerEvent<HTMLButtonElement>) {
     onPointerUp?.(e);
-    clearRepeat();
-    scheduleSuppressReset();
+    finishPointer();
   }
 
   function handlePointerCancel(e: React.PointerEvent<HTMLButtonElement>) {
     onPointerCancel?.(e);
-    clearRepeat();
-    scheduleSuppressReset();
+    finishPointer();
   }
 
   function handleLostPointerCapture(e: React.PointerEvent<HTMLButtonElement>) {
     onLostPointerCapture?.(e);
-    clearRepeat();
-    scheduleSuppressReset();
+    finishPointer();
   }
 
   function handlePointerLeave(e: React.PointerEvent<HTMLButtonElement>) {
     onPointerLeave?.(e);
     if (e.pointerType === 'mouse') {
+      finishPointer();
+    }
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    onPointerMove?.(e);
+    const start = pointerStartRef.current;
+    if (!start || start.id !== e.pointerId || start.type === 'mouse') return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    if (Math.hypot(dx, dy) > 10 && !holdStartedRef.current) {
       clearRepeat();
-      scheduleSuppressReset();
+      pointerStartRef.current = null;
+      canceledTapRef.current = true;
+      suppressClickRef.current = true;
     }
   }
 
@@ -169,6 +207,7 @@ export function Btn({
       onPointerCancel={handlePointerCancel}
       onLostPointerCapture={handleLostPointerCapture}
       onPointerLeave={handlePointerLeave}
+      onPointerMove={handlePointerMove}
       {...rest}
     >
       {children}
