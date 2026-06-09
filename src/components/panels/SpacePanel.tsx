@@ -75,28 +75,31 @@ export function SpacePanel({ snap: s }: Props) {
                 <span className="stat-value">{showUniverse ? spellf(s.harvesterLevel) : formatWithCommas(s.harvesterLevel)}</span>
               </div>
               {!showUniverse && (
-                <div className="row" style={{ marginTop: 4 }}>
-                  <Btn holdRepeat onClick={() => { makeHarvester(G); }}
+                <div className="drone-build-controls">
+                  <Btn className="drone-build-primary" holdRepeat onClick={() => { makeHarvester(G); }}
                     disabled={s.unusedClips < s.harvesterCost}>
-                    Build ({spellf(s.harvesterCost)})
+                    <span>Build</span>
+                    <span className="drone-build-cost">({spellf(s.harvesterCost)})</span>
                   </Btn>
-                  <Btn holdRepeat onClick={() => { makeHarvester(G, 10); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeHarvester(G, 10); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 10)}>
                     ×10
                   </Btn>
-                  <Btn holdRepeat onClick={() => { makeHarvester(G, 100); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeHarvester(G, 100); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 100)}>
                     ×100
                   </Btn>
-                  <Btn holdRepeat onClick={() => { makeHarvester(G, 1000); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeHarvester(G, 1000); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 1000)}>
                     ×1000
                   </Btn>
                   {s.harvesterLevel > 0 && (
-                    <Btn onClick={() => { harvesterReboot(G); }}
-                      title={`+${spellf(s.harvesterBill)} clips`}>
-                      Disassemble All
-                    </Btn>
+                    <div className="drone-disassemble-row">
+                      <Btn variant="danger" onClick={() => { harvesterReboot(G); }}
+                        title={`+${spellf(s.harvesterBill)} clips`}>
+                        Disassemble All
+                      </Btn>
+                    </div>
                   )}
                 </div>
               )}
@@ -111,28 +114,31 @@ export function SpacePanel({ snap: s }: Props) {
                 <span className="stat-value">{showUniverse ? spellf(s.wireDroneLevel) : formatWithCommas(s.wireDroneLevel)}</span>
               </div>
               {!showUniverse && (
-                <div className="row" style={{ marginTop: 4 }}>
-                  <Btn holdRepeat onClick={() => { makeWireDrone(G); }}
+                <div className="drone-build-controls">
+                  <Btn className="drone-build-primary" holdRepeat onClick={() => { makeWireDrone(G); }}
                     disabled={s.unusedClips < s.wireDroneCost}>
-                    Build ({spellf(s.wireDroneCost)})
+                    <span>Build</span>
+                    <span className="drone-build-cost">({spellf(s.wireDroneCost)})</span>
                   </Btn>
-                  <Btn holdRepeat onClick={() => { makeWireDrone(G, 10); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeWireDrone(G, 10); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 10)}>
                     ×10
                   </Btn>
-                  <Btn holdRepeat onClick={() => { makeWireDrone(G, 100); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeWireDrone(G, 100); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 100)}>
                     ×100
                   </Btn>
-                  <Btn holdRepeat onClick={() => { makeWireDrone(G, 1000); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeWireDrone(G, 1000); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 1000)}>
                     ×1000
                   </Btn>
                   {s.wireDroneLevel > 0 && (
-                    <Btn onClick={() => { wireDroneReboot(G); }}
-                      title={`+${spellf(s.wireDroneBill)} clips`}>
-                      Disassemble All
-                    </Btn>
+                    <div className="drone-disassemble-row">
+                      <Btn variant="danger" onClick={() => { wireDroneReboot(G); }}
+                        title={`+${spellf(s.wireDroneBill)} clips`}>
+                        Disassemble All
+                      </Btn>
+                    </div>
                   )}
                 </div>
               )}
