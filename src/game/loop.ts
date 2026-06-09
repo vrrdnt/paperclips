@@ -1163,7 +1163,7 @@ function tickInvestmentSell(s: GameState): void {
 }
 
 function tickInvestmentReport(s: GameState): void {
-  if (!s.investmentEngineFlag) return;
+  if (!s.investmentEngineFlag || !s.humanFlag) return;
   s.stockReportCounter++;
   if (s.stockReportCounter < 10000) return;
 
