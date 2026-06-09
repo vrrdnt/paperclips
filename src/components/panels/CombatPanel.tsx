@@ -60,7 +60,7 @@ export function CombatPanel({ snap: s }: Props) {
       )}
       {active ? (
         <div className="battle-report-grid">
-          <span className="stat-label">Clips</span>
+          <span className="stat-label">Probes</span>
           <span className="stat-value">{spellf(active.clipProbes)}</span>
           <span className="stat-label">Drifters</span>
           <span className="stat-value">{spellf(active.drifterProbes)}</span>
