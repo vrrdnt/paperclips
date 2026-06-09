@@ -592,11 +592,14 @@ type BattleGrid = Ship[][][];
 
 // checkForBattles / createBattle from combat.js.
 function tickCombat(s: GameState): void {
-  const activeBattles = s.battles.filter(b => !b.over).length;
-  if (s.drifterCount > WAR_TRIGGER && s.probeCount > 0 && activeBattles < MAX_BATTLES) {
+  const battle = normalizeBattleQueue(s);
+  const battleBlocksNew = battle && (!battle.over || battle.endDelay < battleEndTimer(s));
+  const battleCount = battleBlocksNew ? 1 : 0;
+
+  if (s.drifterCount > WAR_TRIGGER && s.probeCount > 0 && battleCount < MAX_BATTLES) {
     if (Math.random() * 100 >= 50) {
       if (!s.battleFlag) s.battleFlag = 1;
-      s.battles = s.battles.filter(b => !b.over);
+      s.battles = [];
       createBattle(s);
     }
   }
@@ -687,27 +690,44 @@ function tickBattles(s: GameState): void {
 }
 
 function stepBattles(s: GameState): void {
-  for (let i = s.battles.length - 1; i >= 0; i--) {
-    const b = s.battles[i];
-    normalizeBattleRuntime(b);
-    s.battleName = b.name;
-    s.battleScale = b.scale || b.unitSize;
+  const b = normalizeBattleQueue(s);
+  if (!b) return;
 
-    if (b.over) {
-      const grid = updateBattleGrid(b);
-      moveBattleShips(b, grid);
-      b.endDelay++;
-      continue;
-    }
+  normalizeBattleRuntime(b);
+  s.battleName = b.name;
+  s.battleScale = b.scale || b.unitSize;
 
+  if (b.over) {
     const grid = updateBattleGrid(b);
     moveBattleShips(b, grid);
-    doBattleCombat(s, b, grid);
+    b.endDelay++;
+    return;
+  }
 
-    if (checkForBattleEnd(s, b)) {
-      s.battles.splice(i, 1);
+  const grid = updateBattleGrid(b);
+  moveBattleShips(b, grid);
+  doBattleCombat(s, b, grid);
+
+  if (checkForBattleEnd(s, b)) {
+    b.over = true;
+    b.result = null;
+    b.endDelay = battleEndTimer(s);
+  }
+}
+
+function normalizeBattleQueue(s: GameState): Battle | undefined {
+  if (s.battles.length <= 1) return s.battles[0];
+
+  let selected: Battle | undefined;
+  for (let i = s.battles.length - 1; i >= 0; i--) {
+    if (!s.battles[i].over) {
+      selected = s.battles[i];
+      break;
     }
   }
+  selected = selected ?? s.battles[s.battles.length - 1];
+  s.battles = selected ? [selected] : [];
+  return selected;
 }
 
 function normalizeBattleRuntime(b: Battle): void {
@@ -930,6 +950,10 @@ function applyBattleHonor(s: GameState, b: Battle): void {
   }
 
   b.honorApplied = true;
+}
+
+function battleEndTimer(s: GameState): number {
+  return s.projectFlags[121] === 1 ? 200 : 100;
 }
 
 function allBattleShips(b: Battle): Ship[] {

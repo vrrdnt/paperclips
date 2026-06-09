@@ -255,6 +255,7 @@ export interface GameState {
   disorgMsg: number;
   synchCost: number;
   threnodyTitle: string;
+  threnodyDisplayTitle: string;
   threnodyCost: number;
   entertainCost: number;
   boredomLevel: number;
@@ -372,7 +373,7 @@ export function makeInitialState(): GameState {
     giftPeriod: 125_000, giftCountdown: 125_000, giftBits: 0, giftBitGenerationRate: 0,
     elapsedTime: 0,
     disorgCounter: 0, disorgFlag: 0, disorgMsg: 0,
-    synchCost: 5000, threnodyTitle: 'Durenstein 1', threnodyCost: 50_000,
+    synchCost: 5000, threnodyTitle: 'Durenstein 1', threnodyDisplayTitle: 'Durenstein 1', threnodyCost: 50_000,
     entertainCost: 10_000, boredomLevel: 0, boredomFlag: 0, boredomMsg: 0,
 
     qClock: 0, qChipCost: 10_000, nextQchip: 0, qFade: 1,

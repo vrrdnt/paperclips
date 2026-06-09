@@ -7,6 +7,13 @@ const H = 150;
 const SCALE = 2;
 const BG = '#252525';
 
+function visibleBattle(): Battle | null {
+  for (let i = G.battles.length - 1; i >= 0; i--) {
+    if (!G.battles[i].over) return G.battles[i];
+  }
+  return G.battles[G.battles.length - 1] ?? null;
+}
+
 export function CombatCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -50,7 +57,7 @@ export function CombatCanvas() {
 
     function frame() {
       raf = requestAnimationFrame(frame);
-      const battle = G.battles.find(b => !b.over) ?? G.battles[0] ?? null;
+      const battle = visibleBattle();
 
       ctx!.fillStyle = BG;
       ctx!.fillRect(0, 0, W, H);
