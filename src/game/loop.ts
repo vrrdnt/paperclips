@@ -1174,17 +1174,20 @@ function tickInvestmentReport(s: GameState): void {
 
 // ── Auto-tourney ──────────────────────────────────────────────────────────
 let autoTourneyTimer = 0;
+const AUTO_TOURNEY_RESULT_TICKS = 300;
 
 function tickAutoTourney(s: GameState): void {
   // Original AutoTourney advances only from an existing results screen.
-  if (!s.currentTournament) return;
-  if ((s.currentTournament?.pendingYomi ?? 0) > 0) return;
+  if (!s.currentTournament) {
+    autoTourneyTimer = 0;
+    return;
+  }
+  if ((s.currentTournament?.pendingYomi ?? 0) > 0) {
+    autoTourneyTimer = 0;
+    return;
+  }
   autoTourneyTimer++;
-  // Original cadence: a tournament plays out at 1s per round (rounds = strats^2)
-  // then waits 3s on the results screen before the next starts.
-  const rounds = s.strategies.length * s.strategies.length;
-  const interval = rounds * 100 + 300;
-  if (autoTourneyTimer < interval || s.operations < s.newTourneyCost) return;
+  if (autoTourneyTimer < AUTO_TOURNEY_RESULT_TICKS || s.operations < s.newTourneyCost) return;
   autoTourneyTimer = 0;
 
   s.standardOps -= s.newTourneyCost;
@@ -1199,14 +1202,13 @@ function tickAutoTourney(s: GameState): void {
   s.vMove = result.vMove;
   s.hMovePrev = result.hMovePrev;
   s.vMovePrev = result.vMovePrev;
-  s.yomi += Math.floor(yomiGain);
   s.tourneyCount++;
   s.currentTournament = {
     stratH: pickedStrat, stratV: result.winner.name,
     payoff: result.payoff, choiceNames: result.choiceNames,
     totalRounds: s.strategies.length * s.strategies.length,
     results: result.scores.map(sc => `${sc.name}: ${sc.score}`),
-    pendingYomi: 0,
+    pendingYomi: Math.floor(yomiGain),
   };
   s.tourneyResult = result.scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
 }
