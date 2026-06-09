@@ -1252,7 +1252,7 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 133,
-    title: (s) => `Threnody for the Heroes of ${s.threnodyTitle} `,
+    title: (s) => `Threnody for the Heroes of ${s.threnodyDisplayTitle} `,
     priceTag: (s) => `(${s.threnodyCost.toLocaleString()} creat, ${(2 * (s.threnodyCost / 5)).toLocaleString()} yomi)`,
     description: 'Gain 10,000 honor  ',
     trigger: (s) =>
@@ -1263,6 +1263,7 @@ export const ALL_PROJECTS: Project[] = [
       s.creativity -= s.threnodyCost;
       s.yomi -= 2 * (s.threnodyCost / 5);
       s.threnodyCost += 10000;
+      s.threnodyDisplayTitle = s.threnodyTitle;
       s.honor += 10000 * activeArtifactMultiplier(s, A.POLYPHASE_QUADRATURE_TRANSFORM);
       displayMessage(s, 'Deep Listening is listening in every possible way to everything possible to hear no matter what you are doing. ');
       // Repeatable — do not permanently flag

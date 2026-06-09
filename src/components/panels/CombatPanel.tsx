@@ -28,12 +28,24 @@ function battleRatio(clips: number, drifters: number): string {
   return `1:${ratioNumber(drifters / clips)}`;
 }
 
+function visibleBattle(s: DisplaySnapshot) {
+  for (let i = s.battles.length - 1; i >= 0; i--) {
+    if (!s.battles[i].over) return s.battles[i];
+  }
+  return s.battles[s.battles.length - 1];
+}
+
+function battleEndTimer(s: DisplaySnapshot): number {
+  return s.projectFlags[121] === 1 ? 200 : 100;
+}
+
 export function CombatPanel({ snap: s }: Props) {
   if (!s.battleFlag) return null;
   if (s.dismantle >= 1 && s.endTimer1 >= 190) return null;
 
-  const active = s.battles.find(b => !b.over) ?? s.battles[0];
+  const active = visibleBattle(s);
   const showCanvas = !(s.dismantle >= 1 && s.endTimer1 >= 175);
+  const visibleResult = active?.result && active.endDelay < battleEndTimer(s) ? active.result : null;
   const battleName = active?.name || s.battleName || 'Drifter Attack';
   const battleScale = active?.scale || s.battleScale || originalBattleScale(s);
   const initialClips = active?.initialClipProbes ?? active?.clipProbes ?? 0;
@@ -45,16 +57,16 @@ export function CombatPanel({ snap: s }: Props) {
     <SectionCard title="Combat" icon={<Shield size={14} />}>
       <div className="battle-heading">
         <span>{active ? battleName : 'Awaiting drifter attack'}</span>
-        {active?.result && (
-          <span className={`battle-outcome-pill ${active.result}`}>
-            {active.result === 'victory' ? 'VICTORY' : 'DEFEAT'}
+        {visibleResult && (
+          <span className={`battle-outcome-pill ${visibleResult}`}>
+            {visibleResult === 'victory' ? 'VICTORY' : 'DEFEAT'}
           </span>
         )}
       </div>
       {showCanvas && <CombatCanvas />}
-      {active?.result && (
-        <div className={`battle-outcome-row ${active.result}`}>
-          <span>{active.result === 'victory' ? 'Victory' : 'Defeat'}</span>
+      {visibleResult && (
+        <div className={`battle-outcome-row ${visibleResult}`}>
+          <span>{visibleResult === 'victory' ? 'Victory' : 'Defeat'}</span>
           <span>{honorSign}{spellf(Math.abs(honorDelta))} honor</span>
         </div>
       )}

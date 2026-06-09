@@ -98,6 +98,19 @@ function normalizeBattles(s: GameState): void {
   }
 }
 
+function normalizeBattleQueue(s: GameState): void {
+  if (s.battles.length <= 1) return;
+
+  let selected = s.battles[s.battles.length - 1];
+  for (let i = s.battles.length - 1; i >= 0; i--) {
+    if (!s.battles[i].over) {
+      selected = s.battles[i];
+      break;
+    }
+  }
+  s.battles = selected ? [selected] : [];
+}
+
 function normalizeBattleNameNumbers(s: GameState, loaded: LegacySavedState): void {
   const saved = Array.isArray(loaded.battleNameNumbers)
     ? loaded.battleNameNumbers
@@ -199,10 +212,17 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   normalizeCurrentTournament(merged);
   normalizeProbeDesign(merged);
   normalizeBattles(merged);
+  normalizeBattleQueue(merged);
   normalizeBattleNameNumbers(merged, loaded as LegacySavedState);
   normalizeDemandBoost(merged);
   normalizeMarketingCost(merged);
   normalizeInvestmentState(merged, loaded as LegacySavedState);
+  if (typeof (loaded as LegacySavedState & { threnodyDisplayTitle?: unknown }).threnodyDisplayTitle !== 'string' ||
+      merged.threnodyDisplayTitle.length === 0) {
+    merged.threnodyDisplayTitle = typeof merged.threnodyTitle === 'string' && merged.threnodyTitle.length > 0
+      ? merged.threnodyTitle
+      : initial.threnodyDisplayTitle;
+  }
   if (!Number.isFinite((loaded as LegacySavedState).prevIncome)) {
     merged.prevIncome = finiteNumber(merged.income);
   }
