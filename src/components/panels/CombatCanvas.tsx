@@ -25,7 +25,7 @@ export function CombatCanvas() {
 
     let raf = 0;
 
-    function drawShip(sh: Ship, color: string) {
+    function drawShip(sh: Ship, color: string, contrastBacking = false) {
       if (!sh.alive) {
         if (sh.framesDead < 10) {
           ctx!.fillStyle = '#ffffff';
@@ -41,6 +41,10 @@ export function CombatCanvas() {
         }
         return;
       }
+      if (contrastBacking) {
+        ctx!.fillStyle = 'rgba(220, 220, 220, 0.55)';
+        ctx!.fillRect(sh.x - 2, sh.y - 2, 4, 4);
+      }
       ctx!.fillStyle = color;
       ctx!.fillRect(sh.x - 1, sh.y - 1, 2, 2);
     }
@@ -50,7 +54,7 @@ export function CombatCanvas() {
       for (let i = 0; i < maxShips; i++) {
         const drifter = battle.drifterShips[i];
         const probe = battle.probeShips[i];
-        if (drifter) drawShip(drifter, '#000000');
+        if (drifter) drawShip(drifter, '#000000', true);
         if (probe) drawShip(probe, '#ffffff');
       }
     }
