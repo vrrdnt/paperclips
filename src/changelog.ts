@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.4',
+    date: '2026-06-10',
+    title: 'Honor placement',
+    commits: 'v2.3.3..v2.3.4',
+    changes: [
+      'Moved the honor value into the probe design section under the available probe trust row.',
+    ],
+  },
+  {
     version: '2.3.3',
     date: '2026-06-10',
     title: 'Combat count polish',

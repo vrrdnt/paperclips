@@ -46,6 +46,12 @@ export function ProbeDesignPanel({ snap: s }: Props) {
         <span className="stat-label">Available</span>
         <span className="stat-value">{available}</span>
       </div>
+      {s.projectFlags[121] === 1 && (
+        <div className="stat-row">
+          <span className="stat-label">Honor</span>
+          <span className="stat-value">{formatWithCommas(s.honor)}</span>
+        </div>
+      )}
 
       <div className="row" style={{ marginTop: 6 }}>
         {showTrustIncrease && (
