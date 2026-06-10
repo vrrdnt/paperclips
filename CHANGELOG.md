@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.13 - 2026-06-10
+
+Commits: `d353a3a..HEAD`
+
+- Flipped the universe exploration timeline so probe progress moves back toward the early universe and adjusted the ringed planet so its rings pass partly behind the planet.
+
 ## 2.3.12 - 2026-06-10
 
-Commits: `0349bf5..HEAD`
+Commits: `0349bf5..d353a3a`
 
 - Matched solar farm and battery assembly controls to the drone build layout, including fixed batch buttons and full-width disassembly controls.
 
