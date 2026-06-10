@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.11 - 2026-06-10
+
+Commits: `aa85b82..HEAD`
+
+- Renamed the later-stage Paperclips section `Clips` label to `Clips made`.
+
 ## 2.3.10 - 2026-06-10
 
-Commits: `a2582d4..HEAD`
+Commits: `a2582d4..aa85b82`
 
 - Replaced the public demand readout with average clips sold per second, calculated from the same sales and RevTracker timing as average revenue.
 
