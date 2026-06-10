@@ -67,12 +67,12 @@ textarea {
 .app-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding:
-    calc(12px + env(safe-area-inset-top))
-    calc(14px + env(safe-area-inset-right))
-    12px
-    calc(14px + env(safe-area-inset-left));
+    calc(9px + env(safe-area-inset-top))
+    calc(10px + env(safe-area-inset-right))
+    9px
+    calc(10px + env(safe-area-inset-left));
   background: var(--panel2);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -81,41 +81,143 @@ textarea {
 }
 
 .app-header-title {
-  flex: 0 0 auto;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  color: #d0d0d0;
   display: flex;
   align-items: center;
-  gap: 7px;
-  min-width: 0; /* allow truncation */
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
 }
 
 .app-header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  gap: 7px;
+  flex: 0 0 auto;
   justify-content: flex-end;
-  min-width: 0;
 }
 
 .header-clip-count {
-  font-size: 12px;
-  color: var(--text-dim);
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 8px 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--text);
+  background: rgba(20,20,20,0.18);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 5px;
+}
+
+.header-clip-number {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.header-clip-unit {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+  font-size: 11px;
 }
 
 .app-header-right .btn {
   flex-shrink: 0;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  border-radius: 5px;
+}
+
+.header-menu-wrap {
+  position: relative;
+  display: flex;
+}
+
+.header-action-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 260;
+  width: 190px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.55);
+}
+
+.header-action-menu-item {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.header-action-menu-item svg {
+  flex: 0 0 auto;
+  color: #d0d0d0;
+}
+
+.header-action-menu-item:hover,
+.header-action-menu-item:focus-visible {
+  outline: 0;
+  background: rgba(255,255,255,0.08);
+}
+
+.header-action-menu-item.is-danger,
+.header-action-menu-item.is-danger svg {
+  color: #e08080;
+}
+
+@media (min-width: 900px) {
+  .app-header {
+    padding:
+      calc(8px + env(safe-area-inset-top))
+      calc(12px + env(safe-area-inset-right))
+      8px
+      calc(12px + env(safe-area-inset-left));
+  }
+
+  .app-header-title {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .app-header-right .btn {
+    width: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .header-clip-count {
+    padding: 6px 9px;
+  }
+
+  .header-clip-number {
+    font-size: 13px;
+  }
 }
 
 /* Modal shell */
@@ -224,9 +326,20 @@ textarea {
   margin-top: 5px;
 }
 
-/* Hide clip count text on very small screens — it's also shown in the panel */
+/* Keep the primary number visible on cramped screens. */
 @media (max-width: 380px) {
-  .header-clip-count { display: none; }
+  .header-clip-unit { display: none; }
+  .app-header-title {
+    flex-basis: 34px;
+    width: 34px;
+  }
+  .app-header-right {
+    gap: 5px;
+  }
+  .app-header-right .btn {
+    width: 38px;
+    min-width: 38px;
+  }
 }
 
 /* Outer wrapper: flex column so console sits flush above the grid */
