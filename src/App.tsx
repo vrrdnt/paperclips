@@ -2,8 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { History, Map as MapIcon, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
-import { resetTickClock, tickBatch } from './game/loop';
-import { hydrateGameState, loadGame, saveGame, resetGame, resetAllProgress, savePrestigeState, toSaveableState } from './game/save';
+import { clearCatchUp, queueCatchUp, resetTickClock, tickBatch } from './game/loop';
+import { getLastSavedAt, hydrateGameState, loadGame, saveGame, resetGame, resetAllProgress, savePrestigeState, toSaveableState } from './game/save';
 import { Btn } from './components/ui/Btn';
 import { Console } from './components/Console';
 import { BusinessPanel } from './components/panels/BusinessPanel';
@@ -45,14 +45,18 @@ export default function App() {
   const saveFeedbackTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
+    const loadedAt = Date.now();
+    const savedAt = getLastSavedAt();
     const saved = loadGame();
     Object.assign(G, saved);
+    if (savedAt > 0 && loadedAt > savedAt) queueCatchUp(loadedAt - savedAt);
     resetHistories(G);
     setSnap(G);
-    resetTickClock();
+    resetTickClock(loadedAt);
+    let suspendedAt = 0;
+    let lastResumeCatchUpAt = loadedAt;
 
     const gameTimer = setInterval(() => {
-      if (document.visibilityState === 'hidden') return;
       tickBatch(G);
     }, 50);
     const displayTimer = setInterval(() => {
@@ -60,6 +64,7 @@ export default function App() {
         savePrestigeState(G);
         const fresh = resetGame();
         Object.assign(G, fresh);
+        clearCatchUp();
         resetHistories(G);
         setSnap(G);
         saveGame(G);
@@ -72,20 +77,32 @@ export default function App() {
       }
       setSnap(G);
     }, 100);
-    const resetOnResume = () => resetTickClock();
+    const catchUpOnResume = () => {
+      const now = Date.now();
+      if (now - lastResumeCatchUpAt < 1000) {
+        resetTickClock(now);
+        return;
+      }
+      const lastSavedAt = getLastSavedAt();
+      const catchUpSince = Math.max(suspendedAt, lastSavedAt);
+      if (catchUpSince > 0 && now > catchUpSince) queueCatchUp(now - catchUpSince);
+      suspendedAt = 0;
+      lastResumeCatchUpAt = now;
+      resetTickClock(now);
+    };
     const persistOnSuspend = () => {
+      suspendedAt = Date.now();
       saveGame(G);
-      resetTickClock();
     };
     const persistOnVisibilityChange = () => {
       if (document.visibilityState === 'hidden') persistOnSuspend();
-      else resetOnResume();
+      else catchUpOnResume();
     };
 
     document.addEventListener('visibilitychange', persistOnVisibilityChange);
     document.addEventListener('freeze', persistOnSuspend);
     window.addEventListener('pagehide', persistOnSuspend);
-    window.addEventListener('pageshow', resetOnResume);
+    window.addEventListener('pageshow', catchUpOnResume);
     window.addEventListener('beforeunload', persistOnSuspend);
 
     return () => {
@@ -94,7 +111,7 @@ export default function App() {
       document.removeEventListener('visibilitychange', persistOnVisibilityChange);
       document.removeEventListener('freeze', persistOnSuspend);
       window.removeEventListener('pagehide', persistOnSuspend);
-      window.removeEventListener('pageshow', resetOnResume);
+      window.removeEventListener('pageshow', catchUpOnResume);
       window.removeEventListener('beforeunload', persistOnSuspend);
     };
   }, []);
@@ -143,6 +160,7 @@ export default function App() {
     setShowArtifactMap(false);
     const fresh = resetAllProgress();
     Object.assign(G, fresh);
+    clearCatchUp();
     resetHistories(G);
     setSnap(G);
   }
@@ -225,6 +243,7 @@ export default function App() {
       const loaded = JSON.parse(decoded);
       const merged = hydrateGameState(loaded);
       Object.assign(G, merged);
+      clearCatchUp();
       resetHistories(G);
       setSnap(G);
       saveGame(G);
