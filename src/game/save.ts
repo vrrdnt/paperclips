@@ -228,6 +228,7 @@ export function hydrateGameState(loaded: Partial<GameState>): GameState {
   normalizeDemandBoost(merged);
   normalizeMarketingCost(merged);
   normalizeInvestmentState(merged, loaded as LegacySavedState);
+  merged.catchUpTicksRemaining = Math.floor(finiteNonNegative(finiteNumber(merged.catchUpTicksRemaining)));
   if (typeof (loaded as LegacySavedState & { threnodyDisplayTitle?: unknown }).threnodyDisplayTitle !== 'string' ||
       merged.threnodyDisplayTitle.length === 0) {
     merged.threnodyDisplayTitle = typeof merged.threnodyTitle === 'string' && merged.threnodyTitle.length > 0

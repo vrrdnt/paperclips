@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.3.0 - 2026-06-10
+
+Commits: `v2.2.0..v2.3.0`
+
+- Restored Android/PWA idle progress by saving the last run time, queuing all elapsed idle time on resume, and persisting unfinished catch-up work across app closes.
+- Kept catch-up batched so long idle sessions progress without one large blocking fast-forward.
+- Fixed late combat display behavior, including stable battle names, original battle replacement timing, animated survivors, and clearer drifter visibility.
+- Improved mobile play polish around save feedback, drone controls, reports, and graph readability.
+
+## 2.2.0 - 2026-06-08
+
+Commits: `5f70ab0..2ddc3bd`
+
+- Matched more original-game behavior for AutoTourney results, final artifact map cells, project reveal order, tournament matchup order, swarm gifts, fractional probe replication, combat explosion timing, and large-number precision.
+
 ## 2.1.0 - 2026-06-08
 
 Commits: after `8b09aa5`

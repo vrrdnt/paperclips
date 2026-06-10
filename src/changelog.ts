@@ -8,6 +8,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.0',
+    date: '2026-06-10',
+    title: 'Mobile idle and combat polish',
+    commits: 'v2.2.0..v2.3.0',
+    changes: [
+      'Restored Android/PWA idle progress by saving the last run time, queuing all elapsed idle time on resume, and persisting unfinished catch-up work across app closes.',
+      'Kept catch-up batched so long idle sessions progress without one large blocking fast-forward.',
+      'Fixed late combat display behavior, including stable battle names, original battle replacement timing, animated survivors, and clearer drifter visibility.',
+      'Improved mobile play polish around save feedback, drone controls, reports, and graph readability.',
+    ],
+  },
+  {
     version: '2.2.0',
     date: '2026-06-08',
     title: 'Gameplay parity polish',

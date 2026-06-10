@@ -49,7 +49,7 @@ export default function App() {
     const savedAt = getLastSavedAt();
     const saved = loadGame();
     Object.assign(G, saved);
-    if (savedAt > 0 && loadedAt > savedAt) queueCatchUp(loadedAt - savedAt);
+    if (savedAt > 0 && loadedAt > savedAt) queueCatchUp(G, loadedAt - savedAt);
     resetHistories(G);
     setSnap(G);
     resetTickClock(loadedAt);
@@ -64,7 +64,7 @@ export default function App() {
         savePrestigeState(G);
         const fresh = resetGame();
         Object.assign(G, fresh);
-        clearCatchUp();
+        clearCatchUp(G);
         resetHistories(G);
         setSnap(G);
         saveGame(G);
@@ -85,7 +85,7 @@ export default function App() {
       }
       const lastSavedAt = getLastSavedAt();
       const catchUpSince = Math.max(suspendedAt, lastSavedAt);
-      if (catchUpSince > 0 && now > catchUpSince) queueCatchUp(now - catchUpSince);
+      if (catchUpSince > 0 && now > catchUpSince) queueCatchUp(G, now - catchUpSince);
       suspendedAt = 0;
       lastResumeCatchUpAt = now;
       resetTickClock(now);
@@ -160,7 +160,7 @@ export default function App() {
     setShowArtifactMap(false);
     const fresh = resetAllProgress();
     Object.assign(G, fresh);
-    clearCatchUp();
+    clearCatchUp(G);
     resetHistories(G);
     setSnap(G);
   }
@@ -243,7 +243,7 @@ export default function App() {
       const loaded = JSON.parse(decoded);
       const merged = hydrateGameState(loaded);
       Object.assign(G, merged);
-      clearCatchUp();
+      clearCatchUp(G);
       resetHistories(G);
       setSnap(G);
       saveGame(G);

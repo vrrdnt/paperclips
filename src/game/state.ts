@@ -300,6 +300,7 @@ export interface GameState {
   blinkCounter: number;
   testFlag: number;
   clipCountCrunched: number;
+  catchUpTicksRemaining: number;
 }
 
 export function makeInitialState(): GameState {
@@ -391,6 +392,7 @@ export function makeInitialState(): GameState {
     readouts: ['Welcome to Universal Paperclips'],
     projectFlags: {}, activeProjectIds: [], hiddenProjectIds: [],
     transaction: 1, blinkCounter: 0, testFlag: 0, clipCountCrunched: 0,
+    catchUpTicksRemaining: 0,
   };
 }
 
