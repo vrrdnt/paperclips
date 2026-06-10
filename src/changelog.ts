@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.2',
+    date: '2026-06-10',
+    title: 'Universe progress polish',
+    commits: 'v2.3.1..v2.3.2',
+    changes: [
+      'Added a styled universe exploration progress bar next to the existing exploration percentage.',
+    ],
+  },
+  {
     version: '2.3.1',
     date: '2026-06-10',
     title: 'Catch-up feedback',

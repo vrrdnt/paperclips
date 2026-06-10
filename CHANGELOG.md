@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.2 - 2026-06-10
+
+Commits: `v2.3.1..v2.3.2`
+
+- Added a styled universe exploration progress bar next to the existing exploration percentage.
+
 ## 2.3.1 - 2026-06-10
 
 Commits: `v2.3.0..v2.3.1`
