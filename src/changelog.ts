@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.6',
+    date: '2026-06-10',
+    title: 'Faster idle catch-up',
+    commits: '9c8814d..dc577be',
+    changes: [
+      'Made idle catch-up adaptive, suppressed internal autosaves during fast-forward, and bulk-advanced inert early-game idle time so new worlds stop catching up slowly when no autonomous systems can run.',
+    ],
+  },
+  {
     version: '2.3.5',
     date: '2026-06-10',
     title: 'Cosmic timeline progress',
