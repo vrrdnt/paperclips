@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.8',
+    date: '2026-06-10',
+    title: 'Project reveal indicator',
+    commitsFrom: '0adf22a',
+    changes: [
+      'Replaced project reveal border flashing with right-edge dots: neutral for newly revealed unaffordable projects and candlestick-green for purchasable projects.',
+    ],
+  },
+  {
     version: '2.3.7',
     date: '2026-06-10',
     title: 'Mobile header polish',
-    commitsFrom: '0cb28b9',
+    commits: '0cb28b9..0adf22a',
     changes: [
       'Simplified the mobile header into a readable clip-count pill, primary save/map actions, and an overflow menu for import, export, changelog, and reset.',
     ],
