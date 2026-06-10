@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.3',
+    date: '2026-06-10',
+    title: 'Combat count polish',
+    commits: 'v2.3.2..v2.3.3',
+    changes: [
+      'Kept combat pane probe and drifter counts aligned with visible battle ships so reports no longer hit zero before the canvas battle finishes.',
+    ],
+  },
+  {
     version: '2.3.2',
     date: '2026-06-10',
     title: 'Universe progress polish',

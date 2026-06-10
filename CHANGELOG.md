@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.3 - 2026-06-10
+
+Commits: `v2.3.2..v2.3.3`
+
+- Kept combat pane probe and drifter counts aligned with visible battle ships so reports no longer hit zero before the canvas battle finishes.
+
 ## 2.3.2 - 2026-06-10
 
 Commits: `v2.3.1..v2.3.2`
