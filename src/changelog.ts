@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.9',
+    date: '2026-06-10',
+    title: 'Creativity artifact scaling',
+    commitsFrom: '6ed99ac',
+    changes: [
+      "Applied processor-performance artifact effects to creativity generation so Kolmogorov's Boundary and processor-like artifacts speed creativity consistently with operations.",
+    ],
+  },
+  {
     version: '2.3.8',
     date: '2026-06-10',
     title: 'Project reveal indicator',
-    commitsFrom: '0adf22a',
+    commits: '0adf22a..6ed99ac',
     changes: [
       'Replaced project reveal border flashing with right-edge dots: neutral for newly revealed unaffordable projects and candlestick-green for purchasable projects.',
     ],
