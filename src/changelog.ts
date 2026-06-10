@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.13',
+    date: '2026-06-10',
+    title: 'Reversed universe timeline',
+    commitsFrom: 'd353a3a',
+    changes: [
+      'Flipped the universe exploration timeline so probe progress moves back toward the early universe and adjusted the ringed planet so its rings pass partly behind the planet.',
+    ],
+  },
+  {
     version: '2.3.12',
     date: '2026-06-10',
     title: 'Power assembly layout',
-    commitsFrom: '0349bf5',
+    commits: '0349bf5..d353a3a',
     changes: [
       'Matched solar farm and battery assembly controls to the drone build layout, including fixed batch buttons and full-width disassembly controls.',
     ],
