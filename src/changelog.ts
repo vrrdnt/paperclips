@@ -11,7 +11,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '2.3.5',
     date: '2026-06-10',
     title: 'Cosmic timeline progress',
-    commits: 'v2.3.4..v2.3.5',
+    commits: '378d75e..b6ecd00',
     changes: [
       'Restyled the universe exploration bar as a compact big-bang timeline with cosmic gradients, stellar clouds, galaxies, and planets.',
     ],
@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '2.3.4',
     date: '2026-06-10',
     title: 'Honor placement',
-    commits: 'v2.3.3..v2.3.4',
+    commits: 'a236787..378d75e',
     changes: [
       'Moved the honor value into the probe design section under the available probe trust row.',
     ],
@@ -29,7 +29,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '2.3.3',
     date: '2026-06-10',
     title: 'Combat count polish',
-    commits: 'v2.3.2..v2.3.3',
+    commits: 'c0c5084..a236787',
     changes: [
       'Kept combat pane probe and drifter counts aligned with visible battle ships so reports no longer hit zero before the canvas battle finishes.',
     ],
@@ -38,7 +38,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '2.3.2',
     date: '2026-06-10',
     title: 'Universe progress polish',
-    commits: 'v2.3.1..v2.3.2',
+    commits: '2dc1ae9..c0c5084',
     changes: [
       'Added a styled universe exploration progress bar next to the existing exploration percentage.',
     ],
@@ -47,7 +47,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '2.3.1',
     date: '2026-06-10',
     title: 'Catch-up feedback',
-    commits: 'v2.3.0..v2.3.1',
+    commits: '4542f5a..2dc1ae9',
     changes: [
       'Added a subtle catch-up overlay so resumed idle simulation is visible while elapsed time is processed.',
     ],
@@ -56,7 +56,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '2.3.0',
     date: '2026-06-10',
     title: 'Mobile idle and combat polish',
-    commits: 'v2.2.0..v2.3.0',
+    commits: '2a28484..4542f5a',
     changes: [
       'Restored Android/PWA idle progress by saving the last run time, queuing all elapsed idle time on resume, and persisting unfinished catch-up work across app closes.',
       'Kept catch-up batched so long idle sessions progress without one large blocking fast-forward.',

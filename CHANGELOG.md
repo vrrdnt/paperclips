@@ -2,37 +2,37 @@
 
 ## 2.3.5 - 2026-06-10
 
-Commits: `v2.3.4..v2.3.5`
+Commits: `378d75e..b6ecd00`
 
 - Restyled the universe exploration bar as a compact big-bang timeline with cosmic gradients, stellar clouds, galaxies, and planets.
 
 ## 2.3.4 - 2026-06-10
 
-Commits: `v2.3.3..v2.3.4`
+Commits: `a236787..378d75e`
 
 - Moved the honor value into the probe design section under the available probe trust row.
 
 ## 2.3.3 - 2026-06-10
 
-Commits: `v2.3.2..v2.3.3`
+Commits: `c0c5084..a236787`
 
 - Kept combat pane probe and drifter counts aligned with visible battle ships so reports no longer hit zero before the canvas battle finishes.
 
 ## 2.3.2 - 2026-06-10
 
-Commits: `v2.3.1..v2.3.2`
+Commits: `2dc1ae9..c0c5084`
 
 - Added a styled universe exploration progress bar next to the existing exploration percentage.
 
 ## 2.3.1 - 2026-06-10
 
-Commits: `v2.3.0..v2.3.1`
+Commits: `4542f5a..2dc1ae9`
 
 - Added a subtle catch-up overlay so resumed idle simulation is visible while elapsed time is processed.
 
 ## 2.3.0 - 2026-06-10
 
-Commits: `v2.2.0..v2.3.0`
+Commits: `2a28484..4542f5a`
 
 - Restored Android/PWA idle progress by saving the last run time, queuing all elapsed idle time on resume, and persisting unfinished catch-up work across app closes.
 - Kept catch-up batched so long idle sessions progress without one large blocking fast-forward.
