@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.5',
+    date: '2026-06-10',
+    title: 'Cosmic timeline progress',
+    commits: 'v2.3.4..v2.3.5',
+    changes: [
+      'Restyled the universe exploration bar as a compact big-bang timeline with cosmic gradients, stellar clouds, galaxies, and planets.',
+    ],
+  },
+  {
     version: '2.3.4',
     date: '2026-06-10',
     title: 'Honor placement',

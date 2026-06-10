@@ -175,6 +175,12 @@ export function SpacePanel({ snap: s }: Props) {
             aria-valuenow={universeProgress}
             aria-valuetext={`${s.colonized.toFixed(12)}%`}
           >
+            <div className="universe-progress-nebula" aria-hidden="true" />
+            <div className="universe-progress-stars" aria-hidden="true" />
+            <div className="universe-progress-galaxy galaxy-a" aria-hidden="true" />
+            <div className="universe-progress-galaxy galaxy-b" aria-hidden="true" />
+            <div className="universe-progress-planet planet-a" aria-hidden="true" />
+            <div className="universe-progress-planet planet-b" aria-hidden="true" />
             <div className="universe-progress-fill" style={{ width: `${universeProgress}%` }} />
             <div className="universe-progress-marker" style={{ left: `${universeProgress}%` }} />
           </div>
