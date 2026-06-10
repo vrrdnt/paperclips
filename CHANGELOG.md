@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.6 - 2026-06-10
+
+Commits: `9c8814d..dc577be`
+
+- Made idle catch-up adaptive, suppressed internal autosaves during fast-forward, and bulk-advanced inert early-game idle time so new worlds stop catching up slowly when no autonomous systems can run.
+
 ## 2.3.5 - 2026-06-10
 
 Commits: `378d75e..b6ecd00`
