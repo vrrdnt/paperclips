@@ -33,7 +33,7 @@ export function BusinessPanel({ snap: s }: Props) {
       {/* Clip maker */}
       <SectionCard title="Paperclips" icon={<Paperclip size={14} />}>
         <div className="stat-row">
-          <span className="stat-label">{s.humanFlag === 1 ? 'Clips produced' : 'Clips'}</span>
+          <span className="stat-label">{s.humanFlag === 1 ? 'Clips produced' : 'Clips made'}</span>
           <span className="stat-value-lg">{spellf(s.clips)}</span>
         </div>
         {s.humanFlag === 1 && (

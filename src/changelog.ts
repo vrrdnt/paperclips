@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.11',
+    date: '2026-06-10',
+    title: 'Paperclips label polish',
+    commitsFrom: 'aa85b82',
+    changes: [
+      'Renamed the later-stage Paperclips section Clips label to Clips made.',
+    ],
+  },
+  {
     version: '2.3.10',
     date: '2026-06-10',
     title: 'Average sales readout',
-    commitsFrom: 'a2582d4',
+    commits: 'a2582d4..aa85b82',
     changes: [
       'Replaced the public demand readout with average clips sold per second, calculated from the same sales and RevTracker timing as average revenue.',
     ],
