@@ -26,6 +26,9 @@ export function SpacePanel({ snap: s }: Props) {
   const showHarvesters= !s.humanFlag && s.harvesterFlag === 1 && !hideWireProduction;
   const showWireDrones= !s.humanFlag && s.wireDroneFlag === 1 && !hideWireProduction;
   const showInfra     = showHarvesters || showWireDrones;
+  const universeProgress = Number.isFinite(s.colonized)
+    ? Math.max(0, Math.min(100, s.colonized))
+    : 0;
 
   if (!showUniverse && !showInfra && !showRecoveredWire) return null;
 
@@ -162,6 +165,18 @@ export function SpacePanel({ snap: s }: Props) {
           <div className="stat-row">
             <span className="stat-label">Universe explored</span>
             <span className="stat-value">{s.colonized.toFixed(12)}%</span>
+          </div>
+          <div
+            className="universe-progress"
+            role="progressbar"
+            aria-label="Universe explored"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={universeProgress}
+            aria-valuetext={`${s.colonized.toFixed(12)}%`}
+          >
+            <div className="universe-progress-fill" style={{ width: `${universeProgress}%` }} />
+            <div className="universe-progress-marker" style={{ left: `${universeProgress}%` }} />
           </div>
 
           <div style={{ marginTop: 8 }}>
