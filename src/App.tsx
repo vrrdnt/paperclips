@@ -25,6 +25,27 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { spellf } from './game/format';
 import { artifactMapUnlocked } from './game/artifacts';
 
+function formatCatchUpDuration(ticks: number): string {
+  const seconds = Math.max(1, Math.ceil(ticks / 100));
+  if (seconds < 60) return `${seconds}s`;
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 48) return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  if (days < 365) return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+
+  const years = Math.floor(days / 365);
+  const remainingDays = days % 365;
+  return remainingDays > 0 ? `${years}y ${remainingDays}d` : `${years}y`;
+}
+
 export default function App() {
   const setSnap = useGameStore(st => st.setSnap);
   const resetHistories = useGameStore(st => st.resetHistories);
@@ -154,6 +175,9 @@ export default function App() {
 
   const postHuman = snap.humanFlag === 0;
   const artifactsUnlocked = artifactMapUnlocked(snap);
+  const catchUpTicks = Number.isFinite(snap.catchUpTicksRemaining)
+    ? Math.max(0, snap.catchUpTicksRemaining)
+    : 0;
 
   function handleReset() {
     if (!confirm('Reset all progress, including prestige and artifacts? This cannot be undone.')) return;
@@ -404,6 +428,18 @@ export default function App() {
           </a>
         </footer>
       </div>
+
+      {catchUpTicks > 0 && (
+        <div className="catchup-overlay" aria-live="polite" aria-label="Catching up idle progress">
+          <div className="catchup-card">
+            <div className="catchup-title">Catching up</div>
+            <div className="catchup-subtitle">
+              Simulating {formatCatchUpDuration(catchUpTicks)} of idle time
+            </div>
+            <div className="catchup-progress" aria-hidden="true" />
+          </div>
+        </div>
+      )}
 
       {/* HypnoDrone phase transition overlay */}
       {showHypnoTransition && (
