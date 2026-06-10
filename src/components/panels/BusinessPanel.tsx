@@ -153,8 +153,8 @@ export function BusinessPanel({ snap: s }: Props) {
             <Btn holdRepeat onClick={() => { raisePrice(G); }}>+</Btn>
           </div>
           <div className="stat-row" style={{ marginTop: 2 }}>
-            <span className="stat-label">Public demand</span>
-            <span className="stat-value dim">{formatWithCommas(s.demand * 10, 0)}</span>
+            <span className="stat-label">Avg clips sold/sec</span>
+            <span className="stat-value dim">{spellf(s.avgSales)}/s</span>
           </div>
 
           <hr className="divider" />

@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.10 - 2026-06-10
+
+Commits: `a2582d4..HEAD`
+
+- Replaced the public demand readout with average clips sold per second, calculated from the same sales and RevTracker timing as average revenue.
+
 ## 2.3.9 - 2026-06-10
 
-Commits: `6ed99ac..HEAD`
+Commits: `6ed99ac..a2582d4`
 
 - Applied processor-performance artifact effects to creativity generation so Kolmogorov's Boundary and processor-like artifacts speed creativity consistently with operations.
 
