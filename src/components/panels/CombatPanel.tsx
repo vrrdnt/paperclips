@@ -39,6 +39,28 @@ function battleEndTimer(s: DisplaySnapshot): number {
   return s.projectFlags[121] === 1 ? 200 : 100;
 }
 
+type VisibleBattle = NonNullable<ReturnType<typeof visibleBattle>>;
+type BattleShips = VisibleBattle['probeShips'];
+
+function visibleShipCount(ships: BattleShips): number {
+  return ships.reduce((total, ship) => total + (ship.alive || ship.framesDead < 10 ? 1 : 0), 0);
+}
+
+function displayedCombatants(
+  ships: BattleShips,
+  remaining: number,
+  initial: number,
+  scale: number,
+): number {
+  const safeRemaining = Math.max(0, remaining);
+  const visibleShips = visibleShipCount(ships);
+  if (visibleShips === 0) return safeRemaining;
+
+  const visualRemaining = visibleShips * Math.max(1, scale);
+  const cap = initial > 0 ? initial : visualRemaining;
+  return Math.max(safeRemaining, Math.min(cap, visualRemaining));
+}
+
 export function CombatPanel({ snap: s }: Props) {
   if (!s.battleFlag) return null;
   if (s.dismantle >= 1 && s.endTimer1 >= 190) return null;
@@ -50,6 +72,12 @@ export function CombatPanel({ snap: s }: Props) {
   const battleScale = active?.scale || s.battleScale || originalBattleScale(s);
   const initialClips = active?.initialClipProbes ?? active?.clipProbes ?? 0;
   const initialDrifters = active?.initialDrifterProbes ?? active?.drifterProbes ?? 0;
+  const displayProbes = active
+    ? displayedCombatants(active.probeShips, active.clipProbes, initialClips, battleScale)
+    : 0;
+  const displayDrifters = active
+    ? displayedCombatants(active.drifterShips, active.drifterProbes, initialDrifters, battleScale)
+    : 0;
   const honorDelta = active?.honor ?? 0;
   const honorSign = honorDelta >= 0 ? '+' : '-';
 
@@ -73,9 +101,9 @@ export function CombatPanel({ snap: s }: Props) {
       {active ? (
         <div className="battle-report-grid">
           <span className="stat-label">Probes</span>
-          <span className="stat-value">{spellf(active.clipProbes)}</span>
+          <span className="stat-value">{spellf(displayProbes)}</span>
           <span className="stat-label">Drifters</span>
-          <span className="stat-value">{spellf(active.drifterProbes)}</span>
+          <span className="stat-value">{spellf(displayDrifters)}</span>
           <span className="stat-label">Ratio</span>
           <span className="stat-value">{battleRatio(initialClips, initialDrifters)}</span>
           <span className="stat-label">Scale</span>
