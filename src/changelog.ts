@@ -2,8 +2,14 @@ export interface ChangelogEntry {
   version: string;
   date: string;
   title: string;
-  commits: string;
+  commits?: string;
+  commitsFrom?: string;
   changes: string[];
+}
+
+export function formatChangelogCommits(entry: ChangelogEntry): string {
+  if (entry.commitsFrom) return `${entry.commitsFrom}..${__APP_COMMIT__}`;
+  return entry.commits ?? '';
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
@@ -11,7 +17,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '2.3.6',
     date: '2026-06-10',
     title: 'Faster idle catch-up',
-    commits: '9c8814d..dc577be',
+    commitsFrom: '9c8814d',
     changes: [
       'Made idle catch-up adaptive, suppressed internal autosaves during fast-forward, and bulk-advanced inert early-game idle time so new worlds stop catching up slowly when no autonomous systems can run.',
     ],

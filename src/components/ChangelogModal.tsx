@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { CHANGELOG } from '../changelog';
+import { CHANGELOG, formatChangelogCommits } from '../changelog';
 import { Btn } from './ui/Btn';
 
 interface Props {
@@ -32,7 +32,7 @@ export function ChangelogModal({ onClose }: Props) {
                 <span className="changelog-date">{entry.date}</span>
               </div>
               <div className="changelog-entry-title">{entry.title}</div>
-              <div className="changelog-commits">Commits {entry.commits}</div>
+              <div className="changelog-commits">Commits {formatChangelogCommits(entry)}</div>
               <ul>
                 {entry.changes.map(change => (
                   <li key={change}>{change}</li>
