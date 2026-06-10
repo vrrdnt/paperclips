@@ -795,27 +795,33 @@ input[type="range"].price-slider::-moz-range-thumb {
 
 .project-reveal {
   display: block;
+  position: relative;
   border-radius: 4px;
 }
 
-.project-reveal.is-reveal-highlighted {
-  animation: reveal-flash 1.15s ease-in-out infinite;
-  box-shadow:
-    0 0 0 1px rgba(220,238,255,0.45),
-    0 0 16px rgba(160,205,255,0.30);
-}
-
-.project-reveal.is-reveal-highlighted .project-btn {
-  border-color: #dceeff;
-}
-
-.project-reveal.is-reveal-highlighted .project-btn:disabled {
-  opacity: 0.72;
+.project-reveal.is-reveal-highlighted::after,
+.project-reveal.is-affordable::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translateY(-50%);
   pointer-events: none;
+  background: #dceeff;
+  box-shadow:
+    0 0 0 1px rgba(220,238,255,0.32),
+    0 0 10px rgba(160,205,255,0.34);
+  animation: project-new-dot 2.2s ease-in-out infinite;
 }
 
-.project-reveal.is-reveal-highlighted .project-btn:not(:disabled) .project-btn-title {
-  color: #eef7ff;
+.project-reveal.is-affordable::after {
+  background: #63c66f;
+  box-shadow:
+    0 0 0 1px rgba(99,198,111,0.32),
+    0 0 10px rgba(99,198,111,0.34);
 }
 
 .project-btn {
@@ -823,7 +829,7 @@ input[type="range"].price-slider::-moz-range-thumb {
   flex-direction: column;
   align-items: flex-start;
   gap: 1px;
-  padding: 6px 9px;
+  padding: 6px 24px 6px 9px;
   text-align: left;
   width: 100%;
   white-space: normal;
@@ -857,6 +863,17 @@ input[type="range"].price-slider::-moz-range-thumb {
   padding: 4px 0;
 }
 
+@keyframes project-new-dot {
+  0%, 100% {
+    opacity: 0.38;
+    transform: translateY(-50%) scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
 @keyframes reveal-flash {
   0%, 100% {
     border-color: #7b8da0;
@@ -875,9 +892,14 @@ input[type="range"].price-slider::-moz-range-thumb {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .section-card.is-reveal-highlighted,
-  .project-reveal.is-reveal-highlighted {
+  .section-card.is-reveal-highlighted {
     animation: none;
+  }
+
+  .project-reveal.is-reveal-highlighted::after,
+  .project-reveal.is-affordable::after {
+    animation: none;
+    opacity: 0.82;
   }
 }
 

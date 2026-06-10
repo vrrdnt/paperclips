@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.8 - 2026-06-10
+
+Commits: `0adf22a..HEAD`
+
+- Replaced project reveal border flashing with right-edge dots: neutral for newly revealed unaffordable projects and candlestick-green for purchasable projects.
+
 ## 2.3.7 - 2026-06-10
 
-Commits: `0cb28b9..HEAD`
+Commits: `0cb28b9..0adf22a`
 
 - Simplified the mobile header into a readable clip-count pill, primary save/map actions, and an overflow menu for import, export, changelog, and reset.
 

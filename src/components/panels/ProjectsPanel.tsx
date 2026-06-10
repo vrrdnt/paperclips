@@ -22,7 +22,11 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
 
   return (
     <div
-      className={`project-reveal ${isHighlighted ? 'is-reveal-highlighted' : ''}`}
+      className={[
+        'project-reveal',
+        isHighlighted ? 'is-reveal-highlighted' : '',
+        canAfford ? 'is-affordable' : '',
+      ].filter(Boolean).join(' ')}
       data-reveal-id={revealKey}
       onMouseEnter={acknowledgeReveal}
       onPointerDown={acknowledgeReveal}
