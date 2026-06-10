@@ -311,13 +311,8 @@ function tickOps(s: GameState): void {
   s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
 
   if (s.operations < s.memory * 1000) {
-    let effectiveProcessors = s.processors;
-    if (hasActiveArtifact(s, A.BOLTZMANNS_BRAIN)) effectiveProcessors += 10;
-    if (hasActiveArtifact(s, A.SMART_FACTORY_FORCE_FEEDBACK)) effectiveProcessors += Math.floor(s.factoryLevel);
-    let processorMultiplier = activeArtifactMultiplier(s, A.KOLMOGOROVS_BOUNDARY);
-    if (hasActiveArtifact(s, A.KOLMOGOROVS_INFINITESIMAL)) {
-      processorMultiplier *= 1 + Math.max(0, effectiveProcessors) * 0.02;
-    }
+    const effectiveProcessors = effectiveProcessorCount(s);
+    const processorMultiplier = processorPerformanceMultiplier(s, effectiveProcessors);
     const opCycle = (effectiveProcessors * processorMultiplier) / 10;
     const opBuf = s.memory * 1000 - s.operations;
     s.standardOps += Math.min(opCycle, opBuf);
@@ -362,6 +357,26 @@ export function buyWire(s: GameState): void {
   if (!free) s.funds -= s.wireCost;
   s.wirePurchase++;
   s.wireBasePrice += 0.05;
+}
+
+function effectiveProcessorCount(s: GameState): number {
+  let effectiveProcessors = s.processors;
+  if (hasActiveArtifact(s, A.BOLTZMANNS_BRAIN)) effectiveProcessors += 10;
+  if (hasActiveArtifact(s, A.SMART_FACTORY_FORCE_FEEDBACK)) effectiveProcessors += Math.floor(s.factoryLevel);
+  return Math.max(0, effectiveProcessors);
+}
+
+function processorPerformanceMultiplier(s: GameState, effectiveProcessors: number): number {
+  let processorMultiplier = activeArtifactMultiplier(s, A.KOLMOGOROVS_BOUNDARY);
+  if (hasActiveArtifact(s, A.KOLMOGOROVS_INFINITESIMAL)) {
+    processorMultiplier *= 1 + Math.max(0, effectiveProcessors) * 0.02;
+  }
+  return processorMultiplier;
+}
+
+function creativitySpeedForProcessors(processors: number): number {
+  if (processors <= 0) return 0;
+  return Math.log10(processors) * Math.pow(processors, 1.1) + processors - 1;
 }
 
 // ── Milestone checks — milestoneCheck() ──────────────────────────────────
@@ -458,7 +473,11 @@ function tickCreativity(s: GameState): void {
   s.creativityCounter++;
   const creativityThreshold = 400;
   const prestige = s.prestigeS / 10;
-  const ss = s.creativitySpeed + s.creativitySpeed * prestige;
+  const effectiveProcessors = effectiveProcessorCount(s);
+  const effectiveProcessorPower = effectiveProcessors * processorPerformanceMultiplier(s, effectiveProcessors);
+  const baseSpeed = creativitySpeedForProcessors(effectiveProcessorPower);
+  const ss = baseSpeed + baseSpeed * prestige;
+  if (ss <= 0) return;
   const creativityCheck = creativityThreshold / ss;
   if (s.creativityCounter >= creativityCheck) {
     if (creativityCheck >= 1) {

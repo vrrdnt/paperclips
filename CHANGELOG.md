@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.9 - 2026-06-10
+
+Commits: `6ed99ac..HEAD`
+
+- Applied processor-performance artifact effects to creativity generation so Kolmogorov's Boundary and processor-like artifacts speed creativity consistently with operations.
+
 ## 2.3.8 - 2026-06-10
 
-Commits: `0adf22a..HEAD`
+Commits: `0adf22a..6ed99ac`
 
 - Replaced project reveal border flashing with right-edge dots: neutral for newly revealed unaffordable projects and candlestick-green for purchasable projects.
 
