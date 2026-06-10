@@ -64,24 +64,31 @@ export function PowerPanel({ snap: s }: Props) {
         <span className="stat-label">Solar farms</span>
         <span className="stat-value">{s.farmLevel}</span>
       </div>
-      <div className="row" style={{ marginTop: 4 }}>
-        <Btn holdRepeat onClick={() => { makeFarm(G); }}
+      <div className="drone-build-controls">
+        <Btn className="drone-build-primary" holdRepeat onClick={() => { makeFarm(G); }}
           disabled={s.unusedClips < s.farmCost}>
-          Build ({spellf(s.farmCost)})
+          <span>Build</span>
+          <span className="drone-build-cost">({spellf(s.farmCost)})</span>
         </Btn>
-        <Btn holdRepeat onClick={() => { makeFarm(G, 10); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeFarm(G, 10); }}
           disabled={s.unusedClips < farmBulkCost(s.farmLevel, 10)}>
           ×10
         </Btn>
-        <Btn holdRepeat onClick={() => { makeFarm(G, 100); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeFarm(G, 100); }}
           disabled={s.unusedClips < farmBulkCost(s.farmLevel, 100)}>
           ×100
         </Btn>
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeFarm(G, 1000); }}
+          disabled={s.unusedClips < farmBulkCost(s.farmLevel, 1000)}>
+          ×1000
+        </Btn>
         {s.farmLevel > 0 && (
-          <Btn onClick={() => { farmReboot(G); }}
-            title={`+${spellf(s.farmBill)} clips`}>
-            Disassemble All
-          </Btn>
+          <div className="drone-disassemble-row">
+            <Btn variant="danger" onClick={() => { farmReboot(G); }}
+              title={`+${spellf(s.farmBill)} clips`}>
+              Disassemble All
+            </Btn>
+          </div>
         )}
       </div>
 
@@ -99,24 +106,31 @@ export function PowerPanel({ snap: s }: Props) {
         <span className="stat-label">Batteries</span>
         <span className="stat-value">{s.batteryLevel}</span>
       </div>
-      <div className="row" style={{ marginTop: 4 }}>
-        <Btn holdRepeat onClick={() => { makeBattery(G); }}
+      <div className="drone-build-controls">
+        <Btn className="drone-build-primary" holdRepeat onClick={() => { makeBattery(G); }}
           disabled={s.unusedClips < s.batteryCost}>
-          Build ({spellf(s.batteryCost)})
+          <span>Build</span>
+          <span className="drone-build-cost">({spellf(s.batteryCost)})</span>
         </Btn>
-        <Btn holdRepeat onClick={() => { makeBattery(G, 10); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeBattery(G, 10); }}
           disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 10)}>
           ×10
         </Btn>
-        <Btn holdRepeat onClick={() => { makeBattery(G, 100); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeBattery(G, 100); }}
           disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 100)}>
           ×100
         </Btn>
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeBattery(G, 1000); }}
+          disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 1000)}>
+          ×1000
+        </Btn>
         {s.batteryLevel > 0 && (
-          <Btn onClick={() => { batteryReboot(G); }}
-            title={`+${spellf(s.batteryBill)} clips`}>
-            Disassemble All
-          </Btn>
+          <div className="drone-disassemble-row">
+            <Btn variant="danger" onClick={() => { batteryReboot(G); }}
+              title={`+${spellf(s.batteryBill)} clips`}>
+              Disassemble All
+            </Btn>
+          </div>
         )}
       </div>
     </SectionCard>

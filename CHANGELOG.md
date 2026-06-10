@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.12 - 2026-06-10
+
+Commits: `0349bf5..HEAD`
+
+- Matched solar farm and battery assembly controls to the drone build layout, including fixed batch buttons and full-width disassembly controls.
+
 ## 2.3.11 - 2026-06-10
 
-Commits: `aa85b82..HEAD`
+Commits: `aa85b82..0349bf5`
 
 - Renamed the later-stage Paperclips section `Clips` label to `Clips made`.
 

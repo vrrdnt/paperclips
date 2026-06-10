@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.12',
+    date: '2026-06-10',
+    title: 'Power assembly layout',
+    commitsFrom: '0349bf5',
+    changes: [
+      'Matched solar farm and battery assembly controls to the drone build layout, including fixed batch buttons and full-width disassembly controls.',
+    ],
+  },
+  {
     version: '2.3.11',
     date: '2026-06-10',
     title: 'Paperclips label polish',
-    commitsFrom: 'aa85b82',
+    commits: 'aa85b82..0349bf5',
     changes: [
       'Renamed the later-stage Paperclips section Clips label to Clips made.',
     ],
