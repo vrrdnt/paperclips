@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.10',
+    date: '2026-06-10',
+    title: 'Average sales readout',
+    commitsFrom: 'a2582d4',
+    changes: [
+      'Replaced the public demand readout with average clips sold per second, calculated from the same sales and RevTracker timing as average revenue.',
+    ],
+  },
+  {
     version: '2.3.9',
     date: '2026-06-10',
     title: 'Creativity artifact scaling',
-    commitsFrom: '6ed99ac',
+    commits: '6ed99ac..a2582d4',
     changes: [
       "Applied processor-performance artifact effects to creativity generation so Kolmogorov's Boundary and processor-like artifacts speed creativity consistently with operations.",
     ],

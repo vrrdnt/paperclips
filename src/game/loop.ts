@@ -1207,12 +1207,16 @@ function tickRevenue(s: GameState): void {
   }
   const trueAvgRev = sum / s.incomeTracker.length;
   const chanceOfPurchase = Math.min(1, s.demand / 100);
+  const expectedAvgSales = chanceOfPurchase * 0.7 * Math.pow(s.demand, 1.15) * 10;
   if (s.unsoldClips < 1) {
     s.avgRev = trueAvgRev;
+    s.avgSales = s.margin > 0 ? trueAvgRev / s.margin : 0;
   } else if (s.demand > s.unsoldClips) {
     s.avgRev = trueAvgRev;
+    s.avgSales = s.margin > 0 ? trueAvgRev / s.margin : 0;
   } else {
-    s.avgRev = chanceOfPurchase * 0.7 * Math.pow(s.demand, 1.15) * s.margin * 10;
+    s.avgSales = expectedAvgSales;
+    s.avgRev = expectedAvgSales * s.margin;
   }
 }
 
