@@ -8,6 +8,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.1',
+    date: '2026-06-10',
+    title: 'Catch-up feedback',
+    commits: 'v2.3.0..v2.3.1',
+    changes: [
+      'Added a subtle catch-up overlay so resumed idle simulation is visible while elapsed time is processed.',
+    ],
+  },
+  {
     version: '2.3.0',
     date: '2026-06-10',
     title: 'Mobile idle and combat polish',

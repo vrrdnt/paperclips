@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.1 - 2026-06-10
+
+Commits: `v2.3.0..v2.3.1`
+
+- Added a subtle catch-up overlay so resumed idle simulation is visible while elapsed time is processed.
+
 ## 2.3.0 - 2026-06-10
 
 Commits: `v2.2.0..v2.3.0`
