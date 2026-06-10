@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { History, Map as MapIcon, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
+import { History, Map as MapIcon, MoreVertical, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
 import { G } from './game/state';
 import { clearCatchUp, queueCatchUp, resetTickClock, tickBatch } from './game/loop';
@@ -59,9 +59,11 @@ export default function App() {
   const [exportText, setExportText] = useState('');
   const [showArtifactMap, setShowArtifactMap] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showTopMenu, setShowTopMenu] = useState(false);
   const [showHypnoTransition, setShowHypnoTransition] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const exportTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
   const prevHumanFlag = useRef<number | null>(null);
   const saveFeedbackTimeoutRef = useRef<number | null>(null);
 
@@ -170,6 +172,25 @@ export default function App() {
       window.clearTimeout(saveFeedbackTimeoutRef.current);
     }
   }, []);
+
+  useEffect(() => {
+    if (!showTopMenu) return;
+
+    function closeOnOutsidePointer(e: PointerEvent) {
+      if (!headerMenuRef.current?.contains(e.target as Node)) setShowTopMenu(false);
+    }
+
+    function closeOnEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setShowTopMenu(false);
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [showTopMenu]);
 
   if (!snap) return <div style={{ padding: 24, color: 'var(--text-dim)' }}>Loading…</div>;
 
@@ -286,10 +307,11 @@ export default function App() {
         <div className="app-header-title" aria-label="Paperclips" title="Paperclips">
           <Paperclip size={18} aria-hidden="true" />
         </div>
+        <div className="header-clip-count" aria-label={`${spellf(snap.clips)} clips`}>
+          <span className="header-clip-number">{spellf(snap.clips)}</span>
+          <span className="header-clip-unit">clips</span>
+        </div>
         <div className="app-header-right">
-          <span className="header-clip-count">
-            {spellf(snap.clips)} clips
-          </span>
           <Btn
             className={saveConfirmed ? 'header-save-btn is-saved' : 'header-save-btn'}
             onClick={handleSave}
@@ -298,25 +320,10 @@ export default function App() {
           >
             <Save size={13} />
           </Btn>
-          <Btn onClick={handleExport} title="Copy save to clipboard"
-            style={{ minWidth: 28, fontSize: 10, gap: 4 }}>
-            <Upload size={13} />
-            {exportCopied && <span style={{ fontSize: 9, color: 'var(--success)' }}>copied</span>}
-          </Btn>
-          <Btn onClick={() => { setShowArtifactMap(false); setShowImport(true); }} title="Import save from clipboard">
-            <Download size={13} />
-          </Btn>
-          <Btn
-            onClick={() => { setShowArtifactMap(false); setShowChangelog(true); }}
-            title="Changelog"
-            aria-label="Changelog"
-          >
-            <History size={13} />
-          </Btn>
           {artifactsUnlocked && (
             <div className="artifact-header-wrap">
               <Btn
-                onClick={() => setShowArtifactMap(open => !open)}
+                onClick={() => { setShowTopMenu(false); setShowArtifactMap(open => !open); }}
                 title="Artifact map"
                 variant={showArtifactMap ? 'primary' : 'default'}
               >
@@ -327,9 +334,57 @@ export default function App() {
               )}
             </div>
           )}
-          <Btn variant="danger" onClick={handleReset} title="Reset game">
-            <RotateCcw size={13} />
-          </Btn>
+          <div className="header-menu-wrap" ref={headerMenuRef}>
+            <Btn
+              onClick={() => { setShowArtifactMap(false); setShowTopMenu(open => !open); }}
+              title="More actions"
+              aria-label="More actions"
+              aria-expanded={showTopMenu}
+              aria-haspopup="menu"
+            >
+              <MoreVertical size={13} />
+            </Btn>
+            {showTopMenu && (
+              <div className="header-action-menu" role="menu" aria-label="More actions">
+                <button
+                  type="button"
+                  className="header-action-menu-item"
+                  role="menuitem"
+                  onClick={() => { void handleExport(); setShowTopMenu(false); }}
+                >
+                  <Upload size={14} />
+                  <span>{exportCopied ? 'Save copied' : 'Export save'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="header-action-menu-item"
+                  role="menuitem"
+                  onClick={() => { setShowArtifactMap(false); setShowImport(true); setShowTopMenu(false); }}
+                >
+                  <Download size={14} />
+                  <span>Import save</span>
+                </button>
+                <button
+                  type="button"
+                  className="header-action-menu-item"
+                  role="menuitem"
+                  onClick={() => { setShowArtifactMap(false); setShowChangelog(true); setShowTopMenu(false); }}
+                >
+                  <History size={14} />
+                  <span>Changelog</span>
+                </button>
+                <button
+                  type="button"
+                  className="header-action-menu-item is-danger"
+                  role="menuitem"
+                  onClick={() => { setShowTopMenu(false); handleReset(); }}
+                >
+                  <RotateCcw size={14} />
+                  <span>Reset game</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

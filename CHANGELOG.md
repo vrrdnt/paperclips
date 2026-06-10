@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.7 - 2026-06-10
+
+Commits: `0cb28b9..HEAD`
+
+- Simplified the mobile header into a readable clip-count pill, primary save/map actions, and an overflow menu for import, export, changelog, and reset.
+
 ## 2.3.6 - 2026-06-10
 
-Commits: `9c8814d..dc577be`
+Commits: `9c8814d..0cb28b9`
 
 - Made idle catch-up adaptive, suppressed internal autosaves during fast-forward, and bulk-advanced inert early-game idle time so new worlds stop catching up slowly when no autonomous systems can run.
 

@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.7',
+    date: '2026-06-10',
+    title: 'Mobile header polish',
+    commitsFrom: '0cb28b9',
+    changes: [
+      'Simplified the mobile header into a readable clip-count pill, primary save/map actions, and an overflow menu for import, export, changelog, and reset.',
+    ],
+  },
+  {
     version: '2.3.6',
     date: '2026-06-10',
     title: 'Faster idle catch-up',
-    commitsFrom: '9c8814d',
+    commits: '9c8814d..0cb28b9',
     changes: [
       'Made idle catch-up adaptive, suppressed internal autosaves during fast-forward, and bulk-advanced inert early-game idle time so new worlds stop catching up slowly when no autonomous systems can run.',
     ],
