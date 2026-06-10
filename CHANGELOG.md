@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.5 - 2026-06-10
+
+Commits: `v2.3.4..v2.3.5`
+
+- Restyled the universe exploration bar as a compact big-bang timeline with cosmic gradients, stellar clouds, galaxies, and planets.
+
 ## 2.3.4 - 2026-06-10
 
 Commits: `v2.3.3..v2.3.4`
