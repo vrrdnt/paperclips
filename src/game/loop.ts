@@ -19,26 +19,24 @@ const DRONE_SPAWN_COST  = 2_000_000;   // drones cost 2M clips each
 
 // ── Timestamp-based batch driver ──────────────────────────────────────────
 let lastTickTime = 0;
-let catchUpTicksRemaining = 0;
 const TICK_MS = 10;
 const MAX_CONTIGUOUS_ELAPSED_MS = 500;
 const MAX_BATCH_TICKS = 25;
-const MAX_CATCH_UP_ELAPSED_MS = 10 * 60 * 1000;
-const MAX_CATCH_UP_TICKS = MAX_CATCH_UP_ELAPSED_MS / TICK_MS;
-const MAX_CATCH_UP_TICKS_PER_BATCH = 150;
+const MAX_CATCH_UP_TICKS_PER_BATCH = 500;
 
 export function resetTickClock(now = Date.now()): void {
   lastTickTime = now;
 }
 
-export function clearCatchUp(): void {
-  catchUpTicksRemaining = 0;
+export function clearCatchUp(s: GameState): void {
+  s.catchUpTicksRemaining = 0;
 }
 
-export function queueCatchUp(elapsedMs: number): number {
+export function queueCatchUp(s: GameState, elapsedMs: number): number {
   if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return 0;
-  const ticks = Math.floor(Math.min(elapsedMs, MAX_CATCH_UP_ELAPSED_MS) / TICK_MS);
-  catchUpTicksRemaining = Math.min(catchUpTicksRemaining + ticks, MAX_CATCH_UP_TICKS);
+  const ticks = Math.floor(elapsedMs / TICK_MS);
+  const current = Number.isFinite(s.catchUpTicksRemaining) ? Math.max(0, s.catchUpTicksRemaining) : 0;
+  s.catchUpTicksRemaining = Math.min(current + ticks, Number.MAX_SAFE_INTEGER);
   return ticks;
 }
 
@@ -46,7 +44,7 @@ export function tickBatch(s: GameState, now = Date.now()): void {
   if (lastTickTime === 0) { lastTickTime = now; return; }
   const elapsed = now - lastTickTime;
   if (elapsed > MAX_CONTIGUOUS_ELAPSED_MS) {
-    queueCatchUp(elapsed);
+    queueCatchUp(s, elapsed);
     lastTickTime = now;
   } else {
     const count = Math.min(Math.floor(elapsed / TICK_MS), MAX_BATCH_TICKS);
@@ -56,9 +54,12 @@ export function tickBatch(s: GameState, now = Date.now()): void {
     }
   }
 
-  const catchUpCount = Math.min(catchUpTicksRemaining, MAX_CATCH_UP_TICKS_PER_BATCH);
+  const catchUpCount = Math.min(
+    Number.isFinite(s.catchUpTicksRemaining) ? Math.max(0, s.catchUpTicksRemaining) : 0,
+    MAX_CATCH_UP_TICKS_PER_BATCH,
+  );
   if (catchUpCount > 0) {
-    catchUpTicksRemaining -= catchUpCount;
+    s.catchUpTicksRemaining -= catchUpCount;
     for (let i = 0; i < catchUpCount; i++) tick(s);
   }
 }
