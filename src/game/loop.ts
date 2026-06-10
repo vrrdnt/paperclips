@@ -22,7 +22,18 @@ let lastTickTime = 0;
 const TICK_MS = 10;
 const MAX_CONTIGUOUS_ELAPSED_MS = 500;
 const MAX_BATCH_TICKS = 25;
-const MAX_CATCH_UP_TICKS_PER_BATCH = 500;
+const MIN_CATCH_UP_TICKS_PER_BATCH = 500;
+const MAX_CATCH_UP_TICKS_PER_BATCH = 50_000;
+const CATCH_UP_TIME_BUDGET_MS = 12;
+const CATCH_UP_SAVE_INTERVAL_MS = 2500;
+let catchUpBatchActive = false;
+let lastCatchUpSaveTime = 0;
+
+function countTimerEvents(startTick: number, elapsedTicks: number, interval: number): number {
+  if (elapsedTicks <= 0) return 0;
+  const endTick = startTick + elapsedTicks;
+  return Math.floor(endTick / interval) - Math.floor(startTick / interval);
+}
 
 export function resetTickClock(now = Date.now()): void {
   lastTickTime = now;
@@ -30,6 +41,7 @@ export function resetTickClock(now = Date.now()): void {
 
 export function clearCatchUp(s: GameState): void {
   s.catchUpTicksRemaining = 0;
+  lastCatchUpSaveTime = 0;
 }
 
 export function queueCatchUp(s: GameState, elapsedMs: number): number {
@@ -38,6 +50,49 @@ export function queueCatchUp(s: GameState, elapsedMs: number): number {
   const current = Number.isFinite(s.catchUpTicksRemaining) ? Math.max(0, s.catchUpTicksRemaining) : 0;
   s.catchUpTicksRemaining = Math.min(current + ticks, Number.MAX_SAFE_INTEGER);
   return ticks;
+}
+
+function canAdvanceInertCatchUp(s: GameState): boolean {
+  return (
+    s.humanFlag === 1 &&
+    s.compFlag === 0 &&
+    s.qFlag === 0 &&
+    s.spaceFlag === 0 &&
+    s.clipmakerLevel <= 0 &&
+    s.megaClipperLevel <= 0 &&
+    s.unsoldClips < 1 &&
+    s.funds < 5 &&
+    s.clips < 500 &&
+    !s.creativityOn &&
+    !s.currentTournament
+  );
+}
+
+function advanceInertCatchUp(s: GameState, ticks: number): void {
+  const elapsedTicks = Math.max(0, Math.floor(ticks));
+  if (elapsedTicks <= 0) return;
+
+  const startTick = s.ticks;
+  const clipRateCycles = countTimerEvents(startTick, elapsedTicks, 100);
+  s.ticks += elapsedTicks;
+
+  s.clipRateTracker = (s.clipRateTracker + elapsedTicks) % 100;
+  if (clipRateCycles > 0) {
+    s.clipRate = 0;
+    s.clipRateTemp = 0;
+    s.prevClips = s.clips;
+  }
+
+  const wirePriceEvents = countTimerEvents(startTick, elapsedTicks, 10);
+  for (let i = 0; i < wirePriceEvents; i++) tickWirePrice(s);
+
+  const revenueEvents = Math.min(countTimerEvents(startTick, elapsedTicks, 100), 10);
+  for (let i = 0; i < revenueEvents; i++) tickRevenue(s);
+
+  s.marketing = Math.pow(1.1, s.marketingLvl - 1);
+  s.demand = (0.8 / s.margin) * s.marketing * s.marketingEffectiveness * s.demandBoost +
+    ((0.8 / s.margin) * s.marketing * s.marketingEffectiveness * s.demandBoost / 10) * s.prestigeU;
+  s.nanoWire = s.wire;
 }
 
 export function tickBatch(s: GameState, now = Date.now()): void {
@@ -54,13 +109,44 @@ export function tickBatch(s: GameState, now = Date.now()): void {
     }
   }
 
-  const catchUpCount = Math.min(
-    Number.isFinite(s.catchUpTicksRemaining) ? Math.max(0, s.catchUpTicksRemaining) : 0,
-    MAX_CATCH_UP_TICKS_PER_BATCH,
-  );
-  if (catchUpCount > 0) {
-    s.catchUpTicksRemaining -= catchUpCount;
-    for (let i = 0; i < catchUpCount; i++) tick(s);
+  const catchUpRemaining = Number.isFinite(s.catchUpTicksRemaining)
+    ? Math.max(0, Math.floor(s.catchUpTicksRemaining))
+    : 0;
+  if (catchUpRemaining > 0) {
+    if (canAdvanceInertCatchUp(s)) {
+      advanceInertCatchUp(s, catchUpRemaining);
+      s.catchUpTicksRemaining = 0;
+      lastCatchUpSaveTime = now;
+      saveGame(s);
+      return;
+    }
+
+    const start = Date.now();
+    const maxTicks = Math.min(catchUpRemaining, MAX_CATCH_UP_TICKS_PER_BATCH);
+    let catchUpCount = 0;
+
+    catchUpBatchActive = true;
+    try {
+      while (catchUpCount < maxTicks) {
+        tick(s);
+        catchUpCount++;
+        if (
+          catchUpCount >= MIN_CATCH_UP_TICKS_PER_BATCH &&
+          catchUpCount % 250 === 0 &&
+          Date.now() - start >= CATCH_UP_TIME_BUDGET_MS
+        ) {
+          break;
+        }
+      }
+    } finally {
+      catchUpBatchActive = false;
+    }
+
+    s.catchUpTicksRemaining = Math.max(0, catchUpRemaining - catchUpCount);
+    if (s.catchUpTicksRemaining === 0 || now - lastCatchUpSaveTime >= CATCH_UP_SAVE_INTERVAL_MS) {
+      saveGame(s);
+      lastCatchUpSaveTime = now;
+    }
   }
 }
 
@@ -177,7 +263,7 @@ export function tick(s: GameState): void {
   }
 
   // Auto-save every 2500ms
-  if (s.ticks % 250 === 0) saveGame(s);
+  if (s.ticks % 250 === 0 && !catchUpBatchActive) saveGame(s);
 
   // Keep nanoWire display alias in sync (nanoWire == wire in original)
   s.nanoWire = s.wire;
