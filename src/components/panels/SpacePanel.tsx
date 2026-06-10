@@ -233,12 +233,6 @@ export function SpacePanel({ snap: s }: Props) {
               <span className="stat-value">{spellf(s.driftersKilled)}</span>
             </div>
           )}
-          {s.projectFlags[121] === 1 && (
-            <div className="stat-row">
-              <span className="stat-label">Honor</span>
-              <span className="stat-value">{formatWithCommas(s.honor)}</span>
-            </div>
-          )}
         </SectionCard>
       )}
     </>

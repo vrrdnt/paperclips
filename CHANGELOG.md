@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.4 - 2026-06-10
+
+Commits: `v2.3.3..v2.3.4`
+
+- Moved the honor value into the probe design section under the available probe trust row.
+
 ## 2.3.3 - 2026-06-10
 
 Commits: `v2.3.2..v2.3.3`
