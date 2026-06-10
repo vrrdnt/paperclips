@@ -5,6 +5,7 @@ import { normalizeSelectedStrategy } from './tournament';
 
 const KEY = 'upc_v2';
 const PRESTIGE_KEY = 'upc_v2_prestige';
+const SAVE_TIME_KEY = 'upc_v2_saved_at';
 
 interface PrestigeState {
   u: number;
@@ -23,7 +24,17 @@ export function toSaveableState(s: GameState): Omit<GameState, 'readouts'> {
 export function saveGame(s: GameState): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(toSaveableState(s)));
+    localStorage.setItem(SAVE_TIME_KEY, String(Date.now()));
   } catch { /* storage full */ }
+}
+
+export function getLastSavedAt(): number {
+  try {
+    const value = Number(localStorage.getItem(SAVE_TIME_KEY));
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  } catch {
+    return 0;
+  }
 }
 
 type WholeLevelKey = 'factoryLevel' | 'harvesterLevel' | 'wireDroneLevel';
@@ -261,6 +272,7 @@ export function loadGame(): GameState {
 export function resetGame(): GameState {
   const prestige = getPrestige();
   localStorage.removeItem(KEY);
+  localStorage.removeItem(SAVE_TIME_KEY);
   const s = makeInitialState();
   s.prestigeU = prestige.u;
   s.prestigeS = prestige.s;
@@ -274,6 +286,7 @@ export function resetGame(): GameState {
 
 export function resetAllProgress(): GameState {
   localStorage.removeItem(KEY);
+  localStorage.removeItem(SAVE_TIME_KEY);
   localStorage.removeItem(PRESTIGE_KEY);
   return makeInitialState();
 }

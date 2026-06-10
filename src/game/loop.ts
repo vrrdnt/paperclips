@@ -19,24 +19,47 @@ const DRONE_SPAWN_COST  = 2_000_000;   // drones cost 2M clips each
 
 // ── Timestamp-based batch driver ──────────────────────────────────────────
 let lastTickTime = 0;
+let catchUpTicksRemaining = 0;
+const TICK_MS = 10;
 const MAX_CONTIGUOUS_ELAPSED_MS = 500;
 const MAX_BATCH_TICKS = 25;
+const MAX_CATCH_UP_ELAPSED_MS = 10 * 60 * 1000;
+const MAX_CATCH_UP_TICKS = MAX_CATCH_UP_ELAPSED_MS / TICK_MS;
+const MAX_CATCH_UP_TICKS_PER_BATCH = 150;
 
 export function resetTickClock(now = Date.now()): void {
   lastTickTime = now;
+}
+
+export function clearCatchUp(): void {
+  catchUpTicksRemaining = 0;
+}
+
+export function queueCatchUp(elapsedMs: number): number {
+  if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return 0;
+  const ticks = Math.floor(Math.min(elapsedMs, MAX_CATCH_UP_ELAPSED_MS) / TICK_MS);
+  catchUpTicksRemaining = Math.min(catchUpTicksRemaining + ticks, MAX_CATCH_UP_TICKS);
+  return ticks;
 }
 
 export function tickBatch(s: GameState, now = Date.now()): void {
   if (lastTickTime === 0) { lastTickTime = now; return; }
   const elapsed = now - lastTickTime;
   if (elapsed > MAX_CONTIGUOUS_ELAPSED_MS) {
-    resetTickClock(now);
-    return;
+    queueCatchUp(elapsed);
+    lastTickTime = now;
+  } else {
+    const count = Math.min(Math.floor(elapsed / TICK_MS), MAX_BATCH_TICKS);
+    if (count > 0) {
+      lastTickTime += count * TICK_MS;
+      for (let i = 0; i < count; i++) tick(s);
+    }
   }
-  const count = Math.min(Math.floor(elapsed / 10), MAX_BATCH_TICKS);
-  if (count > 0) {
-    lastTickTime += count * 10;
-    for (let i = 0; i < count; i++) tick(s);
+
+  const catchUpCount = Math.min(catchUpTicksRemaining, MAX_CATCH_UP_TICKS_PER_BATCH);
+  if (catchUpCount > 0) {
+    catchUpTicksRemaining -= catchUpCount;
+    for (let i = 0; i < catchUpCount; i++) tick(s);
   }
 }
 
