@@ -1,8 +1,15 @@
 # Changelog
 
+## 2.3.15 - 2026-06-11
+
+Commits: `4cb047f..HEAD`
+
+- Added a high-volume computing allocator that appears when the active trust or swarm-gift pool exceeds 100, with a typed amount, Max shortcut, and separate processor/memory apply buttons.
+- Batch processor and memory allocation now spends one explicit amount at a time and writes one aggregated log message instead of requiring repeated taps.
+
 ## 2.3.14 - 2026-06-11
 
-Commits: `e329eac..HEAD`
+Commits: `e329eac..4cb047f`
 
 - Added an accelerated space-stage idle catch-up path that batches probe growth, drift, hazards, exploration, swarm gifts, matter processing, factories, clipper output, creativity, and strategic modeling instead of replaying every 10 ms tick.
 - Strategic modeling payouts are collected during catch-up, and auto tournaments can complete in catch-up instead of waiting for the normal visible tournament pacing.

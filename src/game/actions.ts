@@ -108,6 +108,19 @@ export function addProc(s: GameState): void {
   );
 }
 
+export function addProcAmount(s: GameState, rawAmount: number): void {
+  const amount = claimComputeAllocation(s, rawAmount);
+  if (amount <= 0) return;
+  s.processors += amount;
+  s.creativitySpeed = Math.log10(s.processors) * Math.pow(s.processors, 1.1) + s.processors - 1;
+  displayMessage(
+    s,
+    s.creativityOn
+      ? `${formatWithCommas(amount)} processors added, operations (or creativity) per sec increased`
+      : `${formatWithCommas(amount)} processors added, operations per sec increased`,
+  );
+}
+
 export function addMem(s: GameState): void {
   const hasTrustCapacity = s.trust > s.processors + s.memory;
   const hasSwarmGift = s.swarmGifts > 0;
@@ -115,6 +128,27 @@ export function addMem(s: GameState): void {
   if (hasSwarmGift && !s.humanFlag) s.swarmGifts--;
   s.memory++;
   displayMessage(s, 'Memory added, max operations increased');
+}
+
+export function addMemAmount(s: GameState, rawAmount: number): void {
+  const amount = claimComputeAllocation(s, rawAmount);
+  if (amount <= 0) return;
+  s.memory += amount;
+  displayMessage(s, `${formatWithCommas(amount)} memory added, max operations increased`);
+}
+
+function claimComputeAllocation(s: GameState, rawAmount: number): number {
+  const requested = Math.floor(rawAmount);
+  if (!Number.isFinite(requested) || requested <= 0) return 0;
+
+  const available = s.humanFlag === 1
+    ? Math.max(0, s.trust - (s.processors + s.memory))
+    : Math.max(0, Math.floor(s.swarmGifts));
+  const amount = Math.min(requested, available);
+  if (amount <= 0) return 0;
+
+  if (s.humanFlag === 0) s.swarmGifts = Math.max(0, s.swarmGifts - amount);
+  return amount;
 }
 
 // ── Quantum compute ───────────────────────────────────────────────────────
