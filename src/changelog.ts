@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.16',
+    date: '2026-06-11',
+    title: 'Universe progress direction',
+    commitsFrom: 'f3d4794',
+    changes: [
+      'Changed the universe exploration progress fill and marker to advance from left to right.',
+    ],
+  },
+  {
     version: '2.3.15',
     date: '2026-06-11',
     title: 'Batch computing allocation',
-    commitsFrom: '4cb047f',
+    commits: '4cb047f..f3d4794',
     changes: [
       'Added a high-volume computing allocator that appears when the active trust or swarm-gift pool exceeds 100, with a typed amount, Max shortcut, and separate processor/memory apply buttons.',
       'Batch processor and memory allocation now spends one explicit amount at a time and writes one aggregated log message instead of requiring repeated taps.',

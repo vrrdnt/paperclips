@@ -1455,7 +1455,7 @@ input[type="range"].price-slider::-moz-range-thumb {
 
 .universe-progress-fill {
   position: absolute;
-  inset: 0 0 0 auto;
+  inset: 0 auto 0 0;
   z-index: 5;
   height: 100%;
   border-radius: inherit;
@@ -1475,8 +1475,8 @@ input[type="range"].price-slider::-moz-range-thumb {
   border-radius: 999px;
   background: rgba(245,255,255,0.95);
   box-shadow: 0 0 8px rgba(170,235,255,0.9), 0 0 18px rgba(110,180,255,0.46);
-  transform: translate(50%, -50%);
-  transition: right 0.12s linear;
+  transform: translate(-50%, -50%);
+  transition: left 0.12s linear;
 }
 
 .universe-progress-marker::after {
