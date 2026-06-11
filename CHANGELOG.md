@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.16 - 2026-06-11
+
+Commits: `f3d4794..HEAD`
+
+- Changed the universe exploration progress fill and marker to advance from left to right.
+
 ## 2.3.15 - 2026-06-11
 
-Commits: `4cb047f..HEAD`
+Commits: `4cb047f..f3d4794`
 
 - Added a high-volume computing allocator that appears when the active trust or swarm-gift pool exceeds 100, with a typed amount, Max shortcut, and separate processor/memory apply buttons.
 - Batch processor and memory allocation now spends one explicit amount at a time and writes one aggregated log message instead of requiring repeated taps.
