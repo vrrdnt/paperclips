@@ -26,6 +26,8 @@ const MIN_CATCH_UP_TICKS_PER_BATCH = 500;
 const MAX_CATCH_UP_TICKS_PER_BATCH = 50_000;
 const CATCH_UP_TIME_BUDGET_MS = 12;
 const CATCH_UP_SAVE_INTERVAL_MS = 2500;
+const FAST_SPACE_CATCH_UP_CHUNK_TICKS = 100;
+const FAST_SPACE_CATCH_UP_TICKS_PER_BATCH = 1_000_000;
 let catchUpBatchActive = false;
 let lastCatchUpSaveTime = 0;
 
@@ -95,6 +97,367 @@ function advanceInertCatchUp(s: GameState, ticks: number): void {
   s.nanoWire = s.wire;
 }
 
+function activeBattleBlocksFastCatchUp(s: GameState): boolean {
+  const battle = normalizeBattleQueue(s);
+  return !!battle && (!battle.over || battle.endDelay < battleEndTimer(s));
+}
+
+function canAdvanceSpaceCatchUp(s: GameState): boolean {
+  return s.spaceFlag === 1 && !endGameSequenceActive(s) && !activeBattleBlocksFastCatchUp(s);
+}
+
+function endGameSequenceActive(s: GameState): boolean {
+  return (
+    s.dismantle > 0 ||
+    s.projectFlags[148] === 1 ||
+    s.projectFlags[211] === 1 ||
+    s.projectFlags[212] === 1 ||
+    s.projectFlags[213] === 1 ||
+    s.projectFlags[215] === 1 ||
+    s.projectFlags[216] === 1
+  );
+}
+
+function advanceOpsForTicks(s: GameState, ticks: number): void {
+  if (!s.compFlag || ticks <= 0) return;
+  s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
+  if (s.operations >= s.memory * 1000) return;
+
+  const effectiveProcessors = effectiveProcessorCount(s);
+  const processorMultiplier = processorPerformanceMultiplier(s, effectiveProcessors);
+  const opCycle = (effectiveProcessors * processorMultiplier * ticks) / 10;
+  const opBuf = s.memory * 1000 - s.operations;
+  s.standardOps += Math.min(opCycle, opBuf);
+  if (s.standardOps > s.memory * 1000) s.standardOps = s.memory * 1000;
+  s.operations = Math.floor(s.standardOps + Math.floor(s.tempOps));
+}
+
+function advanceQuantumForTicks(s: GameState, ticks: number): void {
+  if (!s.qFlag || ticks <= 0) return;
+  s.qClock += 0.01 * ticks;
+  for (let i = 0; i < 10; i++) {
+    const waveSeed = (i + 1) * 0.1;
+    const active = i < s.nextQchip ? 1 : 0;
+    s.qChips[i] = Math.sin(s.qClock * waveSeed * active);
+  }
+}
+
+function collectPendingTourneyCatchUp(s: GameState): number {
+  const pendingYomi = Math.floor(s.currentTournament?.pendingYomi ?? 0);
+  if (pendingYomi <= 0 || !s.currentTournament) return 0;
+  s.yomi += pendingYomi;
+  s.currentTournament.pendingYomi = 0;
+  return pendingYomi;
+}
+
+function runAutoTourneyCatchUp(s: GameState): number {
+  if (!s.currentTournament || s.operations < s.newTourneyCost) return 0;
+
+  const pickedStrat = normalizeSelectedStrategy(s);
+  s.standardOps -= s.newTourneyCost;
+  s.operations = Math.floor(s.standardOps + s.tempOps);
+
+  const result = simulateTournament(s, pickedStrat, s.projectFlags[128] === 1);
+  let yomiGain = result.yomiGain;
+  if (hasActiveArtifact(s, A.ZERO_DETERMINANT_LATTICE)) yomiGain *= 6;
+
+  s.hMove = result.hMove;
+  s.vMove = result.vMove;
+  s.hMovePrev = result.hMovePrev;
+  s.vMovePrev = result.vMovePrev;
+  s.tourneyCount++;
+  s.currentTournament = {
+    stratH: pickedStrat, stratV: result.winner.name,
+    payoff: result.payoff, choiceNames: result.choiceNames,
+    totalRounds: s.strategies.length * s.strategies.length,
+    results: result.scores.map(sc => `${sc.name}: ${sc.score}`),
+    pendingYomi: 0,
+  };
+  s.tourneyResult = result.scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
+
+  const earned = Math.floor(yomiGain);
+  s.yomi += earned;
+  return earned;
+}
+
+function advanceTournamentsForCatchUp(s: GameState, ticks: number): { yomi: number; runs: number } {
+  let totalYomi = collectPendingTourneyCatchUp(s);
+  let runs = 0;
+
+  if (!s.currentTournament) {
+    autoTourneyTimer = 0;
+    return { yomi: totalYomi, runs };
+  }
+  if (!s.autoTourneyFlag || !s.autoTourneyStatus || ticks <= 0) {
+    return { yomi: totalYomi, runs };
+  }
+
+  autoTourneyTimer += ticks;
+  while (autoTourneyTimer >= AUTO_TOURNEY_RESULT_TICKS && s.operations >= s.newTourneyCost) {
+    autoTourneyTimer -= AUTO_TOURNEY_RESULT_TICKS;
+    const earned = runAutoTourneyCatchUp(s);
+    totalYomi += earned;
+    runs++;
+  }
+
+  return { yomi: totalYomi, runs };
+}
+
+function advanceExploreForTicks(s: GameState, ticks: number): void {
+  if (s.probeCount < 1 || ticks <= 0) return;
+  const probeSpeed = effectiveProbeAttr(s, s.probeSpeed, A.ABANDONED_HYPERBOLIC_SOLITON);
+  const probeNav = effectiveProbeAttr(s, s.probeNav, A.CADASTRAL_MAP);
+  const xRate = Math.floor(s.probeCount) * PROBE_X_BASE_RATE * probeSpeed * probeNav * ticks;
+  const maxExplore = s.totalMatter - s.foundMatter;
+  const actual = Math.min(xRate, maxExplore);
+  s.foundMatter += actual;
+  s.availableMatter += actual;
+  if (s.foundMatter > 0) s.colonized = 100 / (s.totalMatter / s.foundMatter);
+}
+
+function advanceMatterForTicks(s: GameState, ticks: number): void {
+  if (ticks <= 0) return;
+
+  const dbsth = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.harvesterLevel) : 1;
+  let mtr = s.powMod * dbsth * Math.floor(s.harvesterLevel) *
+    s.harvesterRate * activeArtifactMultiplier(s, A.EXOTHERMIC_DECOMPOSITION);
+  mtr = mtr * ((200 - s.sliderPos) / 100) * ticks;
+  if (mtr > s.availableMatter) mtr = s.availableMatter;
+  if (mtr > 0) {
+    s.mps = (mtr / ticks) * 100;
+    s.availableMatter -= mtr;
+    s.acquiredMatter += mtr;
+  } else {
+    s.mps = 0;
+  }
+
+  const dbstw = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.wireDroneLevel) : 1;
+  let wire = s.powMod * dbstw * Math.floor(s.wireDroneLevel) *
+    s.wireDroneRate * activeArtifactMultiplier(s, A.FROTH_RECOVERY);
+  wire = wire * ((200 - s.sliderPos) / 100) * ticks;
+  if (wire > s.acquiredMatter) wire = s.acquiredMatter;
+  if (wire > 0) {
+    s.wpps = (wire / ticks) * 100;
+    s.acquiredMatter -= wire;
+    s.wire += wire;
+  } else {
+    s.wpps = 0;
+  }
+}
+
+function advanceFactoryProductionForTicks(s: GameState, ticks: number): void {
+  if (s.factoryLevel <= 0 || s.dismantle >= 4 || ticks <= 0) return;
+  const fbst = s.factoryBoost > 1 ? s.factoryBoost * s.factoryLevel : 1;
+  const artifactBoost = activeArtifactMultiplier(s, A.QUARK_GLUON_HEART);
+  clipClick(s, s.powMod * fbst * Math.floor(s.factoryLevel) * s.factoryRate * artifactBoost * ticks);
+}
+
+function advanceAutoClippersForTicks(s: GameState, ticks: number): void {
+  if (s.dismantle >= 4 || ticks <= 0) return;
+  const clipperRate = s.clipperBoost * activeArtifactMultiplier(s, A.WURTZITE_FANG) * (s.clipmakerLevel / 100);
+  const megaRate = s.megaClipperBoost * activeArtifactMultiplier(s, A.LONSDALEITE_CLAW) * (s.megaClipperLevel * 5);
+  clipClick(s, (clipperRate + megaRate) * ticks);
+}
+
+function advanceCreativityForTicks(s: GameState, ticks: number): void {
+  if (!s.creativityOn || s.operations < s.memory * 1000 || ticks <= 0) return;
+
+  const creativityThreshold = 400;
+  const prestige = s.prestigeS / 10;
+  const effectiveProcessors = effectiveProcessorCount(s);
+  const effectiveProcessorPower = effectiveProcessors * processorPerformanceMultiplier(s, effectiveProcessors);
+  const baseSpeed = creativitySpeedForProcessors(effectiveProcessorPower);
+  const ss = baseSpeed + baseSpeed * prestige;
+  if (ss <= 0) return;
+
+  const creativityCheck = creativityThreshold / ss;
+  if (creativityCheck >= 1) {
+    const period = Math.ceil(creativityCheck);
+    const totalCounter = s.creativityCounter + ticks;
+    const gains = Math.floor(totalCounter / period);
+    s.creativity += gains;
+    s.creativityCounter = totalCounter % period;
+  } else {
+    s.creativity += ticks * (ss / creativityThreshold);
+    s.creativityCounter = 0;
+  }
+}
+
+function advanceHazardsForTicks(s: GameState, ticks: number): void {
+  if (s.probeCount <= 0 || ticks <= 0) return;
+  const probeHaz = effectiveProbeAttr(s, s.probeHaz, A.GRAPHENE_SHELL);
+  const boost = Math.pow(probeHaz, 1.6);
+  let amount = s.probeCount * (PROBE_HAZ_RATE / (3 * boost + 1)) * ticks;
+  if (s.projectFlags[129] === 1) amount *= 0.5;
+
+  if (amount < 1) {
+    s.partialProbeHaz += amount;
+    if (s.partialProbeHaz < 1) return;
+    amount = s.partialProbeHaz;
+    s.partialProbeHaz = 0;
+  } else {
+    s.partialProbeHaz = 0;
+  }
+
+  amount = Math.min(amount, s.probeCount);
+  s.probeCount = Math.max(0, s.probeCount - amount);
+  s.probesLostHazards += amount;
+}
+
+function advanceProbeSpawnForTicks(s: GameState, ticks: number): void {
+  if (s.probeCount <= 0 || ticks <= 0) return;
+  const probeRep = effectiveProbeAttr(s, s.probeRep, A.LABYRINTH_THREAD);
+  let nextGen = s.probeCount * PROBE_REP_RATE * probeRep * ticks;
+  if (s.probeCount >= PROBE_GROWTH_CAP) nextGen = 0;
+
+  if (nextGen > 0 && nextGen < 1) {
+    s.partialProbeSpawn += nextGen;
+    if (s.partialProbeSpawn < 1) return;
+    nextGen = s.partialProbeSpawn;
+    s.partialProbeSpawn = 0;
+  } else if (nextGen >= 1) {
+    s.partialProbeSpawn = 0;
+  }
+
+  if (nextGen * PROBE_BASE_COST > s.unusedClips) {
+    nextGen = Math.floor(s.unusedClips / PROBE_BASE_COST);
+  }
+
+  s.unusedClips -= nextGen * PROBE_BASE_COST;
+  s.probesBorn += nextGen;
+  s.probeCount += nextGen;
+}
+
+function advanceDriftForTicks(s: GameState, ticks: number): void {
+  if (s.probeCount <= 0 || ticks <= 0 || s.projectFlags[148] === 1) return;
+  let amount = s.probeCount * PROBE_DRIFT_RATE * Math.pow(s.probeTrust, 1.2) * ticks;
+  if (amount > s.probeCount) amount = s.probeCount;
+  s.probeCount = Math.max(0, s.probeCount - amount);
+  s.drifterCount += amount;
+  s.probesLostDrift += amount;
+}
+
+function advanceSwarmForTicks(s: GameState, ticks: number): void {
+  if (ticks <= 0) return;
+  if (!isFinite(s.swarmGifts) || s.swarmGifts < 0) s.swarmGifts = 0;
+  const d = Math.floor(s.harvesterLevel + s.wireDroneLevel);
+
+  if (s.availableMatter === 0 && d >= 1) {
+    s.boredomLevel += ticks;
+  } else if (s.availableMatter > 0 && s.boredomLevel > 0) {
+    s.boredomLevel = Math.max(0, s.boredomLevel - ticks);
+  }
+  if (s.boredomLevel >= 30000) {
+    s.boredomFlag = 1;
+    s.boredomLevel = 0;
+    if (s.boredomMsg === 0) {
+      displayMessage(s, 'No matter to harvest. Inactivity has caused the Swarm to become bored');
+      s.boredomMsg = 1;
+    }
+  }
+
+  const droneRatio = Math.max(s.harvesterLevel + 1, s.wireDroneLevel + 1)
+                   / Math.min(s.harvesterLevel + 1, s.wireDroneLevel + 1);
+  if (droneRatio < 1.5 && s.disorgCounter > 1) {
+    s.disorgCounter = Math.max(1, s.disorgCounter - 0.01 * ticks);
+  } else if (droneRatio > 1.5) {
+    let x = droneRatio / 10000;
+    if (x > 0.01) x = 0.01;
+    s.disorgCounter += x * ticks;
+  }
+  if (s.disorgCounter >= 100) {
+    s.disorgFlag = 1;
+    if (s.disorgMsg === 0) {
+      displayMessage(s, 'Imbalance between Harvester and Wire Drone levels has disorganized the Swarm');
+      s.disorgMsg = 1;
+    }
+  }
+
+  s.swarmStatus = s.powMod === 0 ? 6 : 0;
+  if (s.spaceFlag === 1 && !s.projectFlags[130]) s.swarmStatus = 9;
+  if (d === 0) s.swarmStatus = 7;
+  else if (d === 1) s.swarmStatus = 8;
+  if (!s.swarmFlag) s.swarmStatus = 6;
+  if (s.boredomFlag === 1) s.swarmStatus = 3;
+  if (s.disorgFlag === 1) s.swarmStatus = 5;
+
+  if (s.swarmStatus !== 0 || d <= 1) return;
+
+  s.giftBitGenerationRate = Math.log(d) * (s.sliderPos / 100) *
+    activeArtifactMultiplier(s, A.TRUE_LEXICON);
+  if (s.giftBitGenerationRate <= 0) return;
+
+  s.giftBits += s.giftBitGenerationRate * ticks;
+  const gifts = Math.floor(s.giftBits / s.giftPeriod);
+  if (gifts > 0) {
+    s.nextGift = Math.round(Math.log10(d) * s.sliderPos / 100);
+    if (s.nextGift <= 0) s.nextGift = 1;
+    s.swarmGifts += gifts * s.nextGift;
+    s.giftBits %= s.giftPeriod;
+  }
+  s.giftCountdown = (s.giftPeriod - s.giftBits) / s.giftBitGenerationRate;
+}
+
+function advanceSpaceCatchUp(s: GameState, ticks: number): { ticks: number; yomi: number; tourneys: number } {
+  if (!canAdvanceSpaceCatchUp(s)) return { ticks: 0, yomi: 0, tourneys: 0 };
+
+  let remaining = Math.max(0, Math.floor(ticks));
+  let totalYomi = 0;
+  let totalTourneys = 0;
+  const clipsBefore = s.clips;
+
+  while (remaining > 0) {
+    const chunk = Math.min(remaining, FAST_SPACE_CATCH_UP_CHUNK_TICKS);
+    const startTick = s.ticks;
+    s.ticks += chunk;
+    s.clipRateTracker = (s.clipRateTracker + chunk) % 100;
+
+    tickMilestoneChecks(s);
+    advanceOpsForTicks(s, chunk);
+    advanceQuantumForTicks(s, chunk);
+    advanceCreativityForTicks(s, chunk);
+    const tourneys = advanceTournamentsForCatchUp(s, chunk);
+    totalYomi += tourneys.yomi;
+    totalTourneys += tourneys.runs;
+    advanceExploreForTicks(s, chunk);
+    advanceSwarmForTicks(s, chunk);
+    advanceMatterForTicks(s, chunk);
+    advanceFactoryProductionForTicks(s, chunk);
+    advanceAutoClippersForTicks(s, chunk);
+    advanceHazardsForTicks(s, chunk);
+    s.factoryLevel += spawnProbeBuiltUnits(s, s.probeCount * PROBE_FAC_RATE * s.probeFac * chunk, FAC_SPAWN_COST);
+    s.harvesterLevel += spawnProbeBuiltUnits(s, s.probeCount * PROBE_HARV_RATE * s.probeHarv * chunk, DRONE_SPAWN_COST);
+    s.wireDroneLevel += spawnProbeBuiltUnits(s, s.probeCount * PROBE_WIRE_RATE * s.probeWire * chunk, DRONE_SPAWN_COST);
+    advanceProbeSpawnForTicks(s, chunk);
+    advanceDriftForTicks(s, chunk);
+
+    const investmentSellEvents = countTimerEvents(startTick, chunk, 250);
+    s.sellDelay += investmentSellEvents;
+    s.nanoWire = s.wire;
+    s.probeTrustCost = Math.floor(Math.pow(s.probeTrust + 1, 1.47) * 500);
+    s.probeTrustUsed = s.probeSpeed + s.probeNav + s.probeRep + s.probeHaz
+                     + s.probeFac + s.probeHarv + s.probeWire + s.probeCombat;
+    tickMilestoneChecks(s);
+
+    remaining -= chunk;
+  }
+
+  if (ticks > 0) {
+    s.clipRate = Math.max(0, ((s.clips - clipsBefore) / Math.max(1, Math.floor(ticks))) * 100);
+    s.clipRateTemp = 0;
+    s.prevClips = s.clips;
+  }
+
+  if (totalYomi > 0) {
+    const runText = totalTourneys > 0
+      ? ` from ${formatWithCommas(totalTourneys)} completed run${totalTourneys === 1 ? '' : 's'}`
+      : '';
+    displayMessage(s, `Strategic modeling catch-up: ${formatWithCommas(totalYomi)} yomi earned${runText}`);
+  }
+
+  return { ticks: Math.max(0, Math.floor(ticks)), yomi: totalYomi, tourneys: totalTourneys };
+}
+
 export function tickBatch(s: GameState, now = Date.now()): void {
   if (lastTickTime === 0) { lastTickTime = now; return; }
   const elapsed = now - lastTickTime;
@@ -121,6 +484,14 @@ export function tickBatch(s: GameState, now = Date.now()): void {
       return;
     }
 
+    const fastSpace = advanceSpaceCatchUp(s, Math.min(catchUpRemaining, FAST_SPACE_CATCH_UP_TICKS_PER_BATCH));
+    if (fastSpace.ticks > 0) {
+      s.catchUpTicksRemaining = Math.max(0, catchUpRemaining - fastSpace.ticks);
+      lastCatchUpSaveTime = now;
+      saveGame(s);
+      return;
+    }
+
     const start = Date.now();
     const maxTicks = Math.min(catchUpRemaining, MAX_CATCH_UP_TICKS_PER_BATCH);
     let catchUpCount = 0;
@@ -129,6 +500,7 @@ export function tickBatch(s: GameState, now = Date.now()): void {
     try {
       while (catchUpCount < maxTicks) {
         tick(s);
+        collectPendingTourneyCatchUp(s);
         catchUpCount++;
         if (
           catchUpCount >= MIN_CATCH_UP_TICKS_PER_BATCH &&
