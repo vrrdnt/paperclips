@@ -1,8 +1,15 @@
 # Changelog
 
+## 2.3.14 - 2026-06-11
+
+Commits: `e329eac..HEAD`
+
+- Added an accelerated space-stage idle catch-up path that batches probe growth, drift, hazards, exploration, swarm gifts, matter processing, factories, clipper output, creativity, and strategic modeling instead of replaying every 10 ms tick.
+- Strategic modeling payouts are collected during catch-up, and auto tournaments can complete in catch-up instead of waiting for the normal visible tournament pacing.
+
 ## 2.3.13 - 2026-06-10
 
-Commits: `d353a3a..HEAD`
+Commits: `d353a3a..e329eac`
 
 - Flipped the universe exploration timeline so probe progress moves back toward the early universe and adjusted the ringed planet so its rings pass partly behind the planet.
 

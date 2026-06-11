@@ -14,10 +14,20 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.14',
+    date: '2026-06-11',
+    title: 'Accelerated space catch-up',
+    commitsFrom: 'e329eac',
+    changes: [
+      'Added an accelerated space-stage idle catch-up path that batches probe growth, drift, hazards, exploration, swarm gifts, matter processing, factories, clipper output, creativity, and strategic modeling instead of replaying every 10 ms tick.',
+      'Strategic modeling payouts are collected during catch-up, and auto tournaments can complete in catch-up instead of waiting for the normal visible tournament pacing.',
+    ],
+  },
+  {
     version: '2.3.13',
     date: '2026-06-10',
     title: 'Reversed universe timeline',
-    commitsFrom: 'd353a3a',
+    commits: 'd353a3a..e329eac',
     changes: [
       'Flipped the universe exploration timeline so probe progress moves back toward the early universe and adjusted the ringed planet so its rings pass partly behind the planet.',
     ],
