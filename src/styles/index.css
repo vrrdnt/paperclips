@@ -1725,42 +1725,10 @@ input[type="range"].price-slider::-moz-range-thumb {
   color: #f0f0f0;
 }
 
-.artifact-map-cell.is-guide-path {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(103, 205, 123, 0.12), transparent 62%),
-    #292929;
-}
-
-.artifact-map-cell.is-completed.is-guide-path {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(103, 205, 123, 0.14), transparent 62%),
-    #424242;
-}
-
-.artifact-map-cell.is-guide-next {
-  border-color: rgba(118, 218, 137, 0.58);
-  box-shadow: inset 0 0 0 1px rgba(118, 218, 137, 0.16);
-}
-
-.artifact-map-cell.is-guide-target {
-  border-color: rgba(188, 222, 152, 0.62);
-}
-
-.artifact-map-cell.is-guide-target::after {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  z-index: 2;
-  border: 1px solid rgba(188, 222, 152, 0.55);
-  border-radius: 3px;
-  box-shadow: 0 0 10px rgba(118, 218, 137, 0.12);
-  pointer-events: none;
-}
-
 .artifact-map-cell.has-artifact .artifact-cell-icon {
   position: absolute;
   inset: 5px;
-  z-index: 3;
+  z-index: 2;
   color: var(--success);
   display: flex;
   align-items: center;
@@ -1772,14 +1740,6 @@ input[type="range"].price-slider::-moz-range-thumb {
 .artifact-map-cell.has-artifact .artifact-cell-icon svg {
   width: 100%;
   height: 100%;
-}
-
-.artifact-cell-mark {
-  position: absolute;
-  top: 6px;
-  left: 7px;
-  z-index: 4;
-  text-shadow: 0 1px 2px #111;
 }
 
 .artifact-path-guide {
@@ -1799,26 +1759,13 @@ input[type="range"].price-slider::-moz-range-thumb {
 }
 
 .artifact-path-guide-glow {
-  stroke: rgba(94, 209, 118, 0.14);
-  stroke-width: 0.16;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 0.14;
 }
 
 .artifact-path-guide-line {
-  stroke: rgba(127, 225, 146, 0.46);
-  stroke-width: 0.045;
-  stroke-dasharray: 0.15 0.16;
-}
-
-.artifact-path-guide-next {
-  fill: rgba(127, 225, 146, 0.72);
-  stroke: rgba(237, 255, 235, 0.72);
-  stroke-width: 0.025;
-}
-
-.artifact-path-guide-target {
-  fill: rgba(188, 222, 152, 0.28);
-  stroke: rgba(224, 245, 194, 0.7);
-  stroke-width: 0.035;
+  stroke: rgba(255, 255, 255, 0.54);
+  stroke-width: 0.034;
 }
 
 .artifact-slots {

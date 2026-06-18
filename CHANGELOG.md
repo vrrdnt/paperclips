@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.18 - 2026-06-18
+
+Commits: `de39cf7..HEAD`
+
+- Reworked the artifact map guide into a subtle white route line that follows an efficient route through remaining artifact cells without extra dots, circles, or current-square text markers.
+
 ## 2.3.17 - 2026-06-18
 
-Commits: `778dd61..HEAD`
+Commits: `778dd61..de39cf7`
 
 - Hid the average clips sold per second readout until RevTracker is purchased.
 - Normalized displayed matter and wire rates after accelerated space catch-up so they reflect the final probe and drone counts instead of stale batched throughput.
