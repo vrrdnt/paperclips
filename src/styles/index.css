@@ -1720,6 +1720,7 @@ input[type="range"].price-slider::-moz-range-thumb {
 }
 
 .artifact-map-cell.is-current {
+  z-index: 4;
   outline: 1px solid #d8d8d8;
   outline-offset: -2px;
   color: #f0f0f0;
@@ -1728,7 +1729,7 @@ input[type="range"].price-slider::-moz-range-thumb {
 .artifact-map-cell.has-artifact .artifact-cell-icon {
   position: absolute;
   inset: 5px;
-  z-index: 2;
+  z-index: 6;
   color: var(--success);
   display: flex;
   align-items: center;
@@ -1745,10 +1746,10 @@ input[type="range"].price-slider::-moz-range-thumb {
 .artifact-path-guide {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 3;
   pointer-events: none;
   overflow: visible;
-  mix-blend-mode: screen;
+  opacity: 0.62;
 }
 
 .artifact-path-guide-glow,
@@ -1759,13 +1760,13 @@ input[type="range"].price-slider::-moz-range-thumb {
 }
 
 .artifact-path-guide-glow {
-  stroke: rgba(255, 255, 255, 0.14);
-  stroke-width: 0.14;
+  stroke: rgba(255, 255, 255, 0.045);
+  stroke-width: 0.09;
 }
 
 .artifact-path-guide-line {
-  stroke: rgba(255, 255, 255, 0.54);
-  stroke-width: 0.034;
+  stroke: rgba(255, 255, 255, 0.24);
+  stroke-width: 0.018;
 }
 
 .artifact-slots {

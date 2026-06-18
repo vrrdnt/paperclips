@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.19 - 2026-06-18
+
+Commits: `d96621b..HEAD`
+
+- Made the artifact map route guide much fainter and layered artifact icons/current-cell styling above the route line.
+
 ## 2.3.18 - 2026-06-18
 
-Commits: `de39cf7..HEAD`
+Commits: `de39cf7..d96621b`
 
 - Reworked the artifact map guide into a subtle white route line that follows an efficient route through remaining artifact cells without extra dots, circles, or current-square text markers.
 

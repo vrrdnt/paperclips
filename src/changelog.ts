@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.19',
+    date: '2026-06-18',
+    title: 'Quieter artifact route layer',
+    commitsFrom: 'd96621b',
+    changes: [
+      'Made the artifact map route guide much fainter and layered artifact icons/current-cell styling above the route line.',
+    ],
+  },
+  {
     version: '2.3.18',
     date: '2026-06-18',
     title: 'Subtle artifact path guide',
-    commitsFrom: 'de39cf7',
+    commits: 'de39cf7..d96621b',
     changes: [
       'Reworked the artifact map guide into a subtle white route line that follows an efficient route through remaining artifact cells without extra dots, circles, or current-square text markers.',
     ],
