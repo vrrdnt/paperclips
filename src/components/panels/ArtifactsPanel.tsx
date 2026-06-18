@@ -62,6 +62,12 @@ interface Props {
   onClose?: () => void;
 }
 
+interface MapPoint {
+  world: number;
+  sim: number;
+  key: string;
+}
+
 const ARTIFACT_ICONS: Record<ArtifactId, LucideIcon> = {
   [A.MARKOVS_BLANKET]: Shield,
   [A.SIERPINSKIS_COMPASS]: DraftingCompass,
@@ -102,6 +108,69 @@ function ArtifactGlyph({ id, size = 14 }: { id: ArtifactId; size?: number }) {
   return <Icon size={size} strokeWidth={1.8} aria-hidden="true" />;
 }
 
+function pointFor(world: number, sim: number): MapPoint {
+  return { world, sim, key: mapKey(world, sim) };
+}
+
+function buildGuidePath(world: number, sim: number, completed: Set<string>): {
+  target?: MapPoint;
+  next?: MapPoint;
+  routeKeys: Set<string>;
+  pathD: string;
+} {
+  const targets = ARTIFACTS
+    .filter(artifact => !completed.has(mapKey(artifact.world, artifact.sim)))
+    .sort((a, b) => {
+      const distA = Math.abs(a.world - world) + Math.abs(a.sim - sim);
+      const distB = Math.abs(b.world - world) + Math.abs(b.sim - sim);
+      return distA - distB || a.world - b.world || a.sim - b.sim;
+    });
+
+  const targetArtifact = targets[0];
+  if (!targetArtifact) return { routeKeys: new Set(), pathD: '' };
+
+  const route = [pointFor(world, sim)];
+  let cursorWorld = world;
+  let cursorSim = sim;
+  const worldStep = Math.sign(targetArtifact.world - cursorWorld);
+  const simStep = Math.sign(targetArtifact.sim - cursorSim);
+  const worldFirst = Math.abs(targetArtifact.world - world) >= Math.abs(targetArtifact.sim - sim);
+
+  const stepWorld = () => {
+    while (cursorWorld !== targetArtifact.world) {
+      cursorWorld += worldStep;
+      route.push(pointFor(cursorWorld, cursorSim));
+    }
+  };
+  const stepSim = () => {
+    while (cursorSim !== targetArtifact.sim) {
+      cursorSim += simStep;
+      route.push(pointFor(cursorWorld, cursorSim));
+    }
+  };
+
+  if (worldFirst) {
+    stepWorld();
+    stepSim();
+  } else {
+    stepSim();
+    stepWorld();
+  }
+
+  const target = route[route.length - 1];
+  const routeKeys = new Set(route.map(point => point.key));
+  const pathD = route
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.world - 0.5} ${point.sim - 0.5}`)
+    .join(' ');
+
+  return {
+    target,
+    next: route[1],
+    routeKeys,
+    pathD,
+  };
+}
+
 export function ArtifactsDropdown({ snap: s, onClose }: Props) {
   if (!artifactMapUnlocked(s)) return null;
 
@@ -112,6 +181,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
   const active = new Set(s.activeArtifacts);
   const current = currentArtifacts(s);
   const available = ARTIFACTS.filter(artifact => canUseArtifact(s, artifact.id));
+  const guide = buildGuidePath(world, sim, completed);
   const activeDefs = s.activeArtifacts
     .map(id => ARTIFACT_BY_ID.get(id as ArtifactId))
     .filter(Boolean);
@@ -152,51 +222,73 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
           <Compass size={12} />
           Map
         </div>
-        <div className="artifact-map-grid">
-          {Array.from({ length: MAP_SIZE }, (_, simIdx) => (
-            Array.from({ length: MAP_SIZE }, (_, worldIdx) => {
-              const cellWorld = worldIdx + 1;
-              const cellSim = simIdx + 1;
-              const key = mapKey(cellWorld, cellSim);
-              const isCurrent = key === currentKey;
-              const isCompleted = completed.has(key);
-              const cellArtifacts = artifactsAt(cellWorld, cellSim);
-              const canWarp = isCompleted && !isCurrent;
-              const title = [
-                `World ${cellWorld}, Simulation ${cellSim}`,
-                isCompleted ? 'complete' : 'incomplete',
-                cellArtifacts.map(a => a.name).join(', '),
-              ].filter(Boolean).join(' - ');
+        <div className="artifact-map-grid-wrap">
+          <div className="artifact-map-grid">
+            {Array.from({ length: MAP_SIZE }, (_, simIdx) => (
+              Array.from({ length: MAP_SIZE }, (_, worldIdx) => {
+                const cellWorld = worldIdx + 1;
+                const cellSim = simIdx + 1;
+                const key = mapKey(cellWorld, cellSim);
+                const isCurrent = key === currentKey;
+                const isCompleted = completed.has(key);
+                const isGuidePath = guide.routeKeys.has(key) && !isCurrent;
+                const isGuideNext = guide.next?.key === key;
+                const isGuideTarget = guide.target?.key === key;
+                const cellArtifacts = artifactsAt(cellWorld, cellSim);
+                const canWarp = isCompleted && !isCurrent;
+                const title = [
+                  `World ${cellWorld}, Simulation ${cellSim}`,
+                  isCompleted ? 'complete' : 'incomplete',
+                  isGuideNext ? 'suggested next step' : '',
+                  isGuideTarget ? 'suggested target' : '',
+                  cellArtifacts.map(a => a.name).join(', '),
+                ].filter(Boolean).join(' - ');
 
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  className={[
-                    'artifact-map-cell',
-                    isCompleted ? 'is-completed' : '',
-                    isCurrent ? 'is-current' : '',
-                    cellArtifacts.length ? 'has-artifact' : '',
-                  ].filter(Boolean).join(' ')}
-                  title={title}
-                  aria-label={title}
-                  disabled={!canWarp}
-                  onClick={() => {
-                    if (!window.confirm(`Warp to World ${cellWorld}, Simulation ${cellSim}? Current run progress will reset.`)) return;
-                    warpToArtifactMapCell(G, cellWorld, cellSim);
-                    onClose?.();
-                  }}
-                >
-                  <span className="artifact-cell-mark">{isCurrent ? 'x' : isCompleted ? '.' : ''}</span>
-                  {cellArtifacts[0] && (
-                    <span className="artifact-cell-icon">
-                      <ArtifactGlyph id={cellArtifacts[0].id} size={28} />
-                    </span>
-                  )}
-                </button>
-              );
-            })
-          ))}
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    className={[
+                      'artifact-map-cell',
+                      isCompleted ? 'is-completed' : '',
+                      isCurrent ? 'is-current' : '',
+                      isGuidePath ? 'is-guide-path' : '',
+                      isGuideNext ? 'is-guide-next' : '',
+                      isGuideTarget ? 'is-guide-target' : '',
+                      cellArtifacts.length ? 'has-artifact' : '',
+                    ].filter(Boolean).join(' ')}
+                    title={title}
+                    aria-label={title}
+                    disabled={!canWarp}
+                    onClick={() => {
+                      if (!window.confirm(`Warp to World ${cellWorld}, Simulation ${cellSim}? Current run progress will reset.`)) return;
+                      warpToArtifactMapCell(G, cellWorld, cellSim);
+                      onClose?.();
+                    }}
+                  >
+                    <span className="artifact-cell-mark">{isCurrent ? 'x' : isCompleted ? '.' : ''}</span>
+                    {cellArtifacts[0] && (
+                      <span className="artifact-cell-icon">
+                        <ArtifactGlyph id={cellArtifacts[0].id} size={28} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            ))}
+          </div>
+          {guide.pathD && (
+            <svg className="artifact-path-guide" viewBox={`0 0 ${MAP_SIZE} ${MAP_SIZE}`} preserveAspectRatio="none" aria-hidden="true">
+              <path className="artifact-path-guide-glow" d={guide.pathD} />
+              <path className="artifact-path-guide-line" d={guide.pathD} />
+              {guide.next && (
+                <circle className="artifact-path-guide-next" cx={guide.next.world - 0.5} cy={guide.next.sim - 0.5} r="0.1" />
+              )}
+              {guide.target && (
+                <circle className="artifact-path-guide-target" cx={guide.target.world - 0.5} cy={guide.target.sim - 0.5} r="0.15" />
+              )}
+            </svg>
+          )}
         </div>
       </div>
 

@@ -1,8 +1,16 @@
 # Changelog
 
+## 2.3.17 - 2026-06-18
+
+Commits: `778dd61..HEAD`
+
+- Hid the average clips sold per second readout until RevTracker is purchased.
+- Normalized displayed matter and wire rates after accelerated space catch-up so they reflect the final probe and drone counts instead of stale batched throughput.
+- Added a subtle artifact map route guide that marks the nearest uncompleted artifact target and next step.
+
 ## 2.3.16 - 2026-06-11
 
-Commits: `f3d4794..HEAD`
+Commits: `f3d4794..778dd61`
 
 - Changed the universe exploration progress fill and marker to advance from left to right.
 

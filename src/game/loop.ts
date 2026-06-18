@@ -245,6 +245,33 @@ function advanceMatterForTicks(s: GameState, ticks: number): void {
   }
 }
 
+function refreshSpaceProductionRates(s: GameState): void {
+  let available = s.availableMatter;
+  if (s.probeCount >= 1) {
+    const probeSpeed = effectiveProbeAttr(s, s.probeSpeed, A.ABANDONED_HYPERBOLIC_SOLITON);
+    const probeNav = effectiveProbeAttr(s, s.probeNav, A.CADASTRAL_MAP);
+    const xRate = Math.floor(s.probeCount) * PROBE_X_BASE_RATE * probeSpeed * probeNav;
+    available += Math.min(xRate, Math.max(0, s.totalMatter - s.foundMatter));
+  }
+
+  const dbsth = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.harvesterLevel) : 1;
+  let mtr = s.powMod * dbsth * Math.floor(s.harvesterLevel) *
+    s.harvesterRate * activeArtifactMultiplier(s, A.EXOTHERMIC_DECOMPOSITION);
+  mtr *= (200 - s.sliderPos) / 100;
+  if (available <= 0) mtr = 0;
+  else if (mtr > available) mtr = available;
+  s.mps = mtr > 0 ? mtr * 100 : 0;
+
+  const acquired = s.acquiredMatter + Math.max(0, mtr);
+  const dbstw = s.droneBoost > 1 ? s.droneBoost * Math.floor(s.wireDroneLevel) : 1;
+  let wire = s.powMod * dbstw * Math.floor(s.wireDroneLevel) *
+    s.wireDroneRate * activeArtifactMultiplier(s, A.FROTH_RECOVERY);
+  wire *= (200 - s.sliderPos) / 100;
+  if (acquired <= 0) wire = 0;
+  else if (wire > acquired) wire = acquired;
+  s.wpps = wire > 0 ? wire * 100 : 0;
+}
+
 function advanceFactoryProductionForTicks(s: GameState, ticks: number): void {
   if (s.factoryLevel <= 0 || s.dismantle >= 4 || ticks <= 0) return;
   const fbst = s.factoryBoost > 1 ? s.factoryBoost * s.factoryLevel : 1;
@@ -441,6 +468,8 @@ function advanceSpaceCatchUp(s: GameState, ticks: number): { ticks: number; yomi
 
     remaining -= chunk;
   }
+
+  refreshSpaceProductionRates(s);
 
   if (ticks > 0) {
     s.clipRate = Math.max(0, ((s.clips - clipsBefore) / Math.max(1, Math.floor(ticks))) * 100);
