@@ -14,10 +14,21 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.17',
+    date: '2026-06-18',
+    title: 'RevTracker, space rate, and artifact path polish',
+    commitsFrom: '778dd61',
+    changes: [
+      'Hid the average clips sold per second readout until RevTracker is purchased.',
+      'Normalized displayed matter and wire rates after accelerated space catch-up so they reflect the final probe and drone counts instead of stale batched throughput.',
+      'Added a subtle artifact map route guide that marks the nearest uncompleted artifact target and next step.',
+    ],
+  },
+  {
     version: '2.3.16',
     date: '2026-06-11',
     title: 'Universe progress direction',
-    commitsFrom: 'f3d4794',
+    commits: 'f3d4794..778dd61',
     changes: [
       'Changed the universe exploration progress fill and marker to advance from left to right.',
     ],

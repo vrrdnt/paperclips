@@ -152,10 +152,12 @@ export function BusinessPanel({ snap: s }: Props) {
             </div>
             <Btn holdRepeat onClick={() => { raisePrice(G); }}>+</Btn>
           </div>
-          <div className="stat-row" style={{ marginTop: 2 }}>
-            <span className="stat-label">Avg clips sold/sec</span>
-            <span className="stat-value dim">{spellf(s.avgSales)}/s</span>
-          </div>
+          {hasRevTracker && (
+            <div className="stat-row" style={{ marginTop: 2 }}>
+              <span className="stat-label">Avg clips sold/sec</span>
+              <span className="stat-value dim">{spellf(s.avgSales)}/s</span>
+            </div>
+          )}
 
           <hr className="divider" />
 
