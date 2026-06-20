@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.20',
+    date: '2026-06-20',
+    title: 'Space production bottleneck notes',
+    commitsFrom: '2dc90ae',
+    changes: [
+      'Added subtle idle-state notes for space factories waiting on wire and probe matter production waiting on explored matter or Speed/Exploration allocation.',
+    ],
+  },
+  {
     version: '2.3.19',
     date: '2026-06-18',
     title: 'Quieter artifact route layer',
-    commitsFrom: 'd96621b',
+    commits: 'd96621b..2dc90ae',
     changes: [
       'Made the artifact map route guide much fainter and layered artifact icons/current-cell styling above the route line.',
     ],
