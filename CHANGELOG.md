@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.20 - 2026-06-20
+
+Commits: `2dc90ae..HEAD`
+
+- Added subtle idle-state notes for space factories waiting on wire and probe matter production waiting on explored matter or Speed/Exploration allocation.
+
 ## 2.3.19 - 2026-06-18
 
-Commits: `d96621b..HEAD`
+Commits: `d96621b..2dc90ae`
 
 - Made the artifact map route guide much fainter and layered artifact icons/current-cell styling above the route line.
 

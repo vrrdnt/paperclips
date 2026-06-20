@@ -8,6 +8,7 @@ import {
   harvesterReboot, wireDroneReboot,
 } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
+import { A, effectiveProbeAttr } from '../../game/artifacts';
 
 interface Props { snap: DisplaySnapshot; }
 
@@ -29,6 +30,16 @@ export function SpacePanel({ snap: s }: Props) {
   const universeProgress = Number.isFinite(s.colonized)
     ? Math.max(0, Math.min(100, s.colonized))
     : 0;
+  const effectiveSpeed = effectiveProbeAttr(s, s.probeSpeed, A.ABANDONED_HYPERBOLIC_SOLITON);
+  const effectiveExploration = effectiveProbeAttr(s, s.probeNav, A.CADASTRAL_MAP);
+  const explorationIdle = showUniverse && s.probeCount >= 1 && (effectiveSpeed <= 0 || effectiveExploration <= 0);
+  const matterPipelineIdle = showInfra
+    && showUniverse
+    && (s.harvesterLevel > 0 || s.wireDroneLevel > 0)
+    && s.mps <= 0
+    && s.wpps <= 0
+    && s.availableMatter <= 0
+    && s.acquiredMatter <= 0;
 
   if (!showUniverse && !showInfra && !showRecoveredWire) return null;
 
@@ -66,6 +77,13 @@ export function SpacePanel({ snap: s }: Props) {
                 </div>
               )}
             </>
+          )}
+          {matterPipelineIdle && (
+            <div className="idle-note">
+              {explorationIdle
+                ? 'Matter idle: assign probe trust to Speed and Exploration.'
+                : 'Matter idle: no explored matter available.'}
+            </div>
           )}
 
           <hr className="divider" />
@@ -184,6 +202,9 @@ export function SpacePanel({ snap: s }: Props) {
             <div className="universe-progress-fill" style={{ width: `${universeProgress}%` }} />
             <div className="universe-progress-marker" style={{ left: `${universeProgress}%` }} />
           </div>
+          {explorationIdle && (
+            <div className="idle-note">Exploration idle: Speed and Exploration are required.</div>
+          )}
 
           <div style={{ marginTop: 8 }}>
             <Btn variant="primary" full holdRepeat
