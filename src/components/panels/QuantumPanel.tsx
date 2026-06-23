@@ -27,6 +27,17 @@ function catmullPath(pts: [number, number][]): string {
   return d;
 }
 
+function qWaveStopColor(index: number, value: number, active: boolean, alpha: number): string {
+  if (!active) return `rgba(130, 130, 130, ${alpha * 0.42})`;
+  const particle = PARTICLE_CHANNELS[index % PARTICLE_CHANNELS.length];
+  const rgb = particle.accent.match(/\d+/g)?.slice(0, 3).map(Number) ?? [220, 220, 220];
+  const [r, g, b] = rgb;
+  const gray = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+  const saturation = clamp((value + 1) / 2, 0, 1);
+  const mixed = [r, g, b].map(channel => Math.round(gray + (channel - gray) * saturation));
+  return `rgba(${mixed[0]}, ${mixed[1]}, ${mixed[2]}, ${alpha})`;
+}
+
 function QWave({ chips, activeCount }: { chips: number[]; activeCount: number }) {
   const W = 100, H = 28, MID = 14, AMP = 11;
   const pts: [number, number][] = chips.map((v, i) => [
@@ -42,32 +53,38 @@ function QWave({ chips, activeCount }: { chips: number[]; activeCount: number })
       preserveAspectRatio="none"
       style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
       <defs>
-        <linearGradient id="qwfill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="rgba(255,255,255,0.12)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        <linearGradient id="qwave-signal" x1="0" y1="0" x2={W} y2="0" gradientUnits="userSpaceOnUse">
+          {chips.map((v, i) => (
+            <stop
+              key={i}
+              offset={`${chips.length > 1 ? (i / (chips.length - 1)) * 100 : 0}%`}
+              stopColor={qWaveStopColor(i, v, i < activeCount, 0.94)}
+            />
+          ))}
+        </linearGradient>
+        <linearGradient id="qwave-fill" x1="0" y1="0" x2={W} y2="0" gradientUnits="userSpaceOnUse">
+          {chips.map((v, i) => (
+            <stop
+              key={i}
+              offset={`${chips.length > 1 ? (i / (chips.length - 1)) * 100 : 0}%`}
+              stopColor={qWaveStopColor(i, v, i < activeCount, 0.14)}
+            />
+          ))}
         </linearGradient>
       </defs>
       {/* Baseline */}
       <line x1="0" y1={MID} x2={W} y2={MID} stroke="#1c1c1c" strokeWidth="0.5" />
       {/* Fill under wave */}
-      <path d={fillPath} fill="url(#qwfill)" />
+      <path d={fillPath} fill="url(#qwave-fill)" />
       {/* Wave line */}
       <path d={linePath} fill="none"
-        stroke="rgba(255,255,255,0.65)" strokeWidth="1"
+        stroke="url(#qwave-signal)" strokeWidth="2.7" opacity="0.2"
         strokeLinecap="round" strokeLinejoin="round"
         vectorEffect="non-scaling-stroke" />
-      {/* Node dots */}
-      {pts.map(([x, y], i) => {
-        const active = i < activeCount;
-        const abs = Math.abs(chips[i]);
-        return (
-          <circle key={i} cx={x} cy={y}
-            r={active ? 1.2 + abs * 0.6 : 0.8}
-            fill={active ? 'white' : '#2a2a2a'}
-            opacity={active ? 0.5 + abs * 0.5 : 1}
-          />
-        );
-      })}
+      <path d={linePath} fill="none"
+        stroke="url(#qwave-signal)" strokeWidth="1.35"
+        strokeLinecap="round" strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
