@@ -14,10 +14,19 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.21',
+    date: '2026-06-23',
+    title: 'Particle-colored quantum waveform',
+    commitsFrom: '2900614',
+    changes: [
+      'Reworked the quantum waveform into a continuous particle-colored gradient and removed the oval node markers.',
+    ],
+  },
+  {
     version: '2.3.20',
     date: '2026-06-20',
     title: 'Space production bottleneck notes',
-    commitsFrom: '2dc90ae',
+    commits: '2dc90ae..2900614',
     changes: [
       'Added subtle idle-state notes for space factories waiting on wire and probe matter production waiting on explored matter or Speed/Exploration allocation.',
     ],

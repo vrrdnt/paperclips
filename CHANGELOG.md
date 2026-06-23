@@ -1,8 +1,14 @@
 # Changelog
 
+## 2.3.21 - 2026-06-23
+
+Commits: `2900614..HEAD`
+
+- Reworked the quantum waveform into a continuous particle-colored gradient and removed the oval node markers.
+
 ## 2.3.20 - 2026-06-20
 
-Commits: `2dc90ae..HEAD`
+Commits: `2dc90ae..2900614`
 
 - Added subtle idle-state notes for space factories waiting on wire and probe matter production waiting on explored matter or Speed/Exploration allocation.
 
