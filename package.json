@@ -6,7 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "playwright test",
+    "check": "npm run typecheck && npm test && npm run build",
+    "benchmark": "tsx scripts/benchmark.ts",
+    "test:production": "playwright test -c playwright.production.config.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -16,10 +23,17 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.13.4",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^6.0.2",
+    "tsx": "^4.23.13",
     "typescript": "^5.5.3",
-    "vite": "^8.0.14"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   }
 }

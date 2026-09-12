@@ -1,4 +1,5 @@
-const CACHE_NAME = 'paperclips-pwa-v4';
+const CACHE_PREFIX = 'paperclips-pwa-';
+const CACHE_NAME = `${CACHE_PREFIX}v5`;
 const APP_SHELL = [
   '/',
   '/privacy.html',
@@ -21,7 +22,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(names => Promise.all(names
-        .filter(name => name !== CACHE_NAME)
+        .filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
         .map(name => caches.delete(name))))
       .then(() => self.clients.claim())
   );
@@ -99,19 +100,33 @@ async function networkFirst(request, fallbackUrl) {
   const cache = await caches.open(CACHE_NAME);
   try {
     const response = await fetch(request);
-    cache.put(request, response.clone());
+    if (!response.ok) return (await cache.match(request)) || response;
+    await cacheResponse(cache, request, response);
     return response;
   } catch {
-    return (await cache.match(request)) || (await cache.match(fallbackUrl));
+    return (await cache.match(request)) || (await cache.match(fallbackUrl)) || Response.error();
   }
 }
 
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  // Vite and some hosts send Vary: Origin. Precache requests lack the Origin
+  // header carried by module/CSS requests. Hashed same-origin build assets are
+  // identical for both, so use their URL to find the offline copy.
+  const isBuildAsset = new URL(request.url).pathname.startsWith('/assets/');
+  const cached = await cache.match(request, { ignoreVary: isBuildAsset });
   if (cached) return cached;
 
   const response = await fetch(request);
-  cache.put(request, response.clone());
+  await cacheResponse(cache, request, response);
   return response;
+}
+
+async function cacheResponse(cache, request, response) {
+  if (!response.ok) return;
+  try {
+    await cache.put(request, response.clone());
+  } catch {
+    // Cache quota failures must not turn a successful network request into an error.
+  }
 }

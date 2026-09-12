@@ -3,7 +3,7 @@ import { SectionCard } from '../ui/SectionCard';
 import { Slider } from '../ui/Slider';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import { entertainSwarm, synchSwarm } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
@@ -64,7 +64,7 @@ export function SwarmPanel({ snap: s }: Props) {
             fill
             mobileStep={5}
             aria-label="Swarm work vs think balance"
-            onInput={v => { G.sliderPos = v; }}
+            onInput={v => { game.act(state => { state.sliderPos = v; }); }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
             <span>Work</span>
@@ -88,7 +88,7 @@ export function SwarmPanel({ snap: s }: Props) {
 
       {isBored && showRecoveryControls && (
         <div className="row" style={{ marginTop: 8 }}>
-          <Btn variant="primary" onClick={() => { entertainSwarm(G); }}
+          <Btn variant="primary" onClick={() => { game.act(entertainSwarm); }}
             disabled={s.creativity < s.entertainCost}>
             Entertain ({formatWithCommas(s.entertainCost)} creat)
           </Btn>
@@ -97,7 +97,7 @@ export function SwarmPanel({ snap: s }: Props) {
 
       {isDisorg && showRecoveryControls && (
         <div className="row" style={{ marginTop: 8 }}>
-          <Btn variant="primary" onClick={() => { synchSwarm(G); }}
+          <Btn variant="primary" onClick={() => { game.act(synchSwarm); }}
             disabled={s.yomi < s.synchCost}>
             Synchronize ({formatWithCommas(s.synchCost)} yomi)
           </Btn>

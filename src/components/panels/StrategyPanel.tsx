@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
+import { useTournamentAnimation, type TournamentCell } from '../../hooks/useTournamentAnimation';
 import { Swords } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
-import { runTourney, toggleAutoTourney, collectTourneyYomi } from '../../game/actions';
-import { saveGame } from '../../game/save';
+import { game } from '../../game/runtime';
+import { runTourney, toggleAutoTourney } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
 
-type Cell = 'AA' | 'AB' | 'BA' | 'BB';
-const CELLS: Cell[] = ['AA', 'AB', 'BA', 'BB'];
+type Cell = TournamentCell;
 
 function PayoffGrid({ payoff, choiceNames, flash }: {
   payoff: number[][];
@@ -87,93 +86,12 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
 }
 
 export function StrategyPanel({ snap: s }: Props) {
-  const [picked, setPicked] = useState(s.selectedStrategy || s.strategies[0] || 'RANDOM');
-  const [flash, setFlash] = useState<Cell | null>(null);
-  const [animRound, setAnimRound] = useState(0);
-  const [animMatchup, setAnimMatchup] = useState<[string, string] | null>(null);
-  const [running, setRunning] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevCountRef = useRef(s.tourneyCount - ((s.currentTournament?.pendingYomi ?? 0) > 0 ? 1 : 0));
-
-  // Keep picked valid when new strategies are unlocked
-  const stratCount = s.strategies.length;
-  useEffect(() => {
-    if (!s.strategyEngineFlag || s.dismantle >= 4) return;
-    if (!s.strategies.includes(picked)) {
-      const next = s.strategies[0] ?? 'RANDOM';
-      G.selectedStrategy = next;
-      setPicked(next);
-    }
-  }, [stratCount]);
-
+  const picked = s.selectedStrategy;
   const ct = s.currentTournament;
-  const tournamentRunning = running || (ct?.pendingYomi ?? 0) > 0;
-
-  useEffect(() => {
-    if (!s.strategyEngineFlag || s.dismantle >= 4) return;
-    if (s.tourneyCount !== prevCountRef.current && ct) {
-      prevCountRef.current = s.tourneyCount;
-      startAnimation(ct.payoff, ct.totalRounds, [...s.strategies]);
-    }
-  }, [s.tourneyCount]);
-
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
-
-  if (!s.strategyEngineFlag) return null;
-  if (s.dismantle >= 4) return null;
-
-  function startAnimation(payoff: number[][], totalRounds: number, strategies: string[]) {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setRunning(true);
-    setAnimRound(0);
-    setAnimMatchup(null);
-
-    const weights = [payoff[0][0], payoff[0][1], payoff[1][0], payoff[1][1]];
-    const totalW = weights.reduce((a, b) => a + b, 0) || 4;
-    function pickCell(): Cell {
-      let r = Math.random() * totalW;
-      for (let i = 0; i < 4; i++) { r -= weights[i]; if (r <= 0) return CELLS[i]; }
-      return CELLS[3];
-    }
-
-    // Match the original pickStrats order, including self-matchups.
-    const pairs: [string, string][] = [];
-    let stratCounter = 0;
-    for (let roundNum = 0; roundNum < totalRounds; roundNum++) {
-      let h = 0;
-      let v = roundNum;
-      if (roundNum >= strategies.length) {
-        stratCounter++;
-        if (stratCounter >= strategies.length) stratCounter -= strategies.length;
-        h = Math.floor(roundNum / strategies.length);
-        v = stratCounter;
-      }
-      pairs.push([strategies[h], strategies[v]]);
-    }
-
-    const TOTAL_ROUNDS = Math.min(totalRounds, pairs.length || 1);
-    // Each pairing plays 10 moves at 100ms each → one full second per pairing, like the original.
-    const GAMES = 10;
-    const MOVE_FLASH = 50;
-    const MOVE_GAP = 50;
-    let round = 0;
-    let game = 0;
-
-    function flashOn() {
-      setFlash(pickCell());
-      setAnimRound(round + 1);
-      if (game === 0 && pairs.length > 0) setAnimMatchup(pairs[round % pairs.length]);
-      timerRef.current = setTimeout(flashOff, MOVE_FLASH);
-    }
-    function flashOff() {
-      setFlash(null);
-      game++;
-      if (game >= GAMES) { game = 0; round++; }
-      if (round >= TOTAL_ROUNDS) { setRunning(false); setAnimMatchup(null); collectTourneyYomi(G); return; }
-      timerRef.current = setTimeout(flashOn, MOVE_GAP);
-    }
-    flashOn();
-  }
+  const running = (ct?.ticksRemaining ?? 0) > 0;
+  const tournamentRunning = running;
+  const { flash, round: animRound, matchup: animMatchup } = useTournamentAnimation(running);
+  if (!s.strategyEngineFlag || s.dismantle >= 4) return null;
 
   return (
     <SectionCard title="Strategy" icon={<Swords size={14} />}>
@@ -189,8 +107,7 @@ export function StrategyPanel({ snap: s }: Props) {
           className="strat-select"
           value={picked}
           onChange={e => {
-            G.selectedStrategy = e.target.value;
-            setPicked(e.target.value);
+            game.act(state => { state.selectedStrategy = e.target.value; });
           }}
         >
           {s.strategies.map(name => (
@@ -202,18 +119,14 @@ export function StrategyPanel({ snap: s }: Props) {
           <Btn
             onClick={() => {
               if (tournamentRunning) return;
-              runTourney(G, picked);
-              if (G.currentTournament) {
-                setRunning(true);
-                saveGame(G);
-              }
+              if (game.act(runTourney, picked)) game.save();
             }}
             disabled={tournamentRunning || s.operations < s.newTourneyCost}
           >
             Run Tournament ({formatWithCommas(s.newTourneyCost)} ops)
           </Btn>
           {s.autoTourneyFlag === 1 && (
-            <Btn onClick={() => { toggleAutoTourney(G); }}
+            <Btn onClick={() => { game.act(toggleAutoTourney); }}
               variant={s.autoTourneyStatus === 1 ? 'success' : 'default'}>
               Auto {s.autoTourneyStatus === 1 ? 'ON' : 'OFF'}
             </Btn>

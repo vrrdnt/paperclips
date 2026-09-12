@@ -1,5 +1,5 @@
 import { GameState } from './state';
-import { displayMessage } from './loop';
+import { displayMessage } from './messages';
 import { formatWithCommas } from './format';
 import { factoryReboot, harvesterReboot, wireDroneReboot, farmReboot, batteryReboot } from './actions';
 import {
@@ -1646,7 +1646,6 @@ export const ALL_PROJECTS: Project[] = [
     trigger: (s) => s.operations <= -10000,
     cost: (s) => s.operations <= -10000,
     effect: (s) => {
-      if (!window.confirm('Are you sure you want to restart?')) return;
       s.standardOps += 10000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.projectFlags[217] = 1;
@@ -1701,7 +1700,7 @@ export function clearActiveProject(s: GameState, projectId: number): void {
   s.activeProjectIds = s.activeProjectIds.filter(id => id !== projectId);
 }
 
-export function getActiveProjects(s: GameState): Project[] {
+export function updateProjects(s: GameState): void {
   ensureProjectLists(s);
 
   for (const p of ALL_PROJECTS) {
@@ -1710,13 +1709,30 @@ export function getActiveProjects(s: GameState): Project[] {
     }
   }
 
-  const knownIds = new Set(ALL_PROJECTS.map(p => p.id));
   const seenIds = new Set<number>();
   s.activeProjectIds = s.activeProjectIds.filter(id => {
-    if (!knownIds.has(id) || seenIds.has(id)) return false;
+    if (!PROJECT_BY_ID.has(id) || seenIds.has(id)) return false;
     seenIds.add(id);
     return !s.projectFlags[id] && !s.hiddenProjectIds.includes(id);
   });
 
-  return ALL_PROJECTS.filter(p => s.activeProjectIds.includes(p.id));
+}
+
+export const PROJECT_BY_ID = new Map(ALL_PROJECTS.map(project => [project.id, project]));
+
+/** Selection is read-only; project discovery belongs to the engine. */
+export function getActiveProjects(s: GameState): Project[] {
+  return ALL_PROJECTS.filter(p => s.activeProjectIds.includes(p.id) && canRevealProject(s, p));
+}
+
+export function purchaseProject(s: GameState, id: number): boolean {
+  if (!s.projectsFlag || s.dismantle >= 7 || s.resetFlag === 1) return false;
+  const project = PROJECT_BY_ID.get(id);
+  if (!project || !canRevealProject(s, project)) return false;
+  if (!s.activeProjectIds.includes(id) && !project.trigger(s)) return false;
+  if (!project.cost(s)) return false;
+  project.effect(s);
+  clearActiveProject(s, id);
+  updateProjects(s);
+  return true;
 }

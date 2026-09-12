@@ -2,7 +2,7 @@ import { Globe, Rocket, Cable } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import {
   makeProbe, makeHarvester, makeWireDrone,
   harvesterReboot, wireDroneReboot,
@@ -97,26 +97,26 @@ export function SpacePanel({ snap: s }: Props) {
               </div>
               {!showUniverse && (
                 <div className="drone-build-controls">
-                  <Btn className="drone-build-primary" holdRepeat onClick={() => { makeHarvester(G); }}
+                  <Btn className="drone-build-primary" holdRepeat onClick={() => { game.act(makeHarvester); }}
                     disabled={s.unusedClips < s.harvesterCost}>
                     <span>Build</span>
                     <span className="drone-build-cost">({spellf(s.harvesterCost)})</span>
                   </Btn>
-                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeHarvester(G, 10); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeHarvester, 10); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 10)}>
                     ×10
                   </Btn>
-                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeHarvester(G, 100); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeHarvester, 100); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 100)}>
                     ×100
                   </Btn>
-                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeHarvester(G, 1000); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeHarvester, 1000); }}
                     disabled={s.unusedClips < droneBulkCost(s.harvesterLevel, 1000)}>
                     ×1000
                   </Btn>
                   {s.harvesterLevel > 0 && (
                     <div className="drone-disassemble-row">
-                      <Btn variant="danger" onClick={() => { harvesterReboot(G); }}
+                      <Btn variant="danger" onClick={() => { game.act(harvesterReboot); }}
                         title={`+${spellf(s.harvesterBill)} clips`}>
                         Disassemble All
                       </Btn>
@@ -136,26 +136,26 @@ export function SpacePanel({ snap: s }: Props) {
               </div>
               {!showUniverse && (
                 <div className="drone-build-controls">
-                  <Btn className="drone-build-primary" holdRepeat onClick={() => { makeWireDrone(G); }}
+                  <Btn className="drone-build-primary" holdRepeat onClick={() => { game.act(makeWireDrone); }}
                     disabled={s.unusedClips < s.wireDroneCost}>
                     <span>Build</span>
                     <span className="drone-build-cost">({spellf(s.wireDroneCost)})</span>
                   </Btn>
-                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeWireDrone(G, 10); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeWireDrone, 10); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 10)}>
                     ×10
                   </Btn>
-                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeWireDrone(G, 100); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeWireDrone, 100); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 100)}>
                     ×100
                   </Btn>
-                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeWireDrone(G, 1000); }}
+                  <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeWireDrone, 1000); }}
                     disabled={s.unusedClips < droneBulkCost(s.wireDroneLevel, 1000)}>
                     ×1000
                   </Btn>
                   {s.wireDroneLevel > 0 && (
                     <div className="drone-disassemble-row">
-                      <Btn variant="danger" onClick={() => { wireDroneReboot(G); }}
+                      <Btn variant="danger" onClick={() => { game.act(wireDroneReboot); }}
                         title={`+${spellf(s.wireDroneBill)} clips`}>
                         Disassemble All
                       </Btn>
@@ -208,7 +208,7 @@ export function SpacePanel({ snap: s }: Props) {
 
           <div style={{ marginTop: 8 }}>
             <Btn variant="primary" full holdRepeat
-              onClick={() => { makeProbe(G); }}
+              onClick={() => { game.act(makeProbe); }}
               disabled={s.unusedClips <= Math.pow(10, 17)}>
               <Rocket size={13} />
               Launch Probe ({spellf(Math.pow(10, 17))} clips)

@@ -17,6 +17,12 @@ keystore.properties
 play-credentials*.json
 google-play*.json
 
+# Test artifacts; reviewed visual baselines are tracked separately.
+test-results/
+playwright-report/
+coverage/
+!tests/browser/appearance.spec.ts-snapshots/*.png
+
 # Local original-script references; keep out of the published app repo.
 combat.js
 globals.js

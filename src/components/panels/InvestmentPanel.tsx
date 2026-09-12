@@ -3,9 +3,8 @@ import { SectionCard } from '../ui/SectionCard';
 import { Sparkline } from '../ui/Sparkline';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot, useGameStore } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import { investDeposit, investWithdraw, investUpgrade } from '../../game/actions';
-import { saveGame } from '../../game/save';
 import { formatWithCommas } from '../../game/format';
 
 interface Props { snap: DisplaySnapshot; }
@@ -66,7 +65,7 @@ export function InvestmentPanel({ snap: s }: Props) {
         <span className="stat-label">Engine level {s.investLevel}</span>
         <Btn
           holdRepeat
-          onClick={() => { investUpgrade(G); }}
+          onClick={() => { game.act(investUpgrade); }}
           disabled={s.yomi < s.investUpgradeCost}
           style={{ fontSize: 10, padding: '3px 8px', minHeight: 'unset' }}
         >
@@ -81,7 +80,7 @@ export function InvestmentPanel({ snap: s }: Props) {
           id="investment-risk"
           className="strat-select investment-risk-select"
           value={s.investRisk}
-          onChange={e => { G.investRisk = e.target.value as typeof s.investRisk; }}
+          onChange={e => { game.act(state => { state.investRisk = e.target.value as typeof s.investRisk; }); }}
         >
           {RISK_OPTIONS.map(option => (
             <option key={option.value} value={option.value}>{option.label}</option>
@@ -91,10 +90,10 @@ export function InvestmentPanel({ snap: s }: Props) {
 
       {/* Deposit / Withdraw */}
       <div className="row" style={{ marginTop: 6 }}>
-        <Btn style={{ flex: 1 }} onClick={() => { investDeposit(G); saveGame(G); }} disabled={s.funds <= 0}>
+        <Btn style={{ flex: 1 }} onClick={() => { game.act(investDeposit); game.save(); }} disabled={s.funds <= 0}>
           Deposit All
         </Btn>
-        <Btn style={{ flex: 1 }} onClick={() => { investWithdraw(G); saveGame(G); }} disabled={s.bankroll <= 0}>
+        <Btn style={{ flex: 1 }} onClick={() => { game.act(investWithdraw); game.save(); }} disabled={s.bankroll <= 0}>
           Withdraw
         </Btn>
       </div>

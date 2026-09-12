@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { G, GameState } from '../game/state';
-import { saveGame } from '../game/save';
-import { useGameStore } from '../store/useGameStore';
+import type { GameState } from '../game/state';
+import { game } from '../game/runtime';
 import { spellf } from '../game/format';
 
 const TRIGGER = 'admin';
@@ -38,7 +37,7 @@ export function AdminMenu() {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const bufRef = useRef('');
-  const setSnap = useGameStore(st => st.setSnap);
+
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -60,7 +59,7 @@ export function AdminMenu() {
   useEffect(() => {
     if (!open) return;
     const snap: Record<string, string> = {};
-    for (const f of FIELDS) snap[f.label] = String(f.get(G));
+    for (const f of FIELDS) snap[f.label] = String(f.get(game.state));
     setValues(snap);
   }, [open]);
 
@@ -69,9 +68,8 @@ export function AdminMenu() {
   function commit(f: Field, raw: string) {
     const v = Number(raw);
     if (raw.trim() === '' || !isFinite(v)) return;
-    f.set(G, v);
-    saveGame(G);
-    setSnap(G);
+    game.act(f.set, v);
+    game.save();
   }
 
   return (

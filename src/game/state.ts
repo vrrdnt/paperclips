@@ -149,6 +149,8 @@ export interface GameState {
     totalRounds: number;
     results: string[];
     pendingYomi: number;
+    ticksRemaining: number;
+    strategies: string[];
   } | null;
   // ── Flags ─────────────────────────────────────────────────────────────────
   compFlag: number;
@@ -302,9 +304,12 @@ export interface GameState {
   testFlag: number;
   clipCountCrunched: number;
   catchUpTicksRemaining: number;
+  randomState: number;
+  autoTourneyTicks: number;
+  battleFrameAccumulator: number;
 }
 
-export function makeInitialState(): GameState {
+export function makeInitialState(seed = Math.floor(Math.random() * 4294967296)): GameState {
   const AM = Math.pow(10, 24) * 6000;
   return {
     clips: 0, unusedClips: 0, clipRate: 0, clipRateTemp: 0, prevClips: 0,
@@ -394,6 +399,9 @@ export function makeInitialState(): GameState {
     projectFlags: {}, activeProjectIds: [], hiddenProjectIds: [],
     transaction: 1, blinkCounter: 0, testFlag: 0, clipCountCrunched: 0,
     catchUpTicksRemaining: 0,
+    randomState: seed >>> 0,
+    autoTourneyTicks: 0,
+    battleFrameAccumulator: 0,
   };
 }
 

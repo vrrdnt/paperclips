@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { DEV_SAVES } from '../devSaves';
-import { G } from '../game/state';
-import { hydrateGameState, saveGame } from '../game/save';
+import { game } from '../game/runtime';
 
 const TRIGGER = 'paperclips';
 
@@ -12,6 +11,7 @@ export function DevMenu() {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') { setOpen(false); return; }
+      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select, [contenteditable]')) return;
       if (e.key.length !== 1) return;
       bufRef.current = (bufRef.current + e.key).slice(-TRIGGER.length);
       if (bufRef.current === TRIGGER) {
@@ -26,10 +26,9 @@ export function DevMenu() {
   if (!open) return null;
 
   function loadSave(data: object) {
-    const merged = hydrateGameState(data);
-    Object.assign(G, merged);
-    saveGame(G);
-    window.location.reload();
+    const result = game.loadStage(data);
+    if (!result.ok) window.alert(result.error);
+    else setOpen(false);
   }
 
   return (

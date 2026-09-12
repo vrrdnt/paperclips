@@ -2,8 +2,8 @@ import { FlaskConical } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
-import { clearActiveProject, getActiveProjects, Project } from '../../game/projects';
+import { game } from '../../game/runtime';
+import { purchaseProject, getActiveProjects, Project } from '../../game/projects';
 import { useRevealHighlight } from '../ui/useRevealHighlight';
 
 interface Props { snap: DisplaySnapshot; }
@@ -36,8 +36,8 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
         className="project-btn"
         disabled={!canAfford}
         onClick={() => {
-          p.effect(G);
-          clearActiveProject(G, p.id);
+          if (p.id === 217 && !window.confirm('Are you sure you want to restart?')) return;
+          game.act(purchaseProject, p.id);
         }}
       >
         <span className="project-btn-title">{title}</span>
@@ -52,7 +52,7 @@ export function ProjectsPanel({ snap: s }: Props) {
   if (!s.projectsFlag) return null;
   if (s.dismantle >= 7) return null;
 
-  const activeProjects = getActiveProjects(G)
+  const activeProjects = getActiveProjects(s)
     .map((project) => ({
       project,
       canAfford: project.cost(s),

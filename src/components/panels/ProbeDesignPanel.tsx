@@ -3,7 +3,7 @@ import { Satellite } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import { raiseProbeAttr, lowerProbeAttr, increaseProbeTrust, increaseMaxTrust } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
@@ -55,13 +55,13 @@ export function ProbeDesignPanel({ snap: s }: Props) {
 
       <div className="row" style={{ marginTop: 6 }}>
         {showTrustIncrease && (
-          <Btn holdRepeat onClick={() => { increaseProbeTrust(G); }}
+          <Btn holdRepeat onClick={() => { game.act(increaseProbeTrust); }}
             disabled={s.yomi < probeTrustCost || s.probeTrust >= s.maxTrust}>
             +Trust ({formatWithCommas(probeTrustCost)} yomi)
           </Btn>
         )}
         {maxTrustUnlocked && (
-          <Btn holdRepeat onClick={() => { increaseMaxTrust(G); }}
+          <Btn holdRepeat onClick={() => { game.act(increaseMaxTrust); }}
             disabled={s.honor < s.maxTrustCost}>
             +Max ({formatWithCommas(Math.floor(s.maxTrustCost))} honor)
           </Btn>
@@ -80,10 +80,10 @@ export function ProbeDesignPanel({ snap: s }: Props) {
                   style={{ width: s.probeTrust > 0 ? `${((s[key] as number) / s.probeTrust) * 100}%` : '0%' }} />
               </div>
               <span className="probe-val">{s[key] as number}</span>
-              <Btn holdRepeat onClick={() => { lowerProbeAttr(G, key); }}
+              <Btn holdRepeat onClick={() => { game.act(lowerProbeAttr, key); }}
                 disabled={(s[key] as number) < 1}
                 style={{ padding: '2px 6px', fontSize: 11 }}>−</Btn>
-              <Btn holdRepeat onClick={() => { raiseProbeAttr(G, key); }}
+              <Btn holdRepeat onClick={() => { game.act(raiseProbeAttr, key); }}
                 disabled={available < 1}
                 style={{ padding: '2px 6px', fontSize: 11 }}>+</Btn>
             </React.Fragment>

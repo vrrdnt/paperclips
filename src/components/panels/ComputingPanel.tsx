@@ -3,7 +3,7 @@ import { Cpu, Brain, Lightbulb } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import { addProc, addMem, addProcAmount, addMemAmount } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
@@ -70,8 +70,8 @@ export function ComputingPanel({ snap: s }: Props) {
 
   function applyBatch(target: 'processors' | 'memory') {
     if (!batchAmountValid || parsedBatchAmount === null) return;
-    if (target === 'processors') addProcAmount(G, parsedBatchAmount);
-    else addMemAmount(G, parsedBatchAmount);
+    if (target === 'processors') game.act(addProcAmount, parsedBatchAmount);
+    else game.act(addMemAmount, parsedBatchAmount);
     setBatchAmount('');
     batchInputRef.current?.blur();
   }
@@ -102,7 +102,7 @@ export function ComputingPanel({ snap: s }: Props) {
               <span className="stat-label"><Cpu size={10} /> Processors</span>
               <span className="stat-value">{s.processors}</span>
             </div>
-            <Btn holdRepeat onClick={() => { addProc(G); }} disabled={!canAllocateCompute}
+            <Btn holdRepeat onClick={() => { game.act(addProc); }} disabled={!canAllocateCompute}
               style={{ marginTop: 4, width: '100%' }}>
               +
             </Btn>
@@ -113,7 +113,7 @@ export function ComputingPanel({ snap: s }: Props) {
             <span className="stat-label"><Brain size={10} /> Memory</span>
             <span className="stat-value">{s.memory}</span>
           </div>
-          <Btn holdRepeat onClick={() => { addMem(G); }} disabled={!canAllocateCompute}
+          <Btn holdRepeat onClick={() => { game.act(addMem); }} disabled={!canAllocateCompute}
             style={{ marginTop: 4, width: '100%' }}>
             +
           </Btn>

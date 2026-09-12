@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { GameState } from '../game/state';
+import { createSnapshot } from './snapshot';
 
 export type DisplaySnapshot = Readonly<GameState>;
 
 const HISTORY_LEN = 80;
-const HISTORY_SAMPLE_EVERY = 1; // setSnap runs every 100ms, so 80 samples is about 8s.
 
 export interface Histories {
   clipRate:      number[];
@@ -43,28 +43,22 @@ function appendSnapshot(histories: Histories, s: GameState): Histories {
 interface GameStore {
   snap: DisplaySnapshot | null;
   histories: Histories;
-  historySampleTick: number;
-  setSnap: (s: GameState) => void;
+  setSnap: (s: GameState, sampleHistory?: boolean) => void;
   resetHistories: (s: GameState) => void;
 }
 
 export const useGameStore = create<GameStore>(set => ({
   snap: null,
   histories: emptyHistories(),
-  historySampleTick: 0,
-  setSnap: (s: GameState) => set(prev => {
-    const historySampleTick = prev.historySampleTick + 1;
-    const shouldSample = historySampleTick % HISTORY_SAMPLE_EVERY === 0
-      || prev.histories.clipRate.length === 0;
+  setSnap: (s: GameState, sampleHistory = false) => set(prev => {
+    const shouldSample = sampleHistory || prev.histories.clipRate.length === 0;
 
     return {
-      snap: { ...s },
-      historySampleTick,
+      snap: createSnapshot(s, prev.snap),
       histories: shouldSample ? appendSnapshot(prev.histories, s) : prev.histories,
     };
   }),
   resetHistories: (s: GameState) => set({
     histories: seedHistories(s),
-    historySampleTick: 0,
   }),
 }));

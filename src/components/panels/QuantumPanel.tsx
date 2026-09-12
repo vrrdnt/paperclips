@@ -3,7 +3,7 @@ import { Atom } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import { qComp } from '../../game/actions';
 import { formatWithCommas } from '../../game/format';
 
@@ -299,7 +299,7 @@ export function QuantumPanel({ snap: s }: Props) {
       <QWave chips={s.qChips} activeCount={s.nextQchip} />
 
       {s.dismantle < 5 && (
-        <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} holdRepeat onClick={() => { qComp(G); }} style={{ marginTop: 2 }}>
+        <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} holdRepeat onClick={() => { game.act(qComp); }} style={{ marginTop: 2 }}>
           Quantum Compute
         </Btn>
       )}

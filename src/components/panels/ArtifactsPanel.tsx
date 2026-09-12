@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import { activateArtifact, deactivateArtifact, warpToArtifactMapCell } from '../../game/actions';
 import {
   A,
@@ -304,7 +304,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
                     disabled={!canWarp}
                     onClick={() => {
                       if (!window.confirm(`Warp to World ${cellWorld}, Simulation ${cellSim}? Current run progress will reset.`)) return;
-                      warpToArtifactMapCell(G, cellWorld, cellSim);
+                      game.act(warpToArtifactMapCell, cellWorld, cellSim);
                       onClose?.();
                     }}
                   >
@@ -357,7 +357,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
                 {!isPermanent && <div className="artifact-effect">current world only</div>}
               </div>
               <Btn
-                onClick={() => { isActive ? deactivateArtifact(G, artifact.id) : activateArtifact(G, artifact.id); }}
+                onClick={() => { isActive ? game.act(deactivateArtifact, artifact.id) : game.act(activateArtifact, artifact.id); }}
                 disabled={useDisabled}
                 variant={isActive ? 'success' : 'default'}
                 title={isActive ? 'Deactivate artifact' : 'Activate artifact'}

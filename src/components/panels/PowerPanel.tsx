@@ -2,7 +2,7 @@ import { Battery } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { G } from '../../game/state';
+import { game } from '../../game/runtime';
 import { makeFarm, makeBattery, farmReboot, batteryReboot } from '../../game/actions';
 import { spellf, formatWithCommas } from '../../game/format';
 import { A, activeArtifactMultiplier } from '../../game/artifacts';
@@ -65,26 +65,26 @@ export function PowerPanel({ snap: s }: Props) {
         <span className="stat-value">{s.farmLevel}</span>
       </div>
       <div className="drone-build-controls">
-        <Btn className="drone-build-primary" holdRepeat onClick={() => { makeFarm(G); }}
+        <Btn className="drone-build-primary" holdRepeat onClick={() => { game.act(makeFarm); }}
           disabled={s.unusedClips < s.farmCost}>
           <span>Build</span>
           <span className="drone-build-cost">({spellf(s.farmCost)})</span>
         </Btn>
-        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeFarm(G, 10); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeFarm, 10); }}
           disabled={s.unusedClips < farmBulkCost(s.farmLevel, 10)}>
           ×10
         </Btn>
-        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeFarm(G, 100); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeFarm, 100); }}
           disabled={s.unusedClips < farmBulkCost(s.farmLevel, 100)}>
           ×100
         </Btn>
-        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeFarm(G, 1000); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeFarm, 1000); }}
           disabled={s.unusedClips < farmBulkCost(s.farmLevel, 1000)}>
           ×1000
         </Btn>
         {s.farmLevel > 0 && (
           <div className="drone-disassemble-row">
-            <Btn variant="danger" onClick={() => { farmReboot(G); }}
+            <Btn variant="danger" onClick={() => { game.act(farmReboot); }}
               title={`+${spellf(s.farmBill)} clips`}>
               Disassemble All
             </Btn>
@@ -107,26 +107,26 @@ export function PowerPanel({ snap: s }: Props) {
         <span className="stat-value">{s.batteryLevel}</span>
       </div>
       <div className="drone-build-controls">
-        <Btn className="drone-build-primary" holdRepeat onClick={() => { makeBattery(G); }}
+        <Btn className="drone-build-primary" holdRepeat onClick={() => { game.act(makeBattery); }}
           disabled={s.unusedClips < s.batteryCost}>
           <span>Build</span>
           <span className="drone-build-cost">({spellf(s.batteryCost)})</span>
         </Btn>
-        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeBattery(G, 10); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeBattery, 10); }}
           disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 10)}>
           ×10
         </Btn>
-        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeBattery(G, 100); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeBattery, 100); }}
           disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 100)}>
           ×100
         </Btn>
-        <Btn className="drone-batch-btn" holdRepeat onClick={() => { makeBattery(G, 1000); }}
+        <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeBattery, 1000); }}
           disabled={s.unusedClips < batteryBulkCost(s.batteryLevel, 1000)}>
           ×1000
         </Btn>
         {s.batteryLevel > 0 && (
           <div className="drone-disassemble-row">
-            <Btn variant="danger" onClick={() => { batteryReboot(G); }}
+            <Btn variant="danger" onClick={() => { game.act(batteryReboot); }}
               title={`+${spellf(s.batteryBill)} clips`}>
               Disassemble All
             </Btn>

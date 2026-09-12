@@ -11,7 +11,7 @@ A non-commercial modernization of **[Universal Paperclips](https://www.decisionp
 The original Universal Paperclips runs as a single-page HTML/JavaScript file with a minimal interface. This reskin rebuilds the front-end using a modern stack while aiming to keep the gameplay identical to the original:
 
 - **Same mechanics** — clippers, wire, ops, trust, yomi, projects, space, swarm, combat, end-game sequence, artifacts
-- **Same numbers** — all costs, rates, probabilities, and formulas match the original
+- **Familiar progression** — retains the existing balance, with bug fixes documented in [the refactor notes](docs/refactor.md)
 - **Modern UI** — responsive 3-column layout, mobile-friendly touch targets, dark monochromatic theme, stock sparkline charts
 
 ## What changed
@@ -20,7 +20,7 @@ The original Universal Paperclips runs as a single-page HTML/JavaScript file wit
 |---|---|
 | Single HTML file + vanilla JS | React 18 + TypeScript + Vite |
 | Fixed-width desktop layout | Mobile-first responsive grid (1→2→3 columns) |
-| Minimal DOM manipulation | Mutable game singleton + Zustand display snapshots |
+| Minimal DOM manipulation | Independent game engine + Zustand display snapshots |
 | Inline styles | CSS variables with a dark gray theme |
 
 ## Stack
@@ -32,9 +32,31 @@ The original Universal Paperclips runs as a single-page HTML/JavaScript file wit
 ## Running locally
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
+
+Requires Node.js 24 or newer. `npm run build` produces the static app in `dist/`.
+The app keeps progress in browser storage and supports export/import backups.
+Existing unversioned saves migrate automatically; new saves include a version,
+timestamp, simulation timers, and a saved random stream.
+
+## Development and verification
+
+```bash
+npm run check                 # Type-check source, tests and config; unit tests; build
+npx playwright install chromium
+npm run test:browser          # Gameplay and existing desktop/mobile appearance
+npm run test:production       # Built app: saving and offline reload
+npm run benchmark -- 3600     # Simulate one hour in four representative scenarios
+```
+
+The screenshot baselines use Windows Chromium; CI runs on Windows for matching
+font rendering. Gameplay and engine tests are platform-independent.
+
+See [architecture and contribution guidance](docs/architecture.md) for state
+ownership, timing, persistence, and how to add a feature without coupling it to
+React. The [refactor notes](docs/refactor.md) describe behavior fixes and validation.
 
 ## Attribution & Copyright
 

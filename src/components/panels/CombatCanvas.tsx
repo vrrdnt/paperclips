@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { G, Battle, Ship } from '../../game/state';
+import type { Battle, Ship } from '../../game/state';
+import { game } from '../../game/runtime';
 
 // Logical drawing space; the backing store is scaled up for crisp pixels.
 const W = 310;
@@ -8,10 +9,10 @@ const SCALE = 2;
 const BG = '#252525';
 
 function visibleBattle(): Battle | null {
-  for (let i = G.battles.length - 1; i >= 0; i--) {
-    if (!G.battles[i].over) return G.battles[i];
+  for (let i = game.state.battles.length - 1; i >= 0; i--) {
+    if (!game.state.battles[i].over) return game.state.battles[i];
   }
-  return G.battles[G.battles.length - 1] ?? null;
+  return game.state.battles[game.state.battles.length - 1] ?? null;
 }
 
 export function CombatCanvas() {

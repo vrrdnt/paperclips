@@ -1,6 +1,9 @@
-// Player-triggered actions — pure functions that mutate GameState
+// Player commands mutate only the supplied GameState. No browser or storage I/O.
 import { GameState } from './state';
-import { displayMessage, buyWire as autoBuyWire } from './loop';
+import { displayMessage } from './messages';
+import { buyWire as autoBuyWire } from './systems/business';
+import { produceClips } from './production';
+import { random } from './random';
 import { formatWithCommas } from './format';
 import {
   A,
@@ -13,20 +16,15 @@ import {
   markArtifactTriggerUsed,
   warpToCompletedCell,
 } from './artifacts';
-import { normalizeSelectedStrategy, simulateTournament } from './tournament';
+export { runTourney } from './tournament';
 
 export const MIN_CLIP_PRICE = 0.01;
 export const PRICE_SLIDER_MAX = 3.00;
 
 // ── Clips ─────────────────────────────────────────────────────────────────
 export function clipClick(s: GameState, n = 1): void {
-  if (s.dismantle >= 4) s.finalClips++;
-  if (s.wire < 1) return;
-  const amount = Math.min(n, s.wire);
-  s.clips += amount;
-  s.unusedClips += amount;
-  s.unsoldClips += amount;
-  s.wire -= amount;
+  const produced = produceClips(s, n);
+  if (s.dismantle >= 4) s.finalClips += produced;
 }
 
 // ── Wire ──────────────────────────────────────────────────────────────────
@@ -45,7 +43,7 @@ export function makeClipper(s: GameState): void {
   s.clipmakerLevel++;
   s.clipmakerLevel2++;
   s.clipperCost = Math.pow(1.1, s.clipmakerLevel) + 5;
-  if (hasActiveArtifact(s, A.SATOSHIS_PYRAMID) && Math.random() < 0.05) {
+  if (hasActiveArtifact(s, A.SATOSHIS_PYRAMID) && random(s) < 0.05) {
     const payout = s.clipmakerLevel * 1000;
     s.funds += payout;
     displayMessage(s, `Satoshi's Pyramid generated $${formatWithCommas(payout, 0)}`);
@@ -56,7 +54,7 @@ export function makeMegaClipper(s: GameState): void {
   if (s.funds < s.megaClipperCost) return;
   s.funds -= s.megaClipperCost;
   s.megaClipperLevel++;
-  if (hasActiveArtifact(s, A.HEX_MEGA_LOYALTY) && Math.random() < 0.06) {
+  if (hasActiveArtifact(s, A.HEX_MEGA_LOYALTY) && random(s) < 0.06) {
     s.megaClipperLevel += 6;
     displayMessage(s, 'Hex-Dimensional MegaClipper Loyalty Chip added 6 MegaClippers');
   }
@@ -212,48 +210,6 @@ export function investUpgrade(s: GameState): void {
 }
 
 // ── Strategy / Tournament ─────────────────────────────────────────────────
-export function runTourney(s: GameState, pickedStrat: string): void {
-  if ((s.currentTournament?.pendingYomi ?? 0) > 0) return;
-  if (s.operations < s.newTourneyCost) return;
-  s.selectedStrategy = s.strategies.includes(pickedStrat) ? pickedStrat : normalizeSelectedStrategy(s);
-  s.standardOps -= s.newTourneyCost;
-  s.operations = Math.floor(s.standardOps + s.tempOps);
-
-  const result = simulateTournament(s, s.selectedStrategy, s.projectFlags[128] === 1);
-  let yomiGain = result.yomiGain;
-  if (hasActiveArtifact(s, A.ZERO_DETERMINANT_LATTICE)) yomiGain *= 6;
-
-  s.hMove = result.hMove;
-  s.vMove = result.vMove;
-  s.hMovePrev = result.hMovePrev;
-  s.vMovePrev = result.vMovePrev;
-  s.tourneyResult = result.scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
-  s.tourneyCount++;
-  s.currentTournament = {
-    stratH: s.selectedStrategy, stratV: result.winner.name,
-    payoff: result.payoff, choiceNames: result.choiceNames,
-    totalRounds: s.strategies.length * s.strategies.length,
-    results: result.scores.map(sc => `${sc.name}: ${sc.score}`),
-    pendingYomi: Math.floor(yomiGain),
-  };
-}
-
-export function collectTourneyYomi(s: GameState): void {
-  if (!s.currentTournament) return;
-  const pendingYomi = s.currentTournament.pendingYomi;
-  if (pendingYomi <= 0) return;
-
-  displayMessage(s, `Strategic modeling results: ${s.tourneyResult}`);
-  displayMessage(s, `${s.currentTournament.stratH} selected, ${formatWithCommas(pendingYomi)} yomi earned`);
-  s.yomi += pendingYomi;
-  s.currentTournament.pendingYomi = 0;
-}
-
-export function newTourney(s: GameState): void {
-  s.currentTournament = null;
-  s.tourneyResult = 'Pick strategy, run tournament, gain yomi';
-}
-
 export function toggleAutoTourney(s: GameState): void {
   s.autoTourneyStatus = s.autoTourneyStatus === 1 ? 0 : 1;
 }
@@ -261,7 +217,7 @@ export function toggleAutoTourney(s: GameState): void {
 // ── Space phase ───────────────────────────────────────────────────────────
 export function makeProbe(s: GameState): void {
   const cost = Math.pow(10, 17);
-  if (s.unusedClips <= cost) return;
+  if (s.unusedClips < cost) return;
   s.unusedClips -= cost;
   s.probeCount++;
   s.probesLaunched++;

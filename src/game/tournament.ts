@@ -1,4 +1,15 @@
 import { GameState } from './state';
+import { random } from './random';
+import { A, activeArtifactMultiplier } from './artifacts';
+import { displayMessage } from './messages';
+import { formatWithCommas } from './format';
+
+export const STRATEGIES = ['RANDOM', 'A100', 'B100', 'GREEDY', 'GENEROUS', 'MINIMAX', 'TIT FOR TAT', 'BEAT LAST'] as const;
+
+export function validStrategies(value: unknown): value is string[] {
+  return Array.isArray(value) && value.length > 0 &&
+    value.every(name => STRATEGIES.includes(name)) && new Set(value).size === value.length;
+}
 
 export interface TournamentScore {
   name: string;
@@ -40,10 +51,10 @@ export function simulateTournament(
   strategicAttachment: boolean,
 ): TournamentSimulation {
   const payoff = [
-    [Math.ceil(Math.random() * 10), Math.ceil(Math.random() * 10)],
-    [Math.ceil(Math.random() * 10), Math.ceil(Math.random() * 10)],
+    [Math.floor(random(s) * 10) + 1, Math.floor(random(s) * 10) + 1],
+    [Math.floor(random(s) * 10) + 1, Math.floor(random(s) * 10) + 1],
   ];
-  const choiceNames = CHOICE_PAIRS[Math.floor(Math.random() * CHOICE_PAIRS.length)];
+  const choiceNames = CHOICE_PAIRS[Math.floor(random(s) * CHOICE_PAIRS.length)];
   const active = [...s.strategies];
   const totals: Record<string, number> = {};
   for (const name of active) totals[name] = 0;
@@ -70,8 +81,8 @@ export function simulateTournament(
     for (let r = 0; r < 10; r++) {
       hMovePrev = hMove;
       vMovePrev = vMove;
-      hMove = pickMove(hName, 1, payoff, hMovePrev, vMovePrev);
-      vMove = pickMove(vName, 2, payoff, hMovePrev, vMovePrev);
+      hMove = pickMove(s, hName, 1, payoff, hMovePrev, vMovePrev);
+      vMove = pickMove(s, vName, 2, payoff, hMovePrev, vMovePrev);
 
       if (hMove === 1 && vMove === 1) {
         totals[hName] += payoff[0][0];
@@ -161,6 +172,7 @@ function findShowScore(scores: TournamentScore[], placeScore: number): number {
 }
 
 function pickMove(
+  s: GameState,
   name: string,
   currentPos: number,
   payoff: number[][],
@@ -187,8 +199,60 @@ function pickMove(
     case 'BEAT LAST':
       return whatBeatsLast(currentPos, payoff, hMovePrev, vMovePrev);
     default:
-      return Math.random() < 0.5 ? 1 : 2;
+      return random(s) < 0.5 ? 1 : 2;
   }
+}
+
+export const TOURNAMENT_MATCH_TICKS = 100;
+export const AUTO_TOURNEY_DELAY_TICKS = 300;
+
+export function runTourney(s: GameState, pickedStrat: string): boolean {
+  if (!s.strategyEngineFlag || s.dismantle >= 4 || (s.currentTournament?.ticksRemaining ?? 0) > 0) return false;
+  if ((s.currentTournament?.pendingYomi ?? 0) > 0 || s.operations < s.newTourneyCost) return false;
+  s.selectedStrategy = s.strategies.includes(pickedStrat) ? pickedStrat : normalizeSelectedStrategy(s);
+  s.standardOps -= s.newTourneyCost;
+  s.operations = Math.floor(s.standardOps + s.tempOps);
+  const result = simulateTournament(s, s.selectedStrategy, s.projectFlags[128] === 1);
+  s.hMove = result.hMove;
+  s.vMove = result.vMove;
+  s.hMovePrev = result.hMovePrev;
+  s.vMovePrev = result.vMovePrev;
+  s.tourneyResult = result.scores.map((sc, i) => `${i + 1}. ${sc.name}: ${sc.score}`).join(' | ');
+  s.tourneyCount++;
+  s.autoTourneyTicks = 0;
+  const totalRounds = s.strategies.length * s.strategies.length;
+  s.currentTournament = {
+    stratH: s.selectedStrategy, stratV: result.winner.name,
+    payoff: result.payoff, choiceNames: result.choiceNames, totalRounds,
+    results: result.scores.map(sc => `${sc.name}: ${sc.score}`),
+    pendingYomi: Math.floor(result.yomiGain * activeArtifactMultiplier(s, A.ZERO_DETERMINANT_LATTICE)),
+    ticksRemaining: totalRounds * TOURNAMENT_MATCH_TICKS,
+    strategies: [...s.strategies],
+  };
+  return true;
+}
+
+/** Rewards and auto-run timing continue without any mounted React component. */
+export function tickTournament(s: GameState): void {
+  const tournament = s.currentTournament;
+  if (!s.strategyEngineFlag || s.dismantle >= 4 || !tournament) {
+    s.autoTourneyTicks = 0;
+    return;
+  }
+  if (tournament.ticksRemaining > 0) {
+    tournament.ticksRemaining--;
+    if (tournament.ticksRemaining > 0) return;
+    const earned = tournament.pendingYomi;
+    s.yomi += earned;
+    tournament.pendingYomi = 0;
+    displayMessage(s, `Strategic modeling results: ${s.tourneyResult}`);
+    displayMessage(s, `${tournament.stratH} selected, ${formatWithCommas(earned)} yomi earned`);
+    s.autoTourneyTicks = 0;
+    return;
+  }
+  if (!s.autoTourneyFlag || !s.autoTourneyStatus) return;
+  s.autoTourneyTicks = Math.min(AUTO_TOURNEY_DELAY_TICKS, s.autoTourneyTicks + 1);
+  if (s.autoTourneyTicks >= AUTO_TOURNEY_DELAY_TICKS) runTourney(s, normalizeSelectedStrategy(s));
 }
 
 function findBiggestPayoff(payoff: number[][]): number {
