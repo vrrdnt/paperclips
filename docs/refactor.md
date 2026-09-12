@@ -23,8 +23,9 @@ gameplay mutations from rendering and animation callbacks.
   malformed data is rejected or migrated; short quantum arrays are repaired.
 - Saves report storage failures, keep a previous checkpoint, and preserve
   unreadable data. Prestige and explicit imports replace complete states.
-- Fractional probe births accumulate once, launching a probe accepts exact
-  funds, and universe completion accounts for unprocessed acquired matter.
+- Launching a probe accepts exact funds, and universe completion accounts for
+  unprocessed acquired matter. The subsequent [parity pass](parity.md) restores
+  the original fractional probe births, superseding the first refactor's change.
 - Offline app reloads find precached build assets even on hosts that vary
   responses by Origin. Service-worker cleanup only removes this app's caches,
   and failed responses cannot replace a good cached page.

@@ -71,7 +71,11 @@ export function tickCreativity(s: GameState): void {
   const prestige = s.prestigeS / 10;
   const effectiveProcessors = effectiveProcessorCount(s);
   const effectiveProcessorPower = effectiveProcessors * processorPerformanceMultiplier(s, effectiveProcessors);
-  const baseSpeed = creativitySpeedForProcessors(effectiveProcessorPower);
+  // The original starts at speed 1 but applies the logarithmic formula only
+  // when allocating processors. After Xavier, a lone processor has speed 0.
+  const baseSpeed = effectiveProcessorPower === s.processors
+    ? s.creativitySpeed
+    : creativitySpeedForProcessors(effectiveProcessorPower);
   const ss = baseSpeed + baseSpeed * prestige;
   if (ss <= 0) return;
   const creativityCheck = creativityThreshold / ss;
@@ -89,7 +93,7 @@ export function tickCreativity(s: GameState): void {
 export function tickQuantum(s: GameState): void {
   s.qClock += 0.01;
   for (let i = 0; i < 10; i++) {
-    const waveSeed = (i + 1) * 0.1;
+    const waveSeed = (i + 1) / 10;
     const active = i < s.nextQchip ? 1 : 0;
     s.qChips[i] = Math.sin(s.qClock * waveSeed * active);
   }

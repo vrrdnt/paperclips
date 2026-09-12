@@ -830,7 +830,9 @@ export const ALL_PROJECTS: Project[] = [
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.qChipCost += 5000;
       if (s.nextQchip < s.qChips.length) {
-        s.qChips[s.nextQchip] = 1;
+        // Activation does not grant a full-amplitude pulse. The next quantum
+        // tick sets the chip's value from the running wave, as in the original.
+        s.qChips[s.nextQchip] = 0;
       }
       s.nextQchip += 1;
       displayMessage(s, 'Photonic chip added');

@@ -5,6 +5,7 @@ import { normalizeSelectedStrategy, TOURNAMENT_MATCH_TICKS, validStrategies } fr
 import { validateSavedState } from './saveValidation';
 import { ENDING_CREDITS } from './ending';
 import { displayMessage } from './messages';
+import { creativitySpeedForProcessors } from './systems/computing';
 
 type WholeLevelKey = 'factoryLevel' | 'harvesterLevel' | 'wireDroneLevel';
 type PartialSpawnKey = 'partialFactorySpawn' | 'partialHarvesterSpawn' | 'partialWireDroneSpawn';
@@ -230,10 +231,11 @@ export function hydrateGameState(input: unknown): GameState {
     merged.battleScale = merged.battleScale || activeBattle.scale || activeBattle.unitSize;
   }
 
-  // Derive creativitySpeed from processors (older saves stored a stale value).
-  merged.creativitySpeed = merged.processors >= 1
-    ? Math.log10(merged.processors) * Math.pow(merged.processors, 1.1) + merged.processors - 1
-    : 0;
+  // This is saved gameplay state, not merely a derived display value: the
+  // original's initial processor and a post-Xavier processor differ in speed.
+  if (loaded.creativitySpeed === undefined) {
+    merged.creativitySpeed = merged.processors === 1 ? 1 : creativitySpeedForProcessors(merged.processors);
+  }
 
   return merged;
 }

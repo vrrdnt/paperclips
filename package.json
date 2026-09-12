@@ -13,6 +13,7 @@
     "test:browser": "playwright test",
     "check": "npm run typecheck && npm test && npm run build",
     "benchmark": "tsx scripts/benchmark.ts",
+    "verify:original": "tsx scripts/verify-original.ts",
     "test:production": "playwright test -c playwright.production.config.ts"
   },
   "dependencies": {

@@ -100,6 +100,14 @@ function createBattle(s: GameState): void {
   if (rightShips > 200) rightShips = 200;
 
   s.battleId = (s.battleId || 0) + 1;
+  const probeShips: Ship[] = [];
+  const drifterShips: Ship[] = [];
+  // Creation order matters too: the original assigns random positions to the
+  // right team first, then alternates sides, and names the battle afterwards.
+  for (let i = 0; i < Math.max(leftShips, rightShips); i++) {
+    if (i < rightShips) drifterShips.push(initShip(s, 'drifter'));
+    if (i < leftShips) probeShips.push(initShip(s, 'probe'));
+  }
   const name = s.projectFlags[121] === 1 ? generateBattleName(s) : `Drifter Attack ${s.battleId}`;
   s.battleName = name;
   s.battleScale = unitSize;
@@ -116,8 +124,8 @@ function createBattle(s: GameState): void {
     territory,
     leftShips,
     rightShips,
-    probeShips: initShips(s, 'probe', leftShips),
-    drifterShips: initShips(s, 'drifter', rightShips),
+    probeShips,
+    drifterShips,
     timer: 0,
     battleClock: 0,
     masterClock: 0,
@@ -139,9 +147,9 @@ function generateBattleName(s: GameState): string {
   return name;
 }
 
-function initShips(s: GameState, side: 'probe' | 'drifter', count: number): Ship[] {
+function initShip(s: GameState, side: 'probe' | 'drifter'): Ship {
   const probe = side === 'probe';
-  return Array.from({ length: count }, () => ({
+  return {
     x: probe ? random(s) * 0.2 * BATTLE_W : (random(s) * 0.2 + 0.8) * BATTLE_W,
     y: random(s) * BATTLE_H,
     vx: probe ? random(s) * BATTLE_MAXSPEED : -random(s) * BATTLE_MAXSPEED,
@@ -151,7 +159,7 @@ function initShips(s: GameState, side: 'probe' | 'drifter', count: number): Ship
     framesDead: 0,
     alive: true,
     side,
-  }));
+  };
 }
 
 // The original combat renderer advances at 16ms, separate from the 10ms main loop.

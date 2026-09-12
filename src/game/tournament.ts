@@ -51,8 +51,8 @@ export function simulateTournament(
   strategicAttachment: boolean,
 ): TournamentSimulation {
   const payoff = [
-    [Math.floor(random(s) * 10) + 1, Math.floor(random(s) * 10) + 1],
-    [Math.floor(random(s) * 10) + 1, Math.floor(random(s) * 10) + 1],
+    [Math.ceil(random(s) * 10), Math.ceil(random(s) * 10)],
+    [Math.ceil(random(s) * 10), Math.ceil(random(s) * 10)],
   ];
   const choiceNames = CHOICE_PAIRS[Math.floor(random(s) * CHOICE_PAIRS.length)];
   const active = [...s.strategies];
@@ -81,7 +81,9 @@ export function simulateTournament(
     for (let r = 0; r < 10; r++) {
       hMovePrev = hMove;
       vMovePrev = vMove;
-      hMove = pickMove(s, hName, 1, payoff, hMovePrev, vMovePrev);
+      // In a self-match both original entries reference the same strategy
+      // object; assigning the vertical position also changes the horizontal one.
+      hMove = pickMove(s, hName, h === v ? 2 : 1, payoff, hMovePrev, vMovePrev);
       vMove = pickMove(s, vName, 2, payoff, hMovePrev, vMovePrev);
 
       if (hMove === 1 && vMove === 1) {

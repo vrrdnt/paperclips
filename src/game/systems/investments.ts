@@ -34,6 +34,7 @@ export function tickInvestmentShop(s: GameState): void {
 }
 
 function createStock(s: GameState, dollars: number): void {
+  const symbol = generateSymbol(s);
   const roll = random(s);
   let price: number;
   if (roll > 0.99)       price = Math.ceil(random(s) * 3000);
@@ -50,7 +51,7 @@ function createStock(s: GameState, dollars: number): void {
   const total = price * amount;
   s.bankroll -= total;
   s.stocks.push({
-    symbol: generateSymbol(s),
+    symbol,
     price, prevPrice: price, priceHistory: [price],
     amount, profit: 0, age: 0, val: total,
   });

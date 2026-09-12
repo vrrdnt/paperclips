@@ -27,11 +27,13 @@ describe('resource invariants', () => {
     expect(state.probeCount).toBe(1);
     expect(state.unusedClips).toBe(0);
   });
-  it('accumulates fractional probe replication without awarding it twice', () => {
-    const state = Object.assign(makeInitialState(), { probeCount: 1, probeRep: 1, powMod: 1 });
+  it('preserves the original fractional replication before an accumulator completes', () => {
+    const state = Object.assign(makeInitialState(), { probeCount: 1000, probeRep: 1, unusedClips: 1e20 });
     spawnProbes(state);
-    expect(state.probeCount).toBe(1);
-    expect(state.partialProbeSpawn).toBeGreaterThan(0);
+    expect(state.probeCount).toBe(1000.05);
+    expect(state.partialProbeSpawn).toBe(0.05);
+    expect(state.probesBorn).toBe(0.05);
+    expect(state.unusedClips).toBe(1e20 - 5e15);
   });
   it('never produces negative resources when the battery runs out', () => {
     const state = Object.assign(makeInitialState(), {

@@ -189,9 +189,10 @@ export function spawnProbes(s: GameState): void {
     if (s.partialProbeSpawn >= 1) {
       nextGen = 1;
       s.partialProbeSpawn = 0;
-    } else {
-      return;
     }
+    // Compatibility: the original still buys the fractional nextGen below one,
+    // then buys one whole probe when the accumulator crosses its threshold.
+    // Waiting for that threshold changes early fleet growth and survival.
   }
 
   if (nextGen * PROBE_BASE_COST > s.unusedClips) {

@@ -3,6 +3,7 @@ import { GameState } from './state';
 import { displayMessage } from './messages';
 import { buyWire as autoBuyWire } from './systems/business';
 import { produceClips } from './production';
+import { creativitySpeedForProcessors } from './systems/computing';
 import { random } from './random';
 import { formatWithCommas } from './format';
 import {
@@ -97,7 +98,7 @@ export function addProc(s: GameState): void {
   if (!hasTrustCapacity && !hasSwarmGift) return;
   if (hasSwarmGift && !s.humanFlag) s.swarmGifts--;
   s.processors++;
-  s.creativitySpeed = Math.log10(s.processors) * Math.pow(s.processors, 1.1) + s.processors - 1;
+  s.creativitySpeed = creativitySpeedForProcessors(s.processors);
   displayMessage(
     s,
     s.creativityOn
@@ -110,7 +111,7 @@ export function addProcAmount(s: GameState, rawAmount: number): void {
   const amount = claimComputeAllocation(s, rawAmount);
   if (amount <= 0) return;
   s.processors += amount;
-  s.creativitySpeed = Math.log10(s.processors) * Math.pow(s.processors, 1.1) + s.processors - 1;
+  s.creativitySpeed = creativitySpeedForProcessors(s.processors);
   displayMessage(
     s,
     s.creativityOn
