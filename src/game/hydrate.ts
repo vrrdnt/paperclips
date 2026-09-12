@@ -1,6 +1,6 @@
 import { GameState, makeInitialState, Stock } from './state';
 import { reconstructReadoutsFromProjectFlags } from './projectReadouts';
-import { normalizeArtifactState } from './artifacts';
+import { isFinalMapCell, normalizeArtifactState } from './artifacts';
 import { normalizeSelectedStrategy, TOURNAMENT_MATCH_TICKS, validStrategies } from './tournament';
 import { validateSavedState } from './saveValidation';
 import { ENDING_CREDITS } from './ending';
@@ -140,6 +140,7 @@ function normalizeCurrentTournament(s: GameState): void {
   ct.choiceNames = [String(ct.choiceNames[0] || 'A'), String(ct.choiceNames[1] || 'B')];
   ct.results = ct.results.map(result => String(result));
   ct.pendingYomi = Math.floor(finiteNonNegative(finiteNumber(ct.pendingYomi)));
+  if (ct.baseYomi !== undefined) ct.baseYomi = Math.floor(finiteNonNegative(finiteNumber(ct.baseYomi)));
   ct.strategies = validStrategies(ct.strategies) ? [...ct.strategies] : [...s.strategies];
   ct.totalRounds = ct.strategies.length ** 2;
   ct.ticksRemaining = Math.min(ct.totalRounds * TOURNAMENT_MATCH_TICKS, Math.floor(finiteNonNegative(finiteNumber(ct.ticksRemaining, ct.pendingYomi > 0 ? ct.totalRounds * TOURNAMENT_MATCH_TICKS : 0))));
@@ -195,6 +196,12 @@ export function hydrateGameState(input: unknown): GameState {
   merged.qChips = Array.from({ length: 10 }, (_, i) => merged.qChips[i] ?? 0);
   merged.nextQchip = Math.max(0, Math.min(10, Math.floor(merged.nextQchip)));
   normalizeArtifactState(merged);
+  // Previous builds allowed Accept in the terminal mobile world. Restore the
+  // remaining ending choice rather than stranding that already-accepted save.
+  if (isFinalMapCell(merged) && merged.projectFlags[147] === 1 && !merged.projectFlags[148]) {
+    delete merged.projectFlags[147];
+    merged.hiddenProjectIds = merged.hiddenProjectIds.filter(id => id !== 148);
+  }
   normalizeTournamentState(merged);
   normalizeCurrentTournament(merged);
   normalizeProbeDesign(merged);

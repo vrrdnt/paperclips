@@ -227,7 +227,8 @@ export function runTourney(s: GameState, pickedStrat: string): boolean {
     stratH: s.selectedStrategy, stratV: result.winner.name,
     payoff: result.payoff, choiceNames: result.choiceNames, totalRounds,
     results: result.scores.map(sc => `${sc.name}: ${sc.score}`),
-    pendingYomi: Math.floor(result.yomiGain * activeArtifactMultiplier(s, A.ZERO_DETERMINANT_LATTICE)),
+    pendingYomi: result.yomiGain,
+    baseYomi: result.yomiGain,
     ticksRemaining: totalRounds * TOURNAMENT_MATCH_TICKS,
     strategies: [...s.strategies],
   };
@@ -244,9 +245,14 @@ export function tickTournament(s: GameState): void {
   if (tournament.ticksRemaining > 0) {
     tournament.ticksRemaining--;
     if (tournament.ticksRemaining > 0) return;
-    const earned = tournament.pendingYomi;
+    // Mobile allows equipping the lattice just before the tournament ends.
+    // Preserve already-calculated rewards from older saves once; their original
+    // activation state cannot reliably be recovered from the current loadout.
+    const earned = tournament.baseYomi === undefined ? tournament.pendingYomi
+      : Math.floor(tournament.baseYomi * activeArtifactMultiplier(s, A.ZERO_DETERMINANT_LATTICE));
     s.yomi += earned;
     tournament.pendingYomi = 0;
+    if (tournament.baseYomi !== undefined) tournament.baseYomi = 0;
     displayMessage(s, `Strategic modeling results: ${s.tourneyResult}`);
     displayMessage(s, `${tournament.stratH} selected, ${formatWithCommas(earned)} yomi earned`);
     s.autoTourneyTicks = 0;

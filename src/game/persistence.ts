@@ -86,7 +86,9 @@ export function makeNextRun(previous: GameState): GameState {
   const fresh = makeInitialState();
   fresh.prestigeU = previous.prestigeU;
   fresh.prestigeS = previous.prestigeS;
-  for (const key of ['completedMapCells', 'collectedArtifacts', 'activeArtifacts', 'usedArtifactTriggers'] as const) {
+  // Both activation bonuses and investment bonuses refresh per run. Their
+  // usage is still saved during a run, so reloading cannot grant another use.
+  for (const key of ['completedMapCells', 'collectedArtifacts', 'activeArtifacts'] as const) {
     fresh[key] = [...previous[key]];
   }
   normalizeArtifactState(fresh);

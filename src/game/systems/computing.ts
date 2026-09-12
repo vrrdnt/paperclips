@@ -47,7 +47,9 @@ export function tickTrust(s: GameState): void {
 export function effectiveProcessorCount(s: GameState): number {
   let effectiveProcessors = s.processors;
   if (hasActiveArtifact(s, A.BOLTZMANNS_BRAIN)) effectiveProcessors += 10;
-  if (hasActiveArtifact(s, A.SMART_FACTORY_FORCE_FEEDBACK)) effectiveProcessors += Math.floor(s.factoryLevel);
+  if (!s.spaceFlag && hasActiveArtifact(s, A.SMART_FACTORY_FORCE_FEEDBACK)) {
+    effectiveProcessors += Math.floor(s.factoryLevel);
+  }
   return Math.max(0, effectiveProcessors);
 }
 

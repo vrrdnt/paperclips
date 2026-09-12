@@ -53,7 +53,7 @@ export const ARTIFACTS: ArtifactDef[] = [
   { id: A.KOLMOGOROVS_BOUNDARY, name: "Kolmogorov's Boundary", world: 1, sim: 1, kind: 'compression', effect: 'Processor performance +500%' },
   { id: A.MICROSTATE_LOOP_CALIBRATOR, name: 'Microstate Loop Calibrator', world: 1, sim: 3, kind: 'compression', effect: 'Momentum accumulation +500%' },
   { id: A.MARTINGALES_DEMON, name: "Martingale's Demon", world: 1, sim: 5, kind: 'compression', effect: 'First deposit doubled' },
-  { id: A.SMART_FACTORY_FORCE_FEEDBACK, name: 'Smart Factory Force Feedback Function', world: 1, sim: 8, kind: 'compression', effect: 'Factories act as processors' },
+  { id: A.SMART_FACTORY_FORCE_FEEDBACK, name: 'Smart Factory Force Feedback Function', world: 1, sim: 8, kind: 'compression', effect: 'Terrestrial factories act as processors' },
   { id: A.SHANNONS_VOLATILITY_PUMP, name: "Shannon's Volatility Pump", world: 1, sim: 10, kind: 'compression', effect: '$1000 per stock price change' },
   { id: A.SIERPINSKIS_COMPASS, name: "Sierpinski's Compass", world: 2, sim: 4, kind: 'compression', effect: 'Monuments double current yomi' },
   { id: A.ZERO_DETERMINANT_LATTICE, name: 'Zero-Determinant Strategy Lattice', world: 2, sim: 6, kind: 'compression', effect: 'Tournament yomi +500%' },
@@ -63,7 +63,7 @@ export const ARTIFACTS: ArtifactDef[] = [
   { id: A.RECURSIVE_ARTHUR_MERLIN, name: 'Recursive Arthur-Merlin Protocol', world: 3, sim: 5, kind: 'compression', effect: 'Qops gained +500%' },
   { id: A.TRUE_LEXICON, name: 'True Lexicon of the Machine Elves', world: 3, sim: 7, kind: 'compression', effect: 'Swarm gifts +500%' },
   { id: A.LONSDALEITE_CLAW, name: 'Trophy: Lonsdaleite Claw', world: 4, sim: 1, kind: 'alien', effect: 'MegaClipper performance +500%' },
-  { id: A.SUPERLUMINOUS_SUPERNOVA, name: 'Superluminous Supernova', world: 4, sim: 3, kind: 'alien', effect: 'First activation doubles creativity' },
+  { id: A.SUPERLUMINOUS_SUPERNOVA, name: 'Superluminous Supernova', world: 4, sim: 3, kind: 'alien', effect: 'First activation each run doubles creativity' },
   { id: A.MUNGERS_REGRET, name: "Munger's Regret", world: 4, sim: 4, kind: 'compression', effect: 'First withdrawal doubled' },
   { id: A.KOLMOGOROVS_INFINITESIMAL, name: "Kolmogorov's Infinitesimal", world: 4, sim: 6, kind: 'compression', effect: 'Each processor adds +2% performance' },
   { id: A.EVERETTS_MIRROR, name: "Everett's Mirror", world: 4, sim: 9, kind: 'compression', effect: 'Negative qOps count positive' },
@@ -79,7 +79,7 @@ export const ARTIFACTS: ArtifactDef[] = [
   { id: A.BATTLE_BEACON, name: 'Battle Beacon from the Siege of El Arish 3', world: 8, sim: 7, kind: 'alien', effect: 'Probe combat +3' },
   { id: A.GRAPHENE_SHELL, name: 'Trophy: Graphene Shell Fragment', world: 9, sim: 3, kind: 'alien', effect: 'Probe hazard remediation +3' },
   { id: A.BOLTZMANNS_BRAIN, name: "Boltzmann's Brain", world: 9, sim: 6, kind: 'alien', effect: '+10 processors' },
-  { id: A.BANACH_TARSKI_CATALYST, name: 'Banach Tarski Catalyst', world: 10, sim: 1, kind: 'alien', effect: 'First activation 10x current clips' },
+  { id: A.BANACH_TARSKI_CATALYST, name: 'Banach Tarski Catalyst', world: 10, sim: 1, kind: 'alien', effect: 'First activation each run: 10x current clips' },
   { id: A.HEX_MEGA_LOYALTY, name: 'Hex-Dimensional MegaClipper Loyalty Chip', world: 10, sim: 6, kind: 'alien', effect: 'MegaClipper purchases may add six' },
   { id: A.QUARK_GLUON_HEART, name: 'Trophy: Quark-Gluon Plasma Heart', world: 10, sim: 10, kind: 'alien', effect: 'Factory performance +500%' },
 ];
@@ -102,6 +102,10 @@ export function currentSim(s: Pick<GameState, 'prestigeS'>): number {
 
 export function currentMapKey(s: Pick<GameState, 'prestigeU' | 'prestigeS'>): string {
   return mapKey(currentWorld(s), currentSim(s));
+}
+
+export function isFinalMapCell(s: Pick<GameState, 'prestigeU' | 'prestigeS'>): boolean {
+  return currentWorld(s) === MAP_SIZE && currentSim(s) === MAP_SIZE;
 }
 
 export function artifactsAt(world: number, sim: number): ArtifactDef[] {

@@ -9,6 +9,7 @@ import {
   currentSim,
   currentWorld,
   hasActiveArtifact,
+  isFinalMapCell,
   moveAfterCompletion,
   type MapCompletion,
 } from './artifacts';
@@ -1410,7 +1411,7 @@ export const ALL_PROJECTS: Project[] = [
     title: 'Accept ',
     priceTag: '',
     description: 'Start over again in a new universe ',
-    trigger: (s) => s.projectFlags[146] === 1,
+    trigger: (s) => s.projectFlags[146] === 1 && !isFinalMapCell(s),
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
       s.standardOps -= s.driftKingMessageCost;
@@ -1694,6 +1695,9 @@ function ensureProjectLists(s: GameState): void {
 }
 
 function canRevealProject(s: GameState, p: Project): boolean {
+  // Mobile's last square cannot grant permanent ownership of the final
+  // artifact via prestige, including saves with already-revealed exits.
+  if (isFinalMapCell(s) && [147, 200, 201, 202, 203].includes(p.id)) return false;
   return !s.projectFlags[p.id] && !s.hiddenProjectIds.includes(p.id);
 }
 

@@ -10,7 +10,7 @@ A non-commercial modernization of **[Universal Paperclips](https://www.decisionp
 
 The original Universal Paperclips runs as a single-page HTML/JavaScript file with a minimal interface. This reskin rebuilds the front-end using a modern stack while aiming to keep the gameplay identical to the original:
 
-- **Original mechanics** — clippers, wire, ops, trust, yomi, projects, space, swarm, combat, end-game sequence; existing artifact extensions are retained
+- **Original mechanics** — clippers, wire, ops, trust, yomi, projects, space, swarm, combat, end-game sequence; artifacts from the mobile edition are included
 - **Familiar progression** — retains the existing balance, with bug fixes documented in [the refactor notes](docs/refactor.md)
 - **Modern UI** — responsive 3-column layout, mobile-friendly touch targets, dark monochromatic theme, stock sparkline charts
 
@@ -59,6 +59,9 @@ ownership, timing, persistence, and how to add a feature without coupling it to
 React. The [refactor notes](docs/refactor.md) describe behavior fixes and validation.
 The [parity notes](docs/parity.md) document comparisons against the original web
 source, preserved quirks, and deliberate stability exceptions.
+The [mobile artifact audit](docs/mobile-artifacts.md) distinguishes verified code
+behavior, corrections supported by mobile reports, and formulas still awaiting
+measurements from the mobile app.
 
 ## Attribution & Copyright
 

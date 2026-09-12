@@ -21,6 +21,35 @@ async function liveState(page: Page) {
   });
 }
 
+test('artifact controls preserve one-use bonuses when toggled and saved', async ({ page }) => {
+  await loadStage(page, '01-phase1-start.json', {
+    prestigeU: 3, prestigeS: 2, creativity: 100, collectedArtifacts: ['superluminous-supernova'],
+    activeArtifacts: [], usedArtifactTriggers: [],
+  });
+  await page.getByRole('button', { name: 'Artifact map', exact: true }).click();
+  const row = page.locator('.artifact-item').filter({ hasText: 'Superluminous Supernova' });
+  await row.getByRole('button', { name: 'Use', exact: true }).click();
+  expect((await liveState(page)).creativity).toBe(200);
+  await row.getByRole('button', { name: 'On', exact: true }).click();
+  await row.getByRole('button', { name: 'Use', exact: true }).click();
+  expect((await liveState(page)).creativity).toBe(200);
+  await page.getByRole('dialog', { name: 'Artifact map' }).getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('button', { name: 'Save game', exact: true }).click();
+  const raw = await page.evaluate(() => localStorage.getItem('upc_v2'));
+  expect(raw).toContain('superluminous-supernova');
+});
+
+test('the final mobile world shows Reject and no prestige exit', async ({ page }) => {
+  await loadStage(page, '07-phase3-endgame.json', {
+    prestigeU: 9, prestigeS: 9, projectFlags: { 146: 1 }, activeProjectIds: [147, 148, 202, 203],
+    hiddenProjectIds: [], operations: 300000, standardOps: 300000, creativity: 300000,
+    dismantle: 0, milestoneFlag: 15,
+  });
+  await expect(page.getByRole('button', { name: /^Reject / })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Accept / })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^The Universe (Behind|Above) / })).toHaveCount(0);
+});
+
 test('manual production updates immediately and survives an actual reload', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Make Paperclip', exact: true }).click();

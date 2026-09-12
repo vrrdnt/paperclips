@@ -149,6 +149,8 @@ export interface GameState {
     totalRounds: number;
     results: string[];
     pendingYomi: number;
+    // Absent in older saves, whose pendingYomi already includes the artifact.
+    baseYomi?: number;
     ticksRemaining: number;
     strategies: string[];
   } | null;

@@ -55,9 +55,11 @@ timers. Project checks cover availability and affordability, not every effect at
 every resource boundary. The original uses unseeded randomness; seeds here are
 controlled inputs, not an original-game feature.
 
-The existing artifact system and reverse-world/reverse-simulation projects have
-no counterpart in this web reference and remain extensions. Comparisons disable
-artifacts. No balance values or interface styles were redesigned in this pass.
+The artifact system and reverse-world/reverse-simulation projects originate in
+the mobile game and have no counterpart in this web reference. Comparisons
+disable artifacts. The subsequent [mobile audit](mobile-artifacts.md) documents
+their evidence, fixes, and unresolved formulas. No balance values or interface
+styles were redesigned in the web parity pass.
 
 The stability fixes documented in the foundation refactor remain: partial
 battery discharge cannot create negative resources, completed swarm gifts are
