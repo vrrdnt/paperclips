@@ -186,7 +186,7 @@ export function BusinessPanel({ snap: s }: Props) {
               <span className="stat-label">Wire cost</span>
               <span className="stat-value">
                 ${formatWithCommas(s.wireCost)}&nbsp;
-                <span style={{ color: wireTrendColor, fontSize: 10 }}>{wireTrendChar}</span>
+                <span style={{ color: wireTrendColor, fontSize: 'var(--mobile-label-size, 10px)' }}>{wireTrendChar}</span>
               </span>
             </div>
             {hasRevTracker && (

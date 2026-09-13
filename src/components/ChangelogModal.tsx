@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { CHANGELOG, formatChangelogCommits } from '../changelog';
 import { Btn } from './ui/Btn';
+import { Dialog } from './ui/Dialog';
 
 interface Props {
   onClose: () => void;
@@ -8,12 +9,7 @@ interface Props {
 
 export function ChangelogModal({ onClose }: Props) {
   return (
-    <div
-      className="modal-backdrop"
-      role="presentation"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="changelog-modal" role="dialog" aria-modal="true" aria-label="Changelog">
+    <Dialog title="Changelog" className="changelog-dialog" onClose={onClose}>
         <div className="changelog-modal-head">
           <div>
             <div className="changelog-title">Changelog</div>
@@ -41,7 +37,6 @@ export function ChangelogModal({ onClose }: Props) {
             </section>
           ))}
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

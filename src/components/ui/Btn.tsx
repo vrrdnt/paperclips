@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
+import { PanelVisibility } from './PanelVisibility';
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'primary' | 'danger' | 'success';
@@ -30,6 +31,7 @@ export function Btn({
   onPointerMove,
   ...rest
 }: Props) {
+  const visible = useContext(PanelVisibility);
   const cls = [
     'btn',
     variant !== 'default' ? `btn-${variant}` : '',
@@ -71,8 +73,29 @@ export function Btn({
   useEffect(() => clearRepeat, [clearRepeat]);
 
   useEffect(() => {
-    if (disabled) clearRepeat();
-  }, [clearRepeat, disabled]);
+    if (disabled || !visible) {
+      clearRepeat();
+      if (holdStartedRef.current || pointerStartRef.current) suppressClickRef.current = true;
+    }
+  }, [clearRepeat, disabled, visible]);
+
+  useEffect(() => {
+    if (!holdRepeat) return;
+    const cancel = () => {
+      clearRepeat();
+      if (pointerStartRef.current) suppressClickRef.current = true;
+      pointerStartRef.current = null;
+    };
+    const visibility = () => { if (document.visibilityState !== 'visible') cancel(); };
+    document.addEventListener('visibilitychange', visibility);
+    document.addEventListener('freeze', cancel);
+    window.addEventListener('pagehide', cancel);
+    return () => {
+      document.removeEventListener('visibilitychange', visibility);
+      document.removeEventListener('freeze', cancel);
+      window.removeEventListener('pagehide', cancel);
+    };
+  }, [clearRepeat, holdRepeat]);
 
   const scheduleSuppressReset = useCallback(() => {
     window.setTimeout(() => {
@@ -94,6 +117,10 @@ export function Btn({
 
   function fireClick() {
     if (disabledRef.current || !clickRef.current || !buttonRef.current) return;
+    if (document.visibilityState !== 'visible' || !buttonRef.current.getClientRects().length) {
+      clearRepeat();
+      return;
+    }
     internalClickRef.current = true;
     buttonRef.current.click();
     internalClickRef.current = false;
@@ -177,7 +204,7 @@ export function Btn({
     if (!start || start.id !== e.pointerId || start.type === 'mouse') return;
     const dx = e.clientX - start.x;
     const dy = e.clientY - start.y;
-    if (Math.hypot(dx, dy) > 10 && !holdStartedRef.current) {
+    if (Math.hypot(dx, dy) > 10) {
       clearRepeat();
       pointerStartRef.current = null;
       canceledTapRef.current = true;

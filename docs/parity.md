@@ -66,8 +66,11 @@ battery discharge cannot create negative resources, completed swarm gifts are
 awarded once, empty wire cannot create final clips, purchases recheck resources,
 and saves are validated/recoverable. Exact-cost probe launches remain allowed.
 Goodwill is unavailable after human industry ends; the reference checker
-explicitly applies that additional phase guard. Catch-up uses the shared engine
-instead of reproducing browser throttling or the original separate timer model.
+explicitly applies that additional phase guard. Visible AFK play uses the shared
+engine. Like the original web game, closed saves do not earn offline progress.
+Unlike the original's browser-dependent background timers, hidden pages explicitly
+save and pause. Gaps longer than one second are discarded as suspension, including
+device sleep without a lifecycle event; short active-frame delays are processed.
 
 Further parity work should extend the reference suite to project-effect resource
 boundaries and full phase transitions before changing additional gameplay rules.

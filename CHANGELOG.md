@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.3.22 - 2026-09-13
+
+Commits: `54ca132..HEAD`
+
+- Added unlocked section tabs below 768 px, two columns at 768–999 px, and retained the desktop panel order.
+- Made the log compact with expandable history, improved project readability and touch controls, and added Back/Escape dismissal for dialogs.
+- Kept normal-speed AFK play while visible; backgrounding, closing, and device suspension now pause progress.
+- Removed offline catch-up and its overlay. Old saves keep earned resources and discard pending catch-up time.
+- Added a background-progress explanation to the menu and regressions for saving, migration, and browser lifecycle events.
+
 ## 2.3.21 - 2026-06-23
 
 Commits: `2900614..HEAD`

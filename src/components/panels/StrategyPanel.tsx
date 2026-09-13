@@ -39,10 +39,10 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
         borderRadius: 2,
         border: '1px solid #2a2a2a',
       }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#ccc', fontVariantNumeric: 'tabular-nums' }}>
+        <div style={{ fontSize: 'var(--mobile-label-size, 12px)', fontWeight: 600, color: '#ccc', fontVariantNumeric: 'tabular-nums' }}>
           <span style={scoreStyle(hVal, vVal)}>{hVal}</span>
         </div>
-        <div style={{ fontSize: 9, color: '#777', fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>
+        <div style={{ fontSize: 'var(--mobile-label-size, 9px)', color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>
           <span style={scoreStyle(vVal, hVal)}>{vVal}</span>
         </div>
       </td>
@@ -50,7 +50,7 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 9, fontWeight: 600, color: 'var(--text-muted)',
+    fontSize: 'var(--mobile-label-size, 9px)', fontWeight: 600, color: 'var(--text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.04em',
     padding: '0 2px', whiteSpace: 'nowrap',
   };
@@ -105,6 +105,7 @@ export function StrategyPanel({ snap: s }: Props) {
       <div className="col" style={{ gap: 6 }}>
         <select
           className="strat-select"
+          aria-label="Tournament strategy"
           value={picked}
           onChange={e => {
             game.act(state => { state.selectedStrategy = e.target.value; });
@@ -137,7 +138,7 @@ export function StrategyPanel({ snap: s }: Props) {
           <>
             <PayoffGrid payoff={ct.payoff} choiceNames={ct.choiceNames} flash={flash} />
 
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', textAlign: 'center', marginTop: 2 }}>
+            <div style={{ fontSize: 'var(--mobile-label-size, 9px)', color: 'var(--text-muted)', textAlign: 'center', marginTop: 2 }}>
               {running
                 ? `Round ${animRound} / ${ct.totalRounds} — ${animMatchup ? `${animMatchup[0]} vs ${animMatchup[1]}` : '…'}`
                 : `Winner: ${ct.stratV} · ${ct.totalRounds} matchups`}
@@ -151,7 +152,7 @@ export function StrategyPanel({ snap: s }: Props) {
                   return (
                     <div key={i} style={{
                       display: 'flex', justifyContent: 'space-between',
-                      fontSize: 10, lineHeight: 1.7,
+                      fontSize: 'var(--mobile-label-size, 10px)', lineHeight: 1.7,
                       color: isMe ? 'var(--text)' : 'var(--text-muted)',
                       fontWeight: isMe ? 700 : 400,
                     }}>
@@ -164,7 +165,7 @@ export function StrategyPanel({ snap: s }: Props) {
             )}
           </>
         ) : (
-          <div className="dim" style={{ fontSize: 11 }}>{s.tourneyResult}</div>
+          <div className="dim" style={{ fontSize: 'var(--mobile-label-size, 11px)' }}>{s.tourneyResult}</div>
         )}
       </div>
     </SectionCard>

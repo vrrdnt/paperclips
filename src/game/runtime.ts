@@ -12,6 +12,7 @@ type Listener = (state: GameState, replaced: boolean) => void;
 export class GameRuntime {
   private engine: GameEngine;
   private initialized = false;
+  private paused = false;
   private lastSavedAt = 0;
   private listeners = new Set<Listener>();
   private lastSaveError = '';
@@ -24,14 +25,14 @@ export class GameRuntime {
     this.engine = new GameEngine(state, this.now());
   }
 
-  initialize(): void {
+  initialize(active = true): void {
     if (this.initialized) return;
     this.initialized = true;
+    this.paused = !active;
     const loaded = this.persistence.load();
     Object.assign(this.state, loaded.state);
     const now = this.now();
     this.engine.resetClock(now);
-    if (loaded.savedAt > 0) this.engine.queueElapsed(now - loaded.savedAt);
     this.lastSavedAt = now;
     updateProjects(this.state);
     if (loaded.warning) displayMessage(this.state, loaded.warning);
@@ -48,10 +49,27 @@ export class GameRuntime {
   }
 
   step(): void {
+    if (this.paused) return;
     const now = this.now();
     this.engine.advance(now);
     if (this.completeReset()) return;
     if (now - this.lastSavedAt >= 2500) this.save();
+  }
+
+  pause(): void {
+    if (this.paused) return;
+    const now = this.now();
+    this.engine.advance(now);
+    this.paused = true;
+    this.engine.resetClock(now);
+    this.save();
+    this.publish();
+  }
+
+  resume(): void {
+    if (!this.paused) return;
+    this.engine.resetClock(this.now());
+    this.paused = false;
   }
 
   act<Args extends unknown[], Result>(action: (s: GameState, ...args: Args) => Result, ...args: Args): Result {
@@ -66,7 +84,6 @@ export class GameRuntime {
     const reset = this.completeReset();
     if (reset) return reset;
     const now = this.now();
-    this.engine.accountTime(now);
     const result = this.persistence.save(this.state, now);
     this.lastSavedAt = now;
     this.reportSaveError(result);
@@ -75,7 +92,6 @@ export class GameRuntime {
 
   export(): string {
     this.completeReset();
-    this.engine.accountTime(this.now());
     return exportSave(this.state);
   }
 

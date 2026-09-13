@@ -66,7 +66,7 @@ export function SwarmPanel({ snap: s }: Props) {
             aria-label="Swarm work vs think balance"
             onInput={v => { game.act(state => { state.sliderPos = v; }); }}
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--mobile-label-size, 10px)', color: 'var(--text-muted)', marginTop: 2 }}>
             <span>Work</span>
             <span>Think</span>
           </div>

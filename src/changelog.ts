@@ -14,6 +14,20 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.22',
+    date: '2026-09-13',
+    title: 'Responsive sections and pause/resume',
+    commitsFrom: '54ca132',
+    changes: [
+      'Phones show unlocked sections as tabs; tablets use two columns and desktops retain three columns. Each section remembers its scroll position during the session.',
+      'The log shows the latest three entries with full history available. Project descriptions and costs stay readable when unaffordable; touch controls are larger.',
+      'Log, import, export, artifact and changelog dialogs support Escape and browser Back, and restore focus when closed.',
+      'The game continues at normal speed while visible, even when you are not clicking. Progress saves and pauses while the game is in the background or closed.',
+      'Returning resumes your saved progress immediately. Old saves keep earned resources; pending offline catch-up time is discarded.',
+      'Removed the catch-up overlay and added a short explanation to the menu.',
+    ],
+  },
+  {
     version: '2.3.21',
     date: '2026-06-23',
     title: 'Particle-colored quantum waveform',

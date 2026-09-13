@@ -1,6 +1,6 @@
 # Game architecture
 
-The application uses one simulation for normal play and idle catch-up. React
+The application uses one simulation for visible play, including AFK play. React
 renders the simulation's output and sends player commands; it does not determine
 rewards, production, project discovery, or elapsed game time.
 
@@ -14,7 +14,7 @@ rewards, production, project discovery, or elapsed game time.
 | `src/game/actions.ts` | Player commands and affordability checks |
 | `src/game/projects.ts` | Project definitions, discovery, and purchase transactions |
 | `src/game/tournament.ts` | Tournament simulation, duration, rewards and automatic reruns |
-| `src/game/engine.ts` | Elapsed-time accounting and bounded simulation batches |
+| `src/game/engine.ts` | Active-frame timing, bounded simulation batches and suspension detection |
 | `src/game/runtime.ts` | Application commands, autosaving, imports, resets, notifications |
 | `src/game/saveValidation.ts`, `hydrate.ts`, `saveCodec.ts` | Validate, migrate, and encode saves |
 | `src/game/persistence.ts` | Browser storage, backup recovery and explicit failure results |
@@ -26,20 +26,49 @@ The application has one `game` runtime. Tests and other hosts can construct as
 many independent `GameRuntime` or `GameEngine` instances as needed. Domain
 functions receive their state explicitly; they never import the singleton.
 
+## Responsive presentation
+
+`GameLayout` retains one mounted instance of each panel. Below 768 CSS pixels,
+it exposes unlocked Production, Computing, Projects, Strategy and Fleet tabs;
+hidden panels stay mounted and the runtime keeps stepping. Wider layouts show
+two columns through 999 pixels and three columns from 1000 pixels. Wire
+production and exploration have separate presentation components with the
+existing calculations unchanged.
+
+The selected section and scroll offsets live only in the layout component.
+The existing game-revision key resets them after imports and new runs; removed
+sections fall back to Production. `PanelVisibility` cancels held buttons in
+hidden sections. Buttons also cancel on browser background/freeze/pagehide and
+touch movement. None of these presentation changes call runtime pause/resume.
+
+`Console` shows three entries and retains full history in a native `Dialog`.
+The shared dialog handles focus containment/restoration, Escape, a temporary
+same-page history entry for Back, and visual-viewport sizing during keyboard
+input. It is also used by header dialogs. Neither dialog nor section state is
+serialized. Native Android Back/IME behavior still requires installed testing.
+
 ## Timing and randomness
 
-`GameEngine.accountTime(now)` adds only elapsed time not already accounted for.
-`advance(now)` runs the same `tick(state)` until its work budget is used, then
-leaves the remaining tick count in state. The browser schedules batches every
-50 ms; each batch normally gets 12 ms, checked every 100 ticks, with a hard
-50,000-tick limit. A very large backlog therefore takes multiple frames. This
-keeps the interface responsive without inventing different offline formulas.
+`GameEngine.advance(now)` accounts for brief active-frame delays and runs the
+unchanged `tick(state)`. The browser schedules batches every 50 ms; each batch
+gets 12 ms, checked every 10 ticks. Pending work is private to the engine and
+capped at 100 ticks (one second), so a slow device cannot build unbounded debt.
+Sub-tick time is retained between active callbacks. Gaps longer than one second,
+or backwards wall-clock changes, clear pending work and rebase the clock. This
+treats device sleep or long stalls without lifecycle events as suspension.
 
-Saving accounts for time without forcing the backlog to run synchronously.
-The save envelope stores its timestamp together with the remaining work; loading
-adds only time since that timestamp. Multiple visibility/pageshow events cannot
-award the same interval twice. Sub-tick time is retained between callbacks;
-save/reload timestamps have at most one 10 ms tick of rounding loss.
+`GameRuntime.pause()` processes the final brief visible interval, clears pending
+work, saves, and stops simulation steps. `resume()` rebases the clock without
+replaying the absence. Visibility, pagehide/pageshow, and freeze/resume events
+drive this policy; a page loaded hidden stays paused. Repeated lifecycle events
+are idempotent. Losing focus alone does not pause a visible game.
+
+Saves and exports contain already simulated progress, never elapsed-time debt.
+Loading ignores the save timestamp for gameplay. Known-field validation drops
+the retired `catchUpTicksRemaining` field from legacy saves, versioned saves,
+backup recovery, and imports without changing earned resources. The version-1
+envelope remains compatible. Save timestamps remain checkpoint metadata.
+At a pause or reload boundary, unprocessed active frames are not replayed.
 
 Gameplay uses `random(state)`, a saved Mulberry32 stream. Do not call
 `Math.random()` inside game rules. A legacy save receives an initial seed on
@@ -88,8 +117,9 @@ the envelope version only for incompatible format changes and supply a migration
 2. Add an action or project transaction for player input. Avoid UI mutation of
    nested state, storage calls inside rules, or timers that award resources.
 3. Add a regression using `makeInitialState(seed)` or a `dev-saves` fixture. For
-   time-dependent work, compare normal ticks with engine catch-up from the same
-   state and seed. No real sleeps are needed for engine tests.
+   time-dependent work, compare normal ticks with scheduled active frames from
+   the same state and seed. Verify paused states remain unchanged and long gaps
+   are discarded. No real sleeps are needed for engine tests.
 4. Run `npm run check`. Run browser tests for UI/lifecycle changes and the
    production test for build or offline changes. Check performance with the
    benchmark when changing hot simulation paths.

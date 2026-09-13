@@ -15,27 +15,39 @@ export function useGameRuntime(): number {
       store.setSnap(game.state, sampleHistory || replaced);
     };
     const unsubscribe = game.subscribe((_state, replaced) => publish(replaced));
-    game.initialize();
-    publish();
-    const simulationTimer = window.setInterval(() => game.step(), 50);
-    const displayTimer = window.setInterval(() => publish(false, true), 100);
+    game.initialize(document.visibilityState === 'visible');
     const save = () => { game.save(); };
-    const resume = () => { game.step(); publish(); };
-    const visibility = () => { if (document.visibilityState === 'hidden') save(); else resume(); };
-    document.addEventListener('visibilitychange', visibility);
-    document.addEventListener('freeze', save);
-    window.addEventListener('pagehide', save);
+    const pause = () => { game.pause(); };
+    const resume = () => {
+      if (document.visibilityState === 'visible') game.resume();
+      else game.pause();
+      publish();
+    };
+    resume();
+    const simulationTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') game.step();
+      else game.pause();
+    }, 50);
+    const displayTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') publish(false, true);
+    }, 100);
+    document.addEventListener('visibilitychange', resume);
+    document.addEventListener('freeze', pause);
+    document.addEventListener('resume', resume);
+    window.addEventListener('pagehide', pause);
     window.addEventListener('beforeunload', save);
     window.addEventListener('pageshow', resume);
     return () => {
       unsubscribe();
       window.clearInterval(simulationTimer);
       window.clearInterval(displayTimer);
-      document.removeEventListener('visibilitychange', visibility);
-      document.removeEventListener('freeze', save);
-      window.removeEventListener('pagehide', save);
+      document.removeEventListener('visibilitychange', resume);
+      document.removeEventListener('freeze', pause);
+      document.removeEventListener('resume', resume);
+      window.removeEventListener('pagehide', pause);
       window.removeEventListener('beforeunload', save);
       window.removeEventListener('pageshow', resume);
+      game.pause();
     };
   }, []);
   return revision;

@@ -22,7 +22,7 @@ export function InvestmentPanel({ snap: s }: Props) {
   const invested = s.stocks.reduce((a, st) => a + st.val, 0);
   const portfolio = s.bankroll + invested;
   const totalPnl = s.stocks.reduce((a, st) => a + st.profit, 0);
-  const pnlColor = totalPnl >= 0 ? '#50b050' : '#c05050';
+  const pnlColor = totalPnl >= 0 ? 'var(--success)' : 'var(--danger)';
 
   return (
     <SectionCard title="Investments" icon={<BarChart2 size={14} />}>
@@ -67,7 +67,7 @@ export function InvestmentPanel({ snap: s }: Props) {
           holdRepeat
           onClick={() => { game.act(investUpgrade); }}
           disabled={s.yomi < s.investUpgradeCost}
-          style={{ fontSize: 10, padding: '3px 8px', minHeight: 'unset' }}
+          style={{ fontSize: 'var(--mobile-label-size, 10px)', padding: '3px 8px' }}
         >
           Upgrade ({formatWithCommas(s.investUpgradeCost)} yomi)
         </Btn>
@@ -104,15 +104,15 @@ export function InvestmentPanel({ snap: s }: Props) {
           <hr className="divider" />
           {s.stocks.map(st => {
             const up = st.price >= (st.prevPrice ?? st.price);
-            const profitColor = st.profit >= 0 ? '#50b050' : '#c05050';
+            const profitColor = st.profit >= 0 ? 'var(--success)' : 'var(--danger)';
             return (
               <div key={st.symbol} className="stat-row" style={{ padding: '2px 0' }}>
-                <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-dim)' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: 'var(--mobile-label-size, 11px)', color: 'var(--text-dim)' }}>
                   {st.symbol}&nbsp;
-                  <span style={{ color: up ? '#50b050' : '#c05050', fontSize: 9 }}>{up ? '▲' : '▼'}</span>
+                  <span style={{ color: up ? 'var(--success)' : 'var(--danger)', fontSize: 'var(--mobile-label-size, 9px)' }}>{up ? '▲' : '▼'}</span>
                   &nbsp;${formatWithCommas(st.price, 2)}
                 </span>
-                <span style={{ fontSize: 10, color: profitColor, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 'var(--mobile-label-size, 10px)', color: profitColor, fontVariantNumeric: 'tabular-nums' }}>
                   {st.profit >= 0 ? '+' : '−'}${formatWithCommas(Math.abs(st.profit), 2)}
                 </span>
               </div>

@@ -143,19 +143,21 @@ describe('save/resume continuity', () => {
     expect(loaded.prestigeU).toBe(2);
     expect(loaded.resetFlag).not.toBe(1);
   });
-  it('preserves unprocessed elapsed time across saves and reloads', () => {
+  it('reloads earned progress without replaying time since the save', () => {
     let now = 1000;
     const storage = memoryStorage();
     const runtime = new GameRuntime(makeInitialState(1), new GamePersistence(() => storage), () => now);
     runtime.initialize();
-    now = 5000; runtime.save();
-    expect(runtime.state.catchUpTicksRemaining).toBe(400);
-    now = 6000;
+    now = 1050; runtime.step(); runtime.save();
+    expect(runtime.state.ticks).toBe(5);
+    now += 30 * 24 * 60 * 60 * 1000;
     const resumed = new GameRuntime(makeInitialState(), new GamePersistence(() => storage), () => now);
     resumed.initialize();
-    expect(resumed.state.catchUpTicksRemaining).toBe(500);
     resumed.step();
-    expect(resumed.state.ticks + resumed.state.catchUpTicksRemaining).toBe(500);
+    expect(resumed.state.ticks).toBe(5);
+    expect(resumed.state.randomState).toBe(runtime.state.randomState);
+    now += 50; resumed.step();
+    expect(resumed.state.ticks).toBe(10);
   });
   it('keeps tournament progress and random state across a save', () => {
     const state = loadFixture('03-phase1-late.json');
@@ -163,7 +165,8 @@ describe('save/resume continuity', () => {
     runTourney(state, state.selectedStrategy);
     for (let i = 0; i < 123; i++) tick(state);
     const resumed = importSave(exportSave(state));
-    new GameEngine(resumed, 1000, () => 0).advance(101000);
+    const engine = new GameEngine(resumed, 1000, () => 0);
+    for (let now = 1050; now <= 101000; now += 50) engine.advance(now);
     for (let i = 0; i < 10000; i++) tick(state);
     for (const key of ['tourneyCount', 'yomi', 'randomState', 'currentTournament', 'stocks'] as const) expect(resumed[key]).toEqual(state[key]);
   });

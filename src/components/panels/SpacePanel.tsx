@@ -19,7 +19,7 @@ function droneBulkCost(baseLevel: number, qty: number): number {
   return total;
 }
 
-export function SpacePanel({ snap: s }: Props) {
+export function WireProductionPanel({ snap: s }: Props) {
   const hideSpaceExploration = s.dismantle >= 1 && s.endTimer1 >= 150;
   const hideWireProduction = s.dismantle >= 2;
   const showUniverse  = s.spaceFlag === 1 && !hideSpaceExploration;
@@ -27,9 +27,6 @@ export function SpacePanel({ snap: s }: Props) {
   const showHarvesters= !s.humanFlag && s.harvesterFlag === 1 && !hideWireProduction;
   const showWireDrones= !s.humanFlag && s.wireDroneFlag === 1 && !hideWireProduction;
   const showInfra     = showHarvesters || showWireDrones;
-  const universeProgress = Number.isFinite(s.colonized)
-    ? Math.max(0, Math.min(100, s.colonized))
-    : 0;
   const effectiveSpeed = effectiveProbeAttr(s, s.probeSpeed, A.ABANDONED_HYPERBOLIC_SOLITON);
   const effectiveExploration = effectiveProbeAttr(s, s.probeNav, A.CADASTRAL_MAP);
   const explorationIdle = showUniverse && s.probeCount >= 1 && (effectiveSpeed <= 0 || effectiveExploration <= 0);
@@ -41,7 +38,7 @@ export function SpacePanel({ snap: s }: Props) {
     && s.availableMatter <= 0
     && s.acquiredMatter <= 0;
 
-  if (!showUniverse && !showInfra && !showRecoveredWire) return null;
+  if (!showInfra && !showRecoveredWire) return null;
 
   return (
     <>
@@ -177,6 +174,20 @@ export function SpacePanel({ snap: s }: Props) {
         </SectionCard>
       )}
 
+    </>
+  );
+}
+
+export function SpaceExplorationPanel({ snap: s }: Props) {
+  const showUniverse = s.spaceFlag === 1 && !(s.dismantle >= 1 && s.endTimer1 >= 150);
+  const universeProgress = Number.isFinite(s.colonized)
+    ? Math.max(0, Math.min(100, s.colonized))
+    : 0;
+  const effectiveSpeed = effectiveProbeAttr(s, s.probeSpeed, A.ABANDONED_HYPERBOLIC_SOLITON);
+  const effectiveExploration = effectiveProbeAttr(s, s.probeNav, A.CADASTRAL_MAP);
+  const explorationIdle = showUniverse && s.probeCount >= 1 && (effectiveSpeed <= 0 || effectiveExploration <= 0);
+  if (!showUniverse) return null;
+  return (<>
       {/* Space Exploration: probe fleet — only after the Space Exploration project */}
       {showUniverse && (
         <SectionCard title="Space Exploration" icon={<Globe size={14} />}>
@@ -262,6 +273,5 @@ export function SpacePanel({ snap: s }: Props) {
           )}
         </SectionCard>
       )}
-    </>
-  );
+  </>);
 }

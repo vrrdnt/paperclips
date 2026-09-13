@@ -75,6 +75,7 @@ export function validateSavedState(value: unknown): Partial<GameState> {
   if (value.currentTournament != null && !object(value.currentTournament)) throw new SaveFormatError('Invalid tournament.');
   if (![0, 1].includes(value.humanFlag as number)) throw new SaveFormatError('Invalid game phase.');
   if (value.investRisk !== undefined && !['low', 'med', 'hi'].includes(String(value.investRisk))) throw new SaveFormatError('Invalid investment risk.');
-  // Pick known properties; migrations can separately read the few documented legacy aliases.
+  // Pick known properties; this also drops retired catchUpTicksRemaining debt.
+  // Migrations can separately read the few documented legacy aliases.
   return Object.fromEntries(Object.keys(defaults).filter(key => value[key] !== undefined).map(key => [key, value[key]])) as Partial<GameState>;
 }

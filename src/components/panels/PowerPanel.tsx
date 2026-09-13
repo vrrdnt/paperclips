@@ -48,7 +48,7 @@ export function PowerPanel({ snap: s }: Props) {
         <span className="stat-label">Consumption</span>
         <span className="stat-value">{formatWithCommas(consumption)} MW</span>
       </div>
-      <div style={{ fontSize: 10, color: 'var(--text-muted)', paddingLeft: 8, marginTop: 2, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--mobile-label-size, 10px)', color: 'var(--text-muted)', paddingLeft: 8, marginTop: 2, lineHeight: 1.5 }}>
         Factories: {formatWithCommas(factoryDraw)} MW<br />
         Drones: {formatWithCommas(droneDraw)} MW
       </div>

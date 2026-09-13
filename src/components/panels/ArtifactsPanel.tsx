@@ -1,3 +1,4 @@
+import { Dialog } from '../ui/Dialog';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
@@ -237,7 +238,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
     .filter(Boolean);
 
   return (
-    <div className="artifact-dropdown" role="dialog" aria-label="Artifact map">
+    <Dialog className="artifact-dropdown" title="Artifact map" onClose={() => onClose?.()}>
       <div className="artifact-dropdown-head">
         <div className="artifact-dropdown-title">
           <MapIcon size={13} />
@@ -368,6 +369,6 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
           );
         })}
       </div>
-    </div>
+    </Dialog>
   );
 }

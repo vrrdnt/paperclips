@@ -103,6 +103,7 @@ export function ComputingPanel({ snap: s }: Props) {
               <span className="stat-value">{s.processors}</span>
             </div>
             <Btn holdRepeat onClick={() => { game.act(addProc); }} disabled={!canAllocateCompute}
+              aria-label="Add processor"
               style={{ marginTop: 4, width: '100%' }}>
               +
             </Btn>
@@ -114,6 +115,7 @@ export function ComputingPanel({ snap: s }: Props) {
             <span className="stat-value">{s.memory}</span>
           </div>
           <Btn holdRepeat onClick={() => { game.act(addMem); }} disabled={!canAllocateCompute}
+            aria-label="Add memory"
             style={{ marginTop: 4, width: '100%' }}>
             +
           </Btn>

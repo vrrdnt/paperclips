@@ -214,7 +214,6 @@ export function hydrateGameState(input: unknown): GameState {
   merged.randomState = merged.randomState >>> 0;
   merged.autoTourneyTicks = Math.max(0, Math.floor(merged.autoTourneyTicks));
   merged.battleFrameAccumulator = Math.max(0, merged.battleFrameAccumulator) % 16;
-  merged.catchUpTicksRemaining = Math.floor(finiteNonNegative(finiteNumber(merged.catchUpTicksRemaining)));
   if (typeof (loaded as LegacySavedState & { threnodyDisplayTitle?: unknown }).threnodyDisplayTitle !== 'string' ||
       merged.threnodyDisplayTitle.length === 0) {
     merged.threnodyDisplayTitle = typeof merged.threnodyTitle === 'string' && merged.threnodyTitle.length > 0

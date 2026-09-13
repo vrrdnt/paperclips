@@ -8,6 +8,7 @@ import type { DisplaySnapshot } from '../store/useGameStore';
 import { Btn } from './ui/Btn';
 import { ArtifactsDropdown } from './panels/ArtifactsPanel';
 import { ChangelogModal } from './ChangelogModal';
+import { Dialog } from './ui/Dialog';
 
 export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
   const [showImport, setShowImport] = useState(false);
@@ -207,6 +208,9 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                   <RotateCcw size={14} />
                   <span>Reset game</span>
                 </button>
+                <p className="header-idle-note" role="note">
+                  Progress pauses while the game is in the background or closed.
+                </p>
               </div>
             )}
           </div>
@@ -215,21 +219,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
 
       {/* Import modal */}
       {showImport && (
-        <div
-          onClick={e => { if (e.target === e.currentTarget) setShowImport(false); }}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 100,
-            background: 'rgba(0,0,0,0.7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-          <div style={{
-            background: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-            padding: '20px 24px',
-            width: 440, maxWidth: '92vw',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-          }}>
+        <Dialog title="Import Save" className="save-dialog" onClose={() => setShowImport(false)}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
               Import Save
             </div>
@@ -238,6 +228,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
             </div>
             <textarea
               ref={textareaRef}
+              aria-label="Save string"
               value={importText}
               onChange={e => { setImportText(e.target.value); setImportError(''); }}
               placeholder="Paste save string here…"
@@ -262,27 +253,12 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                 Import
               </Btn>
             </div>
-          </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Export fallback modal */}
       {showExportFallback && (
-        <div
-          onClick={e => { if (e.target === e.currentTarget) setShowExportFallback(false); }}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 100,
-            background: 'rgba(0,0,0,0.7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-          <div style={{
-            background: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-            padding: '20px 24px',
-            width: 440, maxWidth: '92vw',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-          }}>
+        <Dialog title="Export Save" className="save-dialog" onClose={() => setShowExportFallback(false)}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
               Export Save
             </div>
@@ -291,6 +267,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
             </div>
             <textarea
               ref={exportTextareaRef}
+              aria-label="Exported save string"
               value={exportText}
               readOnly
               rows={5}
@@ -309,8 +286,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                 Copy
               </Btn>
             </div>
-          </div>
-        </div>
+        </Dialog>
       )}
 
       {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}

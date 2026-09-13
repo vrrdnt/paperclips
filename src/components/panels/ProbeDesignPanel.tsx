@@ -81,11 +81,13 @@ export function ProbeDesignPanel({ snap: s }: Props) {
               </div>
               <span className="probe-val">{s[key] as number}</span>
               <Btn holdRepeat onClick={() => { game.act(lowerProbeAttr, key); }}
+                aria-label={`Decrease ${label}`}
                 disabled={(s[key] as number) < 1}
-                style={{ padding: '2px 6px', fontSize: 11 }}>−</Btn>
+                style={{ padding: '2px 6px', fontSize: 'var(--mobile-label-size, 11px)' }}>−</Btn>
               <Btn holdRepeat onClick={() => { game.act(raiseProbeAttr, key); }}
+                aria-label={`Increase ${label}`}
                 disabled={available < 1}
-                style={{ padding: '2px 6px', fontSize: 11 }}>+</Btn>
+                style={{ padding: '2px 6px', fontSize: 'var(--mobile-label-size, 11px)' }}>+</Btn>
             </React.Fragment>
           ))}
         </div>

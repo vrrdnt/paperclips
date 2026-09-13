@@ -41,13 +41,21 @@ The app keeps progress in browser storage and supports export/import backups.
 Existing unversioned saves migrate automatically; new saves include a version,
 timestamp, simulation timers, and a saved random stream.
 
+## AFK and background behavior
+
+The game runs at normal speed while open and visible, even without clicks.
+It saves and pauses when hidden, backgrounded, or closed, and resumes from the
+same progress when you return. There are no offline earnings or time bonuses.
+Old saves retain earned resources; pending offline catch-up time is discarded.
+The app remains playable without a network once its assets are cached.
+
 ## Development and verification
 
 ```bash
 npm run check                 # Type-check source, tests and config; unit tests; build
 npx playwright install chromium
 npm run test:browser          # Gameplay and existing desktop/mobile appearance
-npm run test:production       # Built app: saving and offline reload
+npm run test:production       # Built app: saving, pause policy and offline reload
 npm run benchmark -- 3600     # Simulate one hour in four representative scenarios
 ```
 

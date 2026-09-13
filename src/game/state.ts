@@ -305,7 +305,6 @@ export interface GameState {
   blinkCounter: number;
   testFlag: number;
   clipCountCrunched: number;
-  catchUpTicksRemaining: number;
   randomState: number;
   autoTourneyTicks: number;
   battleFrameAccumulator: number;
@@ -400,7 +399,6 @@ export function makeInitialState(seed = Math.floor(Math.random() * 4294967296)):
     readouts: ['Welcome to Universal Paperclips'],
     projectFlags: {}, activeProjectIds: [], hiddenProjectIds: [],
     transaction: 1, blinkCounter: 0, testFlag: 0, clipCountCrunched: 0,
-    catchUpTicksRemaining: 0,
     randomState: seed >>> 0,
     autoTourneyTicks: 0,
     battleFrameAccumulator: 0,
