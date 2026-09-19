@@ -14,6 +14,18 @@ export function formatChangelogCommits(entry: ChangelogEntry): string {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.3.23',
+    date: '2026-09-19',
+    title: 'Autonomous routines',
+    commitsFrom: '4d56630',
+    changes: [
+      'Unlock Autonomous Routines in early computing for up to 5 minutes of offline automation. Distributed Scheduling extends the limit to 10 minutes; Persistent Directives extends it to 15 minutes.',
+      'Existing automation continues at normal rates, with the same resource costs and probe hazards. Unused time is discarded; projects and allocations remain your decisions.',
+      'Returning adds a log report of actual clips produced and time simulated. Systems enter standby at the execution horizon, and ending sequences wait for central coordination.',
+      'Long returns are processed in short batches to keep the interface responsive. Old uncapped catch-up debt is still discarded.',
+    ],
+  },
+  {
     version: '2.3.22',
     date: '2026-09-13',
     title: 'Responsive sections and pause/resume',

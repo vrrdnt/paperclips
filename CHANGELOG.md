@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.23 - 2026-09-19
+
+- Added Autonomous Routines, Distributed Scheduling and Persistent Directives: optional offline automation capped at 5, 10 and 15 minutes per absence.
+- Reconciles existing automation at normal rates, including resource consumption and probe hazards. No banked time, automatic purchases or speed boosts.
+- Logs actual clips produced and time simulated on return, with standby messages at the execution horizon or ending boundary.
+- Processes returns in short batches, preserves hidden checkpoints and prevents duplicate returns. Saves retain the existing schema.
+
 ## 2.3.22 - 2026-09-13
 
 Commits: `54ca132..HEAD`

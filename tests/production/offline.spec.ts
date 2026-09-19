@@ -1,6 +1,32 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
+test('the built PWA reconciles a month once, capped by its purchased project', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const state = JSON.parse(readFileSync('dev-saves/03-phase1-late.json', 'utf8'));
+  state.projectFlags[220] = 1;
+  await page.addInitScript(state => {
+    Date.now = () => 1789776000000;
+    if (!localStorage.getItem('upc_v2')) localStorage.setItem('upc_v2', JSON.stringify({
+      format: 'paperclips', version: 1, savedAt: Date.now() - 30 * 86400000, state,
+    }));
+  }, state);
+  await page.goto('/');
+  await expect(page.getByText('Central coordination restored.', { exact: true })).toBeVisible();
+  const returned = await page.evaluate(() => JSON.parse(localStorage.getItem('upc_v2')!));
+  expect(returned.state.ticks).toBe(state.ticks + 30000);
+  expect(returned.state.clips).toBeGreaterThan(state.clips);
+  expect(returned.savedAt).toBe(1789776000000);
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Save game', exact: true })).toBeVisible();
+  await page.locator('.header-save-btn').click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('upc_v2')!).state.ticks)).toBe(returned.state.ticks);
+  expect(errors).toEqual([]);
+});
+
 test('the built app retains progress and reloads without a network', async ({ page, context }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));

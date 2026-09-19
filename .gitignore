@@ -22,6 +22,7 @@ test-results/
 playwright-report/
 coverage/
 !tests/browser/appearance.spec.ts-snapshots/*.png
+!tests/browser/autonomy.spec.ts-snapshots/*.png
 
 # Local original-script references; keep out of the published app repo.
 combat.js

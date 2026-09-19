@@ -44,9 +44,21 @@ timestamp, simulation timers, and a saved random stream.
 ## AFK and background behavior
 
 The game runs at normal speed while open and visible, even without clicks.
-It saves and pauses when hidden, backgrounded, or closed, and resumes from the
-same progress when you return. There are no offline earnings or time bonuses.
-Old saves retain earned resources; pending offline catch-up time is discarded.
+Before Autonomous Routines is purchased, progress pauses while away. Three
+projects unlock normal-rate offline automation with a per-absence execution horizon:
+
+| Project | Unlock | Cost | Maximum offline time |
+| --- | --- | --- | --- |
+| Autonomous Routines | Computing | 1,000 ops | 5 minutes |
+| Distributed Scheduling | Routines + swarm computing | 50,000 ops | 10 minutes |
+| Persistent Directives | Scheduling + space exploration | 100,000 ops, 5,000 Yomi | 15 minutes |
+
+Each upgrade replaces the previous limit. Existing automation consumes resources
+and faces the same hazards as active play; projects and allocations remain manual.
+The return log reports actual clips produced and time simulated. Ending sequences
+wait for central coordination. There is no banked time or speed boost, and old
+uncapped catch-up debt is still discarded. If reconciliation is interrupted by
+closing the game, only progress already processed and saved is retained.
 The app remains playable without a network once its assets are cached.
 
 ## Development and verification
@@ -55,7 +67,7 @@ The app remains playable without a network once its assets are cached.
 npm run check                 # Type-check source, tests and config; unit tests; build
 npx playwright install chromium
 npm run test:browser          # Gameplay and existing desktop/mobile appearance
-npm run test:production       # Built app: saving, pause policy and offline reload
+npm run test:production       # Built app: saving, capped autonomy and offline reload
 npm run benchmark -- 3600     # Simulate one hour in four representative scenarios
 ```
 

@@ -7,7 +7,7 @@ import { DevMenu } from './components/DevMenu';
 import { AdminMenu } from './components/AdminMenu';
 
 export default function App() {
-  const gameRevision = useGameRuntime();
+  const { revision: gameRevision, offlineProgress } = useGameRuntime();
   const snap = useGameStore(st => st.snap);
   const [showHypnoTransition, setShowHypnoTransition] = useState(false);
   const previous = useRef({ revision: gameRevision, humanFlag: snap?.humanFlag });
@@ -30,10 +30,21 @@ export default function App() {
 
   return (
     <div id="root">
-      <DevMenu />
-      <AdminMenu />
-      <GameHeader key={`header-${gameRevision}`} snap={snap} />
-      <GameLayout key={`layout-${gameRevision}`} snap={snap} />
+      <div {...(offlineProgress !== null ? { inert: '' } : {})}>
+        <DevMenu />
+        <AdminMenu />
+        <GameHeader key={`header-${gameRevision}`} snap={snap} />
+        <GameLayout key={`layout-${gameRevision}`} snap={snap} />
+      </div>
+      {offlineProgress !== null && (
+        <div className="autonomous-overlay">
+          <div className="autonomous-status" role="status" aria-live="polite">
+            <strong>Restoring central coordination</strong>
+            <p>Reconciling autonomous activity…</p>
+            <progress aria-label="Reconciling autonomous activity" value={offlineProgress} max={1} />
+          </div>
+        </div>
+      )}
 
       {/* HypnoDrone phase transition overlay */}
       {showHypnoTransition && (

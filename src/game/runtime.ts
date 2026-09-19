@@ -5,6 +5,7 @@ import { importSave, exportSave } from './saveCodec';
 import { hydrateGameState } from './hydrate';
 import { updateProjects } from './projects';
 import { displayMessage } from './messages';
+import { AutonomousCycle } from './offline';
 
 type Listener = (state: GameState, replaced: boolean) => void;
 
@@ -16,11 +17,15 @@ export class GameRuntime {
   private lastSavedAt = 0;
   private listeners = new Set<Listener>();
   private lastSaveError = '';
+  private pausedAt = 0;
+  private lastActiveAt = 0;
+  private offlineCycle: AutonomousCycle | null = null;
 
   constructor(
     readonly state: GameState,
     private readonly persistence = new GamePersistence(),
     private readonly now: () => number = Date.now,
+    private readonly budgetClock: () => number = () => performance.now(),
   ) {
     this.engine = new GameEngine(state, this.now());
   }
@@ -34,7 +39,10 @@ export class GameRuntime {
     const now = this.now();
     this.engine.resetClock(now);
     this.lastSavedAt = now;
+    this.lastActiveAt = now;
+    this.pausedAt = loaded.savedAt || now;
     updateProjects(this.state);
+    if (active) this.beginAutonomousCycle(loaded.savedAt ? now - loaded.savedAt : 0);
     if (loaded.warning) displayMessage(this.state, loaded.warning);
     this.publish(true);
   }
@@ -50,7 +58,13 @@ export class GameRuntime {
 
   step(): void {
     if (this.paused) return;
+    if (this.offlineCycle) { this.advanceAutonomousCycle(); return; }
     const now = this.now();
+    if (now - this.lastActiveAt > 1000) {
+      this.beginAutonomousCycle(now - this.lastActiveAt);
+      return;
+    }
+    this.lastActiveAt = now;
     this.engine.advance(now);
     if (this.completeReset()) return;
     if (now - this.lastSavedAt >= 2500) this.save();
@@ -59,8 +73,10 @@ export class GameRuntime {
   pause(): void {
     if (this.paused) return;
     const now = this.now();
-    this.engine.advance(now);
+    if (!this.offlineCycle) this.engine.advance(now);
     this.paused = true;
+    // Keep an unobserved suspension if pagehide arrives only after waking.
+    this.pausedAt = !this.offlineCycle && now - this.lastActiveAt > 1000 ? this.lastActiveAt : now;
     this.engine.resetClock(now);
     this.save();
     this.publish();
@@ -68,11 +84,16 @@ export class GameRuntime {
 
   resume(): void {
     if (!this.paused) return;
-    this.engine.resetClock(this.now());
     this.paused = false;
+    if (this.offlineCycle) this.advanceAutonomousCycle();
+    else this.beginAutonomousCycle(this.now() - this.pausedAt);
   }
 
-  act<Args extends unknown[], Result>(action: (s: GameState, ...args: Args) => Result, ...args: Args): Result {
+  act<Args extends unknown[], Result>(action: (s: GameState, ...args: Args) => Result, ...args: Args): Result | undefined {
+    if (this.paused || this.offlineCycle) return;
+    const elapsed = this.now() - this.lastActiveAt;
+    if (elapsed > 1000) this.beginAutonomousCycle(elapsed);
+    if (this.offlineCycle) return;
     const result = action(this.state, ...args);
     if (this.completeReset()) return result;
     updateProjects(this.state);
@@ -84,7 +105,10 @@ export class GameRuntime {
     const reset = this.completeReset();
     if (reset) return reset;
     const now = this.now();
-    const result = this.persistence.save(this.state, now);
+    // Saving while hidden must not erase the start of the absence. During a
+    // reconciliation save only earned progress; a reload discards unfinished work.
+    const checkpoint = this.offlineCycle ? now : this.paused ? this.pausedAt : this.lastActiveAt;
+    const result = this.persistence.save(this.state, checkpoint);
     this.lastSavedAt = now;
     this.reportSaveError(result);
     return result;
@@ -132,6 +156,9 @@ export class GameRuntime {
     const now = this.now();
     this.engine.resetClock(now);
     this.lastSavedAt = now;
+    this.lastActiveAt = now;
+    this.pausedAt = now;
+    this.offlineCycle = null;
     this.lastSaveError = '';
     this.publish(true);
   }
@@ -141,6 +168,31 @@ export class GameRuntime {
     if (result.error === this.lastSaveError) return;
     this.lastSaveError = result.error;
     displayMessage(this.state, result.error);
+    this.publish();
+  }
+
+  get offlineProgress(): number | null { return this.offlineCycle?.progress ?? null; }
+
+  private beginAutonomousCycle(elapsedMs: number): void {
+    const cycle = new AutonomousCycle(this.state, elapsedMs, this.budgetClock);
+    this.engine.resetClock(this.now());
+    this.lastActiveAt = this.now();
+    if (cycle.totalTicks === 0) return;
+    this.offlineCycle = cycle;
+    this.advanceAutonomousCycle();
+  }
+
+  private advanceAutonomousCycle(): void {
+    const cycle = this.offlineCycle;
+    if (!cycle) return;
+    if (cycle.advance()) {
+      cycle.report();
+      this.offlineCycle = null;
+      updateProjects(this.state);
+      this.lastActiveAt = this.now();
+      this.engine.resetClock(this.lastActiveAt);
+      this.save();
+    }
     this.publish();
   }
 }

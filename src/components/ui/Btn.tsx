@@ -117,7 +117,7 @@ export function Btn({
 
   function fireClick() {
     if (disabledRef.current || !clickRef.current || !buttonRef.current) return;
-    if (document.visibilityState !== 'visible' || !buttonRef.current.getClientRects().length) {
+    if (document.visibilityState !== 'visible' || buttonRef.current.closest('[inert]') || !buttonRef.current.getClientRects().length) {
       clearRepeat();
       return;
     }

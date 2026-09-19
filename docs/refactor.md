@@ -1,7 +1,7 @@
 # Foundation refactor
 
-These are historical refactor notes. Version 2.3.22 replaces offline catch-up
-with save/pause/resume; see [current timing behavior](architecture.md#timing-and-randomness).
+These are historical refactor notes. Version 2.3.23 adds capped, project-unlocked
+autonomy; see [current timing behavior](architecture.md#timing-and-randomness).
 The shared simulation and the gameplay corrections below remain in place.
 
 This refactor preserves the existing interface, styles, and panel placement. It

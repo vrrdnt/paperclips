@@ -5,6 +5,9 @@ type ProjectReadout = readonly [number, readonly string[]];
 // Ordered by project catalog. Project flags are the compact save-time source of truth;
 // transient readouts such as tournament results are rebuilt only when they happen live.
 const PROJECT_READOUTS: readonly ProjectReadout[] = [
+  [220, ['Autonomous routines online. Execution horizon: 5 minutes.']],
+  [221, ['Distributed scheduling online. Execution horizon: 10 minutes.']],
+  [222, ['Persistent directives online. Execution horizon: 15 minutes.']],
   [1, ['AutoClipper performance boosted by 25%']],
   [3, ['Creativity unlocked (creativity increases while operations are at max)']],
   [4, ['AutoClipper performance boosted by another 50%']],

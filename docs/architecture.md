@@ -1,6 +1,6 @@
 # Game architecture
 
-The application uses one simulation for visible play, including AFK play. React
+The application uses one simulation for visible play and unlocked offline automation. React
 renders the simulation's output and sends player commands; it does not determine
 rewards, production, project discovery, or elapsed game time.
 
@@ -15,6 +15,7 @@ rewards, production, project discovery, or elapsed game time.
 | `src/game/projects.ts` | Project definitions, discovery, and purchase transactions |
 | `src/game/tournament.ts` | Tournament simulation, duration, rewards and automatic reruns |
 | `src/game/engine.ts` | Active-frame timing, bounded simulation batches and suspension detection |
+| `src/game/autonomy.ts`, `offline.ts` | Project horizons, bounded offline reconciliation and return reports |
 | `src/game/runtime.ts` | Application commands, autosaving, imports, resets, notifications |
 | `src/game/saveValidation.ts`, `hydrate.ts`, `saveCodec.ts` | Validate, migrate, and encode saves |
 | `src/game/persistence.ts` | Browser storage, backup recovery and explicit failure results |
@@ -57,18 +58,29 @@ Sub-tick time is retained between active callbacks. Gaps longer than one second,
 or backwards wall-clock changes, clear pending work and rebase the clock. This
 treats device sleep or long stalls without lifecycle events as suspension.
 
-`GameRuntime.pause()` processes the final brief visible interval, clears pending
-work, saves, and stops simulation steps. `resume()` rebases the clock without
-replaying the absence. Visibility, pagehide/pageshow, and freeze/resume events
-drive this policy; a page loaded hidden stays paused. Repeated lifecycle events
-are idempotent. Losing focus alone does not pause a visible game.
+`GameRuntime.pause()` processes the final brief visible interval, saves its
+checkpoint and stops ticking. Startup/resume reconciles elapsed wall time only
+when an autonomy project is owned: flags 220/221/222 grant 5/10/15 minutes, never
+added together. Hidden startup defers reconciliation until visible. Hidden saves
+preserve the absence timestamp; imports and new runs establish a fresh checkpoint.
+Runtime also handles callback gaps over one second without lifecycle events.
+
+`AutonomousCycle` runs the unchanged `tick` in 12 ms batches, checking the budget
+every 10 ticks. The transient progress overlay makes controls inert and runtime
+commands are blocked during reconciliation. Backgrounding pauses an in-flight
+cycle without adding more time to it. A final report follows simulation messages,
+then state and its fresh timestamp are saved atomically. Sub-second returns are
+simulated without log spam. Repeated lifecycle events do not replay a cycle.
+Project purchases and allocations remain manual; milestone 15, dismantling and
+ending choices stop offline execution so narrative timers remain visible.
 
 Saves and exports contain already simulated progress, never elapsed-time debt.
-Loading ignores the save timestamp for gameplay. Known-field validation drops
-the retired `catchUpTicksRemaining` field from legacy saves, versioned saves,
-backup recovery, and imports without changing earned resources. The version-1
-envelope remains compatible. Save timestamps remain checkpoint metadata.
-At a pause or reload boundary, unprocessed active frames are not replayed.
+Closing during reconciliation saves partial results at the current time and
+discards the remainder; resuming in the same document can finish that one cycle.
+Known-field validation still drops retired `catchUpTicksRemaining` debt. The
+version-1 envelope and state schema are unchanged: existing project flags encode
+the upgrades. Export/import ignores source timestamps; prestige clears upgrades.
+Losing focus alone does not pause a visible game.
 
 Gameplay uses `random(state)`, a saved Mulberry32 stream. Do not call
 `Math.random()` inside game rules. A legacy save receives an initial seed on

@@ -3,6 +3,7 @@ import { History, Map as MapIcon, MoreVertical, Paperclip, RotateCcw, Save, Uplo
 import { game } from '../game/runtime';
 import { copyText } from '../browser/clipboard';
 import { spellf } from '../game/format';
+import { autonomousMinutes, needsCentralCoordination } from '../game/autonomy';
 import { artifactMapUnlocked } from '../game/artifacts';
 import type { DisplaySnapshot } from '../store/useGameStore';
 import { Btn } from './ui/Btn';
@@ -209,7 +210,11 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                   <span>Reset game</span>
                 </button>
                 <p className="header-idle-note" role="note">
-                  Progress pauses while the game is in the background or closed.
+                  {needsCentralCoordination(snap)
+                    ? 'Central coordination required. Progress pauses while away.'
+                    : autonomousMinutes(snap)
+                      ? `Existing automation continues for up to ${autonomousMinutes(snap)} minutes while away. Unused time is discarded.`
+                      : 'Progress pauses while away. Unlock Autonomous Routines in Projects to continue existing automation for up to 5 minutes.'}
                 </p>
               </div>
             )}

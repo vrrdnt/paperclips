@@ -816,6 +816,13 @@ input[type="range"].price-slider::-moz-range-thumb {
 }
 
 /* ── Console ────────────────────────────────────────────────────── */
+.console-preview, .log-history {
+  padding: 8px 10px;
+  background: var(--console-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px #0005;
+}
 .console-line { color: var(--text-dim); line-height: 1.6; }
 .console-line:last-of-type { color: var(--text); }
 
@@ -1968,3 +1975,25 @@ select {
 @media (max-width: 767px) {
   .artifact-name, .artifact-effect, .artifact-current, .changelog-list, .sparkline-axis-label { font-size: 14px; }
 }
+.autonomous-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(0, 0, 0, .72);
+}
+.autonomous-status {
+  width: min(100%, 380px);
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+.autonomous-status strong { display: block; letter-spacing: .04em; }
+.autonomous-status p { color: var(--text-muted); }
+.autonomous-status progress { width: 100%; accent-color: var(--accent); }

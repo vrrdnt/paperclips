@@ -109,5 +109,5 @@ test('a months-old save with pending debt opens without catch-up and explains th
   expect(after).not.toHaveProperty('catchUpTicksRemaining');
   await expect(page.getByLabel('Catching up idle progress')).toHaveCount(0);
   await page.getByRole('button', { name: 'More actions' }).click();
-  await expect(page.getByRole('note')).toHaveText('Progress pauses while the game is in the background or closed.');
+  await expect(page.getByRole('note')).toHaveText('Progress pauses while away. Unlock Autonomous Routines in Projects to continue existing automation for up to 5 minutes.');
 });

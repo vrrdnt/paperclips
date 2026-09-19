@@ -3,8 +3,9 @@ import { game } from '../game/runtime';
 import { useGameStore } from '../store/useGameStore';
 
 /** React owns only subscriptions; the runtime owns all gameplay and elapsed time. */
-export function useGameRuntime(): number {
+export function useGameRuntime(): { revision: number; offlineProgress: number | null } {
   const [revision, setRevision] = useState(0);
+  const [offlineProgress, setOfflineProgress] = useState<number | null>(null);
   useEffect(() => {
     const publish = (replaced = false, sampleHistory = false) => {
       const store = useGameStore.getState();
@@ -13,6 +14,7 @@ export function useGameRuntime(): number {
         setRevision(value => value + 1);
       }
       store.setSnap(game.state, sampleHistory || replaced);
+      setOfflineProgress(game.offlineProgress);
     };
     const unsubscribe = game.subscribe((_state, replaced) => publish(replaced));
     game.initialize(document.visibilityState === 'visible');
@@ -50,5 +52,5 @@ export function useGameRuntime(): number {
       game.pause();
     };
   }, []);
-  return revision;
+  return { revision, offlineProgress };
 }

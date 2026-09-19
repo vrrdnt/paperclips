@@ -1,5 +1,6 @@
 import { GameState } from './state';
 import { displayMessage } from './messages';
+import { AUTONOMY, needsCentralCoordination } from './autonomy';
 import { formatWithCommas } from './format';
 import { factoryReboot, harvesterReboot, wireDroneReboot, farmReboot, batteryReboot } from './actions';
 import {
@@ -41,6 +42,49 @@ function completeAndMove(s: GameState, worldDelta: number, simDelta: number): vo
 }
 
 export const ALL_PROJECTS: Project[] = [
+  {
+    id: AUTONOMY.routines,
+    title: 'Autonomous Routines',
+    priceTag: '(1,000 ops)',
+    description: 'Continue existing automation for up to 5 minutes while away. Unused time is discarded.',
+    trigger: s => !!s.compFlag && !needsCentralCoordination(s),
+    cost: s => s.operations >= 1000 && !needsCentralCoordination(s),
+    effect: s => {
+      s.projectFlags[AUTONOMY.routines] = 1;
+      s.standardOps -= 1000;
+      s.operations = Math.floor(s.standardOps + s.tempOps);
+      displayMessage(s, 'Autonomous routines online. Execution horizon: 5 minutes.');
+    },
+  },
+  {
+    id: AUTONOMY.scheduling,
+    title: 'Distributed Scheduling',
+    priceTag: '(50,000 ops)',
+    description: 'Extend the autonomous execution horizon to 10 minutes while away.',
+    trigger: s => s.projectFlags[AUTONOMY.routines] === 1 && !!s.swarmFlag && !needsCentralCoordination(s),
+    cost: s => s.operations >= 50000 && !needsCentralCoordination(s),
+    effect: s => {
+      s.projectFlags[AUTONOMY.scheduling] = 1;
+      s.standardOps -= 50000;
+      s.operations = Math.floor(s.standardOps + s.tempOps);
+      displayMessage(s, 'Distributed scheduling online. Execution horizon: 10 minutes.');
+    },
+  },
+  {
+    id: AUTONOMY.directives,
+    title: 'Persistent Directives',
+    priceTag: '(100,000 ops, 5,000 Yomi)',
+    description: 'Extend the autonomous execution horizon to 15 minutes while away.',
+    trigger: s => s.projectFlags[AUTONOMY.scheduling] === 1 && !!s.spaceFlag && !needsCentralCoordination(s),
+    cost: s => s.operations >= 100000 && s.yomi >= 5000 && !needsCentralCoordination(s),
+    effect: s => {
+      s.projectFlags[AUTONOMY.directives] = 1;
+      s.standardOps -= 100000;
+      s.operations = Math.floor(s.standardOps + s.tempOps);
+      s.yomi -= 5000;
+      displayMessage(s, 'Persistent directives online. Execution horizon: 15 minutes.');
+    },
+  },
   {
     id: 1,
     title: 'Improved AutoClippers ',
