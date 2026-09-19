@@ -106,6 +106,7 @@ describe('bounded offline simulation', () => {
     expect(state).toEqual(expected);
   });
 
+  // Two complete 90,000-tick simulations can exceed the default on shared CI runners.
   it('simulates compounding probes, hazards and combat exactly', () => {
     const state = loadFixture('06-phase3-space.json');
     Object.assign(state, { probeCount: 1e12, drifterCount: 1e10, probeRep: 10, probeHaz: 10,
@@ -118,7 +119,7 @@ describe('bounded offline simulation', () => {
     expect(state).toEqual(expected);
     expect(state.battleId).toBeGreaterThan(0);
     expect(state.probeCount).not.toBe(1e12);
-  });
+  }, 30_000);
 
   it('reports actual constrained production, including zero production', () => {
     for (const wire of [0, 25]) {
