@@ -1,4 +1,8 @@
-# Android releases
+# Android maintenance and releases
+
+This guide covers the existing `ps.papercli.app` wrapper and its production
+release workflow. The game opens at `https://papercli.ps/`; the package identity
+and signing setup belong to that app.
 
 Pushing an `android-v<N>` tag runs the game checks, builds a signed Android App
 Bundle, and submits it to **Google Play production**. Manual workflow runs default
@@ -17,26 +21,12 @@ deployment process; publishing this bundle does not deploy the JavaScript from
 the tagged commit. Android releases are for wrapper changes, Android SDK updates,
 and store metadata such as the installed version name.
 
-## One-time setup
+## Release environment
 
-1. Confirm that `ps.papercli.app` is registered in Play Console, has its initial
-   bundle uploaded, and is eligible for production releases. Complete any pending
-   app setup or testing requirements there.
-2. Enable the Google Play Android Developer API in a Google Cloud project. Create
-   a service account and download its JSON key to a private location outside the
-   checkout. [Google's API setup](https://developers.google.com/android-publisher/getting_started)
-3. In Play Console **Users and permissions**, grant that service account access to
-   Paperclips with **View app information (read-only)** and **Release to production,
-   exclude devices, and use Play App Signing**. Scope access to this app.
-   [Play permissions](https://support.google.com/googleplay/android-developer/answer/9844686?hl=en)
-4. In this repository's **Settings → Environments**, create
-   `google-play-production` and add the four secrets below. Use the existing
-   upload key, whose alias is `android`.
-5. After the workflow is on the default branch, open **Actions → Android production
-   release → Run workflow**. Select the branch to test and supply a future version
-   code and leave **Submit to Google Play production** unchecked. This verifies
-   signing and saves a bundle artifact; it makes no Play API calls. Test the bundle
-   on Android before pushing a production tag.
+The workflow reads credentials from the repository's `google-play-production`
+environment. Maintain the existing upload key, whose alias is `android`, and the
+service account authorized for this app in Play Console. The JSON key itself
+belongs in the environment secret, not the checkout.
 
 | Environment secret | Value |
 | --- | --- |
@@ -50,30 +40,37 @@ also require the service account secret. The workflow reports missing secrets
 before installing the Android toolchain, keeps the temporary keystore outside the
 checkout, and deletes it after the job. No signing credentials belong in Git.
 
-With GitHub CLI installed and authenticated, these PowerShell commands upload
-secrets without printing their values. Password commands prompt interactively:
+If credentials need maintenance, update the existing environment secrets in
+GitHub Settings and check the service account's app access in Play Console.
+See [Google's API setup](https://developers.google.com/android-publisher/getting_started)
+and [Play permissions](https://support.google.com/googleplay/android-developer/answer/9844686?hl=en).
+The workflow validates that required secrets are present; their presence alone
+does not verify that the key or account permissions are valid.
 
-```powershell
-$uploadKeyPath = Read-Host 'Path to the existing android.keystore'
-[Convert]::ToBase64String([IO.File]::ReadAllBytes($uploadKeyPath)) |
-  gh secret set ANDROID_KEYSTORE_BASE64 --env google-play-production --repo vrrdnt/paperclips
-gh secret set ANDROID_KEYSTORE_PASSWORD --env google-play-production --repo vrrdnt/paperclips
-gh secret set ANDROID_KEY_PASSWORD --env google-play-production --repo vrrdnt/paperclips
-Get-Content -Raw -LiteralPath (Read-Host 'Path to the service account JSON key') |
-  gh secret set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON --env google-play-production --repo vrrdnt/paperclips
-```
+For a signing check, open **Actions → Android production release → Run workflow**,
+select the review branch, provide a version code, and leave **Submit to Google
+Play production** unchecked. This retains a signed bundle without a Play API
+submission. Installed behavior still needs a device or emulator check.
 
 ## Publish a release
 
 Choose an integer greater than **every version code already uploaded to Play**,
-including testing tracks. The imported wrapper's baseline is code `3`; that does
-not establish the current highest code in Play Console. `android-v4` is only an
-example. The display version comes from the tagged commit's `package.json`.
+including testing tracks. Code `4` was submitted to production by the
+[release workflow](https://github.com/vrrdnt/paperclips/actions/runs/35451867099)
+on 2026-09-20 (JST); do not reuse it. Check Play Console for any later uploads
+before selecting the next code. The workflow validates tag syntax and the
+allowed integer range; it does not query Play for the highest used code.
+
+The checked-in Gradle and Bubblewrap fallback version is still `3`. CI overrides
+it with the tag or manual input. The display version comes from `package.json`
+at the commit being built. These are separate from Google's review and public
+availability status.
 
 1. Verify the intended commit and ensure any required web deployment is complete.
-2. Create a tag with the next unused Android code: `git tag android-v4`.
-3. Push that specific tag: `git push origin android-v4`. This requests production
-   submission after checks and signing pass.
+2. Create an `android-v<N>` tag at that commit, replacing `<N>` with the verified
+   unused code.
+3. Push only that release tag to `origin`. This requests production submission
+   after checks and signing pass.
 4. Review the Actions result and Play Console's release/review status.
 
 The release uses `production`, `status: completed` (full rollout), and
@@ -95,25 +92,34 @@ requires the full game checks, signing verification, and production credentials.
 
 ## Local build and maintenance
 
-The wrapper requires Android 7.0 (API 24) or newer. This app's enabled Play
-automatic protection rejects bundles with a lower minimum SDK; Android 6.0
-devices cannot install this new wrapper version.
+The wrapper requires Android 7.0 (API 24) or newer. The minimum SDK was raised
+for the existing app's Play automatic protection configuration; Android 6.0
+devices cannot install this wrapper version.
 [Play automatic protection requirements](https://support.google.com/googleplay/android-developer/answer/10183279?hl=en)
 
 Use JDK 17, Android platform 36, and Build Tools 35.0.0. The Gradle wrapper pins
 8.11.1 and its distribution checksum; Android Gradle Plugin is 8.10.1. This version
-supports API 36. The wrapper now targets API 36, required for mobile app updates
-from August 31, 2026.
+supports API 36. The checked-in wrapper compiles against and targets API 36.
+Check the current Play requirement before future SDK maintenance.
 [Build compatibility](https://developer.android.com/build/releases/agp-8-10-0-release-notes),
 [Play target API requirement](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en)
 
-Set `JAVA_HOME` and `ANDROID_HOME` to your installations, then from `android/`:
+Set `JAVA_HOME` and `ANDROID_HOME` to your installations. For a local wrapper
+check in PowerShell, start in the repository root:
 
 ```powershell
-.\gradlew.bat --no-daemon bundleRelease '-PappVersionCode=4' '-PappVersionName=2.3.23'
+$androidVersionCode = Read-Host 'Unused Android version code checked in Play Console'
+$androidVersionName = (Get-Content -Raw package.json | ConvertFrom-Json).version
+Push-Location android
+try {
+  .\gradlew.bat --no-daemon bundleRelease "-PappVersionCode=$androidVersionCode" "-PappVersionName=$androidVersionName"
+} finally {
+  Pop-Location
+}
 ```
 
-On Linux/macOS, use `bash ./gradlew` with the same arguments. Without signing
+On Linux/macOS, run `bash ./gradlew` from `android/` with explicit
+`-PappVersionCode` and `-PappVersionName` arguments. Without signing
 variables this produces an unsigned bundle at
 `app/build/outputs/bundle/release/app-release.aab`. CI sets
 `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and
@@ -123,9 +129,9 @@ upload keystore as its trust store.
 `twa-manifest.json` retains the source Bubblewrap settings and a relative signing
 path. Do not run `bubblewrap update` without reviewing its generated changes: it
 can overwrite the Gradle version overrides, SDK target, and CI signing setup.
-The original launcher code, icons, notification behavior, and digital asset
-links are preserved. A build check does not validate installed Android behavior;
-use a device or emulator for that.
+Review the launcher, icons, notification behavior, and digital asset links when
+changing wrapper configuration. A build check does not validate installed
+Android behavior; use a device or emulator for that.
 
 The generated Android scaffolding retains its upstream [Apache 2.0 license](LICENSE).
 This license applies to the wrapper scaffolding; see the root README for game

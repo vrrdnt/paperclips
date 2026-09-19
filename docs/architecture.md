@@ -1,6 +1,7 @@
 # Game architecture
 
-The application uses one simulation for visible play and unlocked offline automation. React
+This document describes the existing application's runtime and maintenance checks.
+One simulation handles open-session play and unlocked offline automation. React
 renders the simulation's output and sends player commands; it does not determine
 rewards, production, project discovery, or elapsed game time.
 
@@ -23,13 +24,15 @@ rewards, production, project discovery, or elapsed game time.
 | `src/hooks/useGameRuntime.ts` | Browser timers and lifecycle listeners, with cleanup |
 | `src/components/GameHeader.tsx`, `GameLayout.tsx` | Save/menu UI and phase-dependent panel placement |
 
-The application has one `game` runtime. Tests and other hosts can construct as
-many independent `GameRuntime` or `GameEngine` instances as needed. Domain
+The application has one `game` runtime. Tests use independent `GameRuntime` or
+`GameEngine` instances to isolate state and control time. Domain
 functions receive their state explicitly; they never import the singleton.
 
 ## Responsive presentation
 
-`GameLayout` retains one mounted instance of each panel. Below 768 CSS pixels,
+`GameLayout` retains one mounted instance of each currently rendered panel when
+switching sections. Gameplay unlocks and dismantling still add or remove panels.
+Below 768 CSS pixels,
 it exposes unlocked Production, Computing, Projects, Strategy and Fleet tabs;
 hidden panels stay mounted and the runtime keeps stepping. Wider layouts show
 two columns through 999 pixels and three columns from 1000 pixels. Wire
@@ -47,12 +50,13 @@ visible below it. Phone spacing is compact, with 14 px essential text and 48 px
 touch targets. Unaffordable controls retain readable text and disabled actions.
 
 `Console` shows three entries in a single large history button, retaining the
-dark text frame and full history in a native `Dialog`.
+dark text frame, bundled IBM Plex Mono font, subtle dithering, and retained
+history in the shared HTML `Dialog` component.
 The shared dialog handles focus containment/restoration, Escape, a temporary
 same-page history entry for Back, and visual-viewport sizing during keyboard
 input. It is also used by header dialogs. Neither dialog nor section state is
 serialized. Dialog height subtracts its top margin and bottom safe area from
-the visual viewport, so its bottom cannot extend off screen.
+the visual viewport to keep the content within the available screen height.
 
 Artifacts open on the available collection, with a separate keyboard-accessible
 World map tab and a name/effect filter for collections over eight items. The list
@@ -85,7 +89,8 @@ when an autonomy project is owned: flags 220/221/222 grant 5/10/15 minutes, neve
 added together. Hidden Android-app startup defers reconciliation until visible;
 hidden browser startup runs immediately. Paused saves preserve the absence
 timestamp; imports and new runs establish a fresh checkpoint. Runtime commands
-wait until queued simulation is settled so decisions cannot affect earlier ticks.
+are blocked while simulation work is pending so decisions cannot affect earlier
+ticks; the runtime does not queue player commands for later execution.
 
 `AutonomousCycle` runs the unchanged `tick` in 12 ms batches, checking the budget
 every 10 ticks. The transient progress overlay makes controls inert and runtime
@@ -129,8 +134,9 @@ closing, remounting, or suspending its panel cannot affect yomi rewards.
 
 - `upc_v2` is a versioned envelope containing state and `savedAt` in one write.
 - `upc_v2_backup` retains the previous valid checkpoint.
-- Legacy raw JSON and Base64 exports remain readable. Documented legacy aliases
-  are normalized in `hydrate.ts`; unknown top-level fields are discarded.
+- Legacy raw JSON remains readable from browser storage. The import dialog
+  accepts Base64 exports. Legacy aliases are normalized in `hydrate.ts`;
+  unknown top-level fields are discarded.
 - Imports and explicit resets validate and persist before replacing live state.
   A failed import or storage write leaves the current run intact.
 - An unreadable save is preserved until the player imports or resets. If a valid
@@ -144,24 +150,47 @@ For a new persisted field, add its type and default to `state.ts`, add nested
 validation/migration if needed, and test an older save without the field. Bump
 the envelope version only for incompatible format changes and supply a migration.
 
-## Adding and verifying features
+## Maintainer checks
 
-1. Add rules to an existing domain module, or a small new system with one clear
-   responsibility. Preserve tick order unless changing it is intentional.
-2. Add an action or project transaction for player input. Avoid UI mutation of
-   nested state, storage calls inside rules, or timers that award resources.
-3. Add a regression using `makeInitialState(seed)` or a `dev-saves` fixture. For
-   time-dependent work, compare normal ticks with scheduled active frames from
-   the same state and seed. Verify paused states remain unchanged and long gaps
-   are discarded. No real sleeps are needed for engine tests.
-4. Run `npm run check`. Run browser tests for UI/lifecycle changes and the
-   production test for build or offline changes. Check performance with the
-   benchmark when changing hot simulation paths.
+Use Node.js 24, matching CI, from the existing checkout. `package.json` accepts
+Node 24 or newer; later major versions are not the CI baseline.
 
-The 14 screenshot baselines were captured before the refactor at 1280 and 390
-pixels wide. They freeze the clock and randomness across all seven bundled
-stages. Update them only for an intentional design change, after reviewing the
-diff on Windows Chromium; do not regenerate them just to make a test pass.
+```sh
+npm ci
+npm run dev
+```
+
+The development server provides a local review of the app. `npm run build`
+type-checks and writes the static production output to `dist/`; it does not
+publish a web or Android release.
+
+```sh
+npm run check                 # Type-check source, tests and config; unit tests; build
+npx playwright install chromium
+npm run test:browser          # Gameplay, responsive UI, lifecycle and screenshots
+npm run test:production       # Previously built PWA: saves, lifecycle and offline reload
+npm run benchmark -- 3600     # One simulated hour in four fixed scenarios
+```
+
+Run the production suite after a current build. Browser suites start their own
+servers; configuration is in `playwright.config.ts` and
+`playwright.production.config.ts`. CI runs these checks on Windows with Node 24.
+
+1. Keep game-rule changes in the domain modules and route player input through
+   actions. Review changes to tick order, costs, and saved fields explicitly.
+2. Use seeded unit regressions for time-dependent behavior. Compare normal ticks
+   with scheduled frames; test continued hidden-browser play separately from
+   suspension and capped offline returns. Excess absence time must not be banked.
+3. Run the browser suite for UI and lifecycle changes and the production suite
+   for build, storage, caching, or background-policy changes. Use the benchmark
+   when changing frequently executed simulation code.
+4. Review screenshot changes on Windows Chromium. Coverage includes all seven
+   [stage fixtures](../dev-saves/README.md) at 1280 and 390 px, selected phone tabs
+   at 390 and 320 px, and the expanded log. Baselines reflect reviewed UI changes;
+   they are not frozen to the pre-refactor design.
+5. Check the installed app on an Android device or emulator before reporting
+   native validation. Browser viewport and lifecycle emulation cannot establish
+   Android Back, gesture navigation, or keyboard behavior on a device.
 
 `projects.ts` remains a declarative catalog. Its size reflects the number of
 projects; avoid splitting it into abstractions that hide individual costs and

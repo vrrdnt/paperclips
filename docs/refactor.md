@@ -1,12 +1,14 @@
-# Foundation refactor
+# Historical foundation refactor
 
-These are historical refactor notes. Version 2.3.23 adds capped, project-unlocked
-autonomy; see [current timing behavior](architecture.md#timing-and-randomness).
-The shared simulation and the gameplay corrections below remain in place.
+These notes record the September 2026 simulation and persistence refactor.
+Later updates changed the layout and background policy; see
+[current timing behavior](architecture.md#timing-and-randomness) and the
+[version history](../CHANGELOG.md). The shared simulation and the corrections
+below remain relevant to maintenance.
 
-This refactor preserves the existing interface, styles, and panel placement. It
-replaces the duplicated active/offline simulation with a single deterministic
-engine, separates browser lifecycle and persistence from rules, and removes
+The refactor kept the interface unchanged at the time. It replaced duplicated
+active/offline simulation with a single deterministic engine, separated browser
+lifecycle and persistence from rules, and removed
 gameplay mutations from rendering and animation callbacks.
 
 ## Corrected behavior
@@ -15,9 +17,10 @@ gameplay mutations from rendering and animation callbacks.
   actual wire consumption counts toward final clips, and credits survive reload.
 - A battery running out partway through a tick supplies the available fraction
   of power; it cannot produce negative matter or clips.
-- Idle progress uses the same hazard losses, probe replication, combat, project
-  discovery, and rewards as active play. Hazard compounding no longer wipes out
-  fleets, and new battles can begin during catch-up.
+- Offline simulation uses the same hazard losses, probe replication, combat,
+  project discovery, and rewards as active play. The separate accelerated hazard
+  calculation was removed; fleets still face normal gameplay losses. Current
+  offline execution requires an autonomy project and is capped per absence.
 - Resuming a hidden page cannot count an already simulated interval again.
 - Project purchases recheck live resources and one-time/mutually exclusive flags.
 - A stopped swarm awards a finished gift once, instead of every tick.
@@ -28,33 +31,35 @@ gameplay mutations from rendering and animation callbacks.
 - Saves report storage failures, keep a previous checkpoint, and preserve
   unreadable data. Prestige and explicit imports replace complete states.
 - Launching a probe accepts exact funds, and universe completion accounts for
-  unprocessed acquired matter. The subsequent [parity pass](parity.md) restores
-  the original fractional probe births, superseding the first refactor's change.
+  unprocessed acquired matter. The subsequent [gameplay comparison](parity.md)
+  restored fractional probe births, superseding the first refactor's change.
 - Offline app reloads find precached build assets even on hosts that vary
   responses by Origin. Service-worker cleanup only removes this app's caches,
   and failed responses cannot replace a good cached page.
 
-## Verification
+## Verification recorded for the refactor
 
 - Seeded unit tests cover seven historical saves, active/offline equality,
   resource boundaries, purchases, tournaments, save recovery, resets, snapshot
   isolation, and the complete disassembly sequence.
 - Browser tests exercise clicking, repeated project purchases, import errors,
   legacy imports, the ending, and save failure feedback.
-- Fourteen full-page screenshots compare seven stages at desktop and mobile
-  sizes against pre-refactor Windows Chromium baselines.
+- Fourteen full-page screenshots compared seven checkpoints at desktop and
+  mobile sizes against the then-current Windows Chromium baselines. Later UI
+  changes updated these images and added section and dialog coverage.
 - A production browser test saves progress and reloads the built PWA while the
   browser is offline.
-- TypeScript checks application code, tests, benchmark scripts, and configuration.
-  CI runs the build and both browser suites on Windows with Node 24.
+- TypeScript checked application code, tests, benchmark scripts, and configuration.
+  The current CI configuration runs the build and both browser suites on Windows
+  with Node 24; see [maintainer checks](architecture.md#maintainer-checks).
 
-The combat benchmark simulates one hour with a seeded large fleet. Reusing its
-spatial grid and ship roster reduced local CPU time from approximately 10.4 to
-5.4 seconds, with the same final-state SHA-256 hash. These are machine-specific
-measurements, not a promised duration on phones. `npm run benchmark -- 3600`
+The combat benchmark simulates one hour with a seeded large fleet. During the
+refactor, reusing its spatial grid and ship roster reduced local CPU time from
+approximately 10.4 to 5.4 seconds, with the same final-state SHA-256 hash. These
+are machine-specific measurements, not a promised duration on phones.
+`npm run benchmark -- 3600`
 reports timings and hashes for business, swarm, space, and heavy combat.
 
-The screenshot checks establish appearance for the supplied fixtures, not every
-possible animation frame. No remote CI run or public deployment is implied by
-the local verification. The engine retains 10 ms rules and existing balance;
-further mechanics or design changes should be reviewed separately.
+The screenshot checks cover the supplied fixtures, not every possible animation
+frame. These historical measurements do not certify a later build, deployment,
+or installed Android release. The engine still advances in 10 ms ticks.

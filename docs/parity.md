@@ -1,8 +1,9 @@
-# Original gameplay parity
+# Historical gameplay comparison
 
-This pass compares the simulation with the scripts loaded by the official
+These notes record a maintenance review against scripts loaded by the official
 [web game](https://www.decisionproblem.com/paperclips/index2.html), retrieved
-2026-09-13. The reference is the web v3 scripts, not a mobile release.
+2026-09-13. The reference was the web v3 scripts. The review informed specific
+bug fixes; it did not establish complete equivalence with the official game.
 
 ## Restored behavior
 
@@ -24,32 +25,34 @@ This pass compares the simulation with the scripts loaded by the official
   alternating drifter/probe ships before drawing a battle name. Both preserve
   the original random draw order when given the same stream.
 
-## Reproducible reference checks
+## Reference evidence and current limits
 
-`npm test` includes standalone numeric regressions and requires no original
-source download. For direct comparisons, save these four scripts in a separate
-directory, then run `npm run verify:original -- <directory>`:
+`npm test` includes numeric regressions for the retained behavior and does not
+require the official game's scripts. The separate historical comparison harness
+is `scripts/verify-original.ts`, exposed by `npm run verify:original`. It is not
+part of `npm run check` or CI.
 
-- [combat.js?v3](https://www.decisionproblem.com/paperclips/combat.js?v3)
-- [globals.js?v3](https://www.decisionproblem.com/paperclips/globals.js?v3)
-- [main.js?v3](https://www.decisionproblem.com/paperclips/main.js?v3)
-- [projects.js?v3](https://www.decisionproblem.com/paperclips/projects.js?v3)
+The harness used separately held `combat.js`, `globals.js`, `main.js`, and
+`projects.js` references. `scripts/original-reference.ts` pins their SHA-256
+hashes; those files are not bundled in this repository. Its VM adapter isolates
+browser effects and supplies controlled state; the VM is not a security boundary.
 
-The original files are not redistributed. `scripts/original-reference.ts` pins
-their SHA-256 hashes and refuses changed files. Review any changed reference
-before updating hashes. Its VM adapter isolates browser effects and copies a
-controlled state into the original globals; VM itself is not a security boundary.
+**The harness needs maintenance before it can check the current project catalog.**
+Its project loop excludes the two mobile universe-direction projects but does
+not exclude autonomy projects 220–222. Those have no official web reference, so
+the loop reaches its missing-reference assertion. The recorded comparison count
+below is a historical result, not a passing result for the current checkout.
 
-The suite checks project triggers/costs across seven historical saves,
+The historical run checked project triggers/costs across seven saves,
 creativity and quantum waves over 1,000 updates, fractional replication over
 1,000 updates, 150 seeded tournaments with all eight strategies, 100 investment
 cycles at each risk level, and 200 combat frames for three seeds. Combat checks
-include individual ship positions, velocities, survival, and aggregate losses.
-There are 1,671 exact comparisons, with no numerical rounding tolerance.
+included individual ship positions, velocities, survival, and aggregate losses.
+It recorded 1,671 exact comparisons, with no numerical rounding tolerance.
 
 ## Scope and intentional differences
 
-This is sampled subsystem parity, not proof of identical complete playthroughs.
+The comparison covered selected systems and inputs, not complete playthroughs.
 The reference adapter does not run the original DOM lifecycle or real browser
 timers. Project checks cover availability and affordability, not every effect at
 every resource boundary. The original uses unseeded randomness; seeds here are
@@ -58,23 +61,18 @@ controlled inputs, not an original-game feature.
 The artifact system and reverse-world/reverse-simulation projects originate in
 the mobile game and have no counterpart in this web reference. Comparisons
 disable artifacts. The subsequent [mobile audit](mobile-artifacts.md) documents
-their evidence, fixes, and unresolved formulas. No balance values or interface
-styles were redesigned in the web parity pass.
+their evidence, fixes, and unresolved formulas. UI changes and autonomy projects
+are outside the historical comparison's scope.
 
 The stability fixes documented in the foundation refactor remain: partial
 battery discharge cannot create negative resources, completed swarm gifts are
 awarded once, empty wire cannot create final clips, purchases recheck resources,
 and saves are validated/recoverable. Exact-cost probe launches remain allowed.
 Goodwill is unavailable after human industry ends; the reference checker
-explicitly applies that additional phase guard. Visible AFK play uses the shared
-engine. Version 2.3.23 deliberately extends the original with three optional
-autonomy projects (5/10/15-minute offline limits). Open browser tabs keep running
-when hidden, including throttled callbacks. Android apps save and pause when
-backgrounded; closed sessions and browser suspensions also use offline progress.
-Returning runs only the purchased allowance through the same tick rules. Without
-an unlock, suspension still earns nothing. No offline time is banked, no player
-choices are automated, and offline execution stops at ending sequences. See the
-README for project costs and eligibility.
+explicitly applies that additional phase guard. Current browser and Android
+background behavior, including the app's three optional autonomy projects, is
+documented in the [README](../README.md#afk-and-background-behavior).
 
-Further parity work should extend the reference suite to project-effect resource
-boundaries and full phase transitions before changing additional gameplay rules.
+Project-effect resource boundaries and full phase transitions were not covered
+exhaustively. Keep these limits explicit when using the historical findings to
+assess a gameplay change.

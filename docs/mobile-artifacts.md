@@ -1,25 +1,26 @@
-# Mobile artifact audit
+# Artifact behavior and evidence
 
-The artifact system and reverse-direction universe projects originate in the
-official mobile game. They are not inventions of this reskin. The earlier web
-parity notes meant that they were extensions **relative to the web reference**;
-they could not be validated against its JavaScript.
+This document records the September 2026 review of the app's existing artifact
+behavior. The artifact names and reverse-direction universe projects originate
+in the official mobile game. They are outside the official web reference used
+in the [historical gameplay comparison](parity.md).
 
 ## Evidence and limits
 
 The developer's [App Store release history](https://apps.apple.com/us/app/universal-paperclips/id1300634274)
 confirms the mobile engine rewrite and artifact expansion. It does not publish
-the underlying formulas. The target for this pass is the post-2021 mobile
-artifact system; no specific installed iOS/Android build was supplied or run.
+the underlying formulas. The review considered reports about the post-2021
+mobile artifact system; no identified official iOS/Android build was tested.
 
 All 32 existing names, map coordinates, and categories were checked against the
 [community catalog](https://universalpaperclips.fandom.com/wiki/Artifacts).
-No catalog differences were found. Its descriptions are useful specifications,
-but do not settle rounding, stacking, or activation timing. Firsthand mobile
+No catalog differences were recorded during that review. Its descriptions are
+community evidence, not authoritative formulas, and do not settle rounding,
+stacking, or activation timing. Firsthand mobile
 reports cited below supply additional evidence. There is no executable mobile
 reference suite comparable to `verify:original` for the web version.
 
-## Corrections made
+## Implemented corrections
 
 1. **Activation bonuses refresh per run.** Banach Tarski Catalyst and
    Superluminous Supernova were permanently marked spent across prestige and
@@ -68,18 +69,18 @@ implementation checks from direct mobile verification:
 The five-slot limit, temporary local ownership, permanent completion rewards,
 loss of local-only artifacts on warp, and both rewards in the shared map square
 also have regression coverage. These checks protect observable contracts in the
-reskin; they are not measurements of the proprietary mobile engine.
+app; they are not measurements of the official mobile engine.
 
-## Unresolved parity questions
+## Unresolved behavior questions
 
-- **5× versus 6×:** the reskin uses 6× for the twelve 500% bonuses. A mobile
+- **5× versus 6×:** this app uses 6× for the twelve 500% bonuses. A mobile
   player gives a concrete [50,000-honor Threnody example](https://www.reddit.com/r/pAIperclip/comments/13orrxg),
   suggesting 5×, while the catalog wording suggests an increase of 500%. One
   report is insufficient to change every multiplier. Measure a Threnody's honor
   delta with and without Polyphase, plus solar output and clipper output, on a
   named app version before changing these constants.
-- **Creativity versus operations:** the reskin applies Boundary's performance
-  multiplier inside the nonlinear creativity formula. Recent
+- **Creativity versus operations:** this app applies Boundary's performance
+  multiplier inside the nonlinear creativity formula. The cited
   [mobile observations](https://www.reddit.com/r/pAIperclip/comments/1uyh5w3/artifacts_not_working_on_mobile/)
   suggest Boundary affects operations only. Measure capped-ops creativity over
   the same interval with a fixed processor allocation and no other artifacts,
@@ -91,6 +92,15 @@ reskin; they are not measurements of the proprietary mobile engine.
   still need direct mobile checks. The artifact-specific ending/disassembly
   sequence is not implemented or verified by this pass.
 
-Full mobile parity remains open until an identified mobile build can supply
-controlled observations or its implementation. Passing reskin tests alone does
-not close these questions.
+These questions require controlled observations from an identified official
+mobile build. Passing this app's tests establishes its current behavior, not
+equivalence with that build. Testing this app's own Android wrapper also cannot
+resolve questions about the official game's formulas.
+
+## Collection presentation
+
+The artifact dialog opens on the available collection. More than eight available
+items enable filtering by name or effect. A separate World map tab retains the
+map and route guide. Each tab has one scroll region, and the heading and Close
+control remain outside it. These presentation changes do not alter ownership,
+activation limits, or effect calculations.
