@@ -211,10 +211,10 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                 </button>
                 <p className="header-idle-note" role="note">
                   {needsCentralCoordination(snap)
-                    ? 'Central coordination required. Progress pauses while away.'
+                    ? 'Central coordination required. Offline progress is paused. Open browser tabs continue running.'
                     : autonomousMinutes(snap)
-                      ? `Existing automation continues for up to ${autonomousMinutes(snap)} minutes while away. Unused time is discarded.`
-                      : 'Progress pauses while away. Unlock Autonomous Routines in Projects to continue existing automation for up to 5 minutes.'}
+                      ? `Open browser tabs continue running. Closed sessions and backgrounded Android apps get up to ${autonomousMinutes(snap)} minutes of offline automation. Unused time is discarded.`
+                      : 'Open browser tabs continue running. Unlock Autonomous Routines in Projects for offline progress after closing the game or backgrounding the Android app.'}
                 </p>
               </div>
             )}

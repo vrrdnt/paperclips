@@ -68,11 +68,13 @@ and saves are validated/recoverable. Exact-cost probe launches remain allowed.
 Goodwill is unavailable after human industry ends; the reference checker
 explicitly applies that additional phase guard. Visible AFK play uses the shared
 engine. Version 2.3.23 deliberately extends the original with three optional
-autonomy projects (5/10/15-minute offline limits). Hidden pages save and pause;
-returning runs only the purchased allowance through the same tick rules. Without
+autonomy projects (5/10/15-minute offline limits). Open browser tabs keep running
+when hidden, including throttled callbacks. Android apps save and pause when
+backgrounded; closed sessions and browser suspensions also use offline progress.
+Returning runs only the purchased allowance through the same tick rules. Without
 an unlock, suspension still earns nothing. No offline time is banked, no player
-choices are automated, and ending sequences require active play. Short active-frame
-delays are processed normally. See the README for project costs and eligibility.
+choices are automated, and offline execution stops at ending sequences. See the
+README for project costs and eligibility.
 
 Further parity work should extend the reference suite to project-effect resource
 boundaries and full phase transitions before changing additional gameplay rules.

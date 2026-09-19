@@ -16,11 +16,12 @@ async function visibility(page: Page, value: 'hidden' | 'visible') {
 }
 
 for (const width of [320, 390, 1280]) {
-  test(`purchases autonomy and reports a capped return at ${width}px`, async ({ page }) => {
+  test(`Android app purchases autonomy and reports a capped return at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.clock.install({ time: epoch }); await page.clock.pauseAt(epoch);
     const state = JSON.parse(readFileSync('dev-saves/03-phase1-late.json', 'utf8'));
     await page.addInitScript(state => {
+      Object.defineProperty(document, 'referrer', { value: 'android-app://ps.papercli.app/' });
       if (!localStorage.getItem('upc_v2')) localStorage.setItem('upc_v2', JSON.stringify(state));
     }, state);
     await page.goto('/');
@@ -42,7 +43,7 @@ for (const width of [320, 390, 1280]) {
     if (width < 768) await expect(page.getByRole('tab', { name: 'Projects', exact: true })).toHaveAttribute('aria-selected', 'true');
     if (width === 390) await expect(page).toHaveScreenshot('autonomous-return-390.png', { animations: 'disabled' });
     await page.getByRole('button', { name: 'More actions' }).click();
-    await expect(page.getByRole('note')).toHaveText('Existing automation continues for up to 5 minutes while away. Unused time is discarded.');
+    await expect(page.getByRole('note')).toHaveText('Open browser tabs continue running. Closed sessions and backgrounded Android apps get up to 5 minutes of offline automation. Unused time is discarded.');
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Full history' }).click();
     await expect(page.getByRole('dialog')).toContainText('Autonomous cycle complete.');

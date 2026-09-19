@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GameEngine } from '../src/game/engine';
+import { BACKGROUND_FRAME_GAP_MS, GameEngine } from '../src/game/engine';
 import { tick } from '../src/game/loop';
 import { makeInitialState } from '../src/game/state';
 import { fixtureNames, loadFixture } from './fixtures';
@@ -45,6 +45,23 @@ describe('visible AFK play uses the original simulation', () => {
 });
 
 describe('elapsed time accounting', () => {
+  it('matches every stock, probe and combat tick with once-a-minute background callbacks', () => {
+    const expected = loadFixture('06-phase3-space.json');
+    Object.assign(expected, { drifterCount: 2e6, probeCount: 1e8, randomState: 123 });
+    const actual = structuredClone(expected);
+    let clock = 0;
+    const engine = new GameEngine(actual, 1000, () => clock += 2);
+    for (let minute = 1; minute <= 2; minute++) {
+      for (let i = 0; i < 6000; i++) tick(expected);
+      engine.advance(1000 + minute * 60000, 12, BACKGROUND_FRAME_GAP_MS);
+      expect(engine.hasPendingTicks).toBe(true);
+      // Returning to a visible tab must retain the remaining background ticks.
+      while (engine.hasPendingTicks) engine.advance(1000 + minute * 60000);
+      expect(actual).toEqual(expected);
+      expect(engine.simulatedAt).toBe(1000 + minute * 60000);
+    }
+  });
+
   it('never adds time twice on repeated callbacks', () => {
     const state = makeInitialState(1);
     const engine = new GameEngine(state, 1000, () => 0);

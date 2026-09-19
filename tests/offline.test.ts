@@ -163,6 +163,37 @@ describe('bounded offline simulation', () => {
 });
 
 describe('offline lifecycle', () => {
+  it.each([[0, 0], [220, 5], [221, 10], [222, 15]])('caps only closed time after a running browser session: project %i', (project, minutes) => {
+    const state = project ? unlocked(project) : makeInitialState(1234);
+    const { runtime, create, elapse } = harness(state);
+    runtime.initialize(); runtime.setBackgroundRunning(true);
+    elapse(60000); runtime.step();
+    while (runtime.hasPendingWork) runtime.step();
+    expect(runtime.state.ticks).toBe(6000);
+    runtime.pause(); elapse(MONTH);
+    const reopened = create(); reopened.initialize(); drain(reopened);
+    expect(reopened.state.ticks).toBe(6000 + minutes * 6000);
+    const again = create(); again.initialize(); drain(again);
+    expect(again.state.ticks).toBe(reopened.state.ticks);
+  });
+
+  it('checkpoints actual earned time when closing during a throttled browser batch', () => {
+    let clock = 0;
+    const { runtime, create, elapse, saved, now } = harness(unlocked(), 0, () => clock += 2);
+    runtime.initialize(); runtime.setBackgroundRunning(true);
+    const started = now();
+    elapse(60000); runtime.step();
+    expect(runtime.hasPendingWork).toBe(true);
+    expect(runtime.act(s => { s.funds = 12345; })).toBeUndefined();
+    runtime.pause();
+    expect(saved().savedAt).toBe(started + runtime.state.ticks * 10);
+    expect(saved().state).not.toHaveProperty('pendingTicks');
+    elapse(60000);
+    const reopened = create(); reopened.initialize(); drain(reopened);
+    expect(reopened.state.ticks).toBe(12000);
+    expect(reopened.state.funds).not.toBe(12345);
+  });
+
   it('preserves hidden timestamps across saves and resumes just once', () => {
     const { runtime, elapse, saved } = harness();
     runtime.initialize(); runtime.pause();

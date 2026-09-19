@@ -50,25 +50,35 @@ serialized. Native Android Back/IME behavior still requires installed testing.
 
 ## Timing and randomness
 
-`GameEngine.advance(now)` accounts for brief active-frame delays and runs the
-unchanged `tick(state)`. The browser schedules batches every 50 ms; each batch
-gets 12 ms, checked every 10 ticks. Pending work is private to the engine and
-capped at 100 ticks (one second), so a slow device cannot build unbounded debt.
-Sub-tick time is retained between active callbacks. Gaps longer than one second,
-or backwards wall-clock changes, clear pending work and rebase the clock. This
-treats device sleep or long stalls without lifecycle events as suspension.
+`GameEngine.advance(now)` runs the unchanged `tick(state)`. The browser schedules
+batches every 50 ms; each batch gets 12 ms, checked every 10 ticks. Open browser
+tabs continue simulating and autosaving when hidden, without rendering updates.
+The visible callback allowance is one second; hidden browser tabs allow 90 seconds
+to accommodate once-a-minute timer throttling with scheduling jitter. A
+`MessageChannel` drains queued work in cooperative batches without waiting for
+another throttled timer. Pending work is private to the engine and capped at
+9,000 ticks (90 seconds); it is never saved. Sub-tick time is retained. Longer
+unobserved gaps use the offline policy; backwards clock changes rebase the clock.
 
-`GameRuntime.pause()` processes the final brief visible interval, saves its
-checkpoint and stops ticking. Startup/resume reconciles elapsed wall time only
+`src/browser/platform.ts` detects the Android TWA by its package referrer, with
+Android installed-PWA display modes as a fallback. Android apps pause when hidden;
+ordinary browser tabs do not. All platforms pause on `freeze` and `pagehide`,
+resuming only after the corresponding `resume` or `pageshow`. These suspension
+flags are independent of visibility, so a visibility event cannot undo a freeze.
+Browser/OS resource policies can still suspend or discard a background page.
+
+`GameRuntime.pause()` processes the final allowed interval, saves the checkpoint
+represented by actual ticks and stops ticking. Startup/resume reconciles elapsed wall time only
 when an autonomy project is owned: flags 220/221/222 grant 5/10/15 minutes, never
-added together. Hidden startup defers reconciliation until visible. Hidden saves
-preserve the absence timestamp; imports and new runs establish a fresh checkpoint.
-Runtime also handles callback gaps over one second without lifecycle events.
+added together. Hidden Android-app startup defers reconciliation until visible;
+hidden browser startup runs immediately. Paused saves preserve the absence
+timestamp; imports and new runs establish a fresh checkpoint. Runtime commands
+wait until queued simulation is settled so decisions cannot affect earlier ticks.
 
 `AutonomousCycle` runs the unchanged `tick` in 12 ms batches, checking the budget
 every 10 ticks. The transient progress overlay makes controls inert and runtime
-commands are blocked during reconciliation. Backgrounding pauses an in-flight
-cycle without adding more time to it. A final report follows simulation messages,
+commands are blocked during reconciliation. Android backgrounding or browser
+suspension pauses an in-flight cycle without adding more time to it. A final report follows simulation messages,
 then state and its fresh timestamp are saved atomically. Sub-second returns are
 simulated without log spam. Repeated lifecycle events do not replay a cycle.
 Project purchases and allocations remain manual; milestone 15, dismantling and
@@ -80,7 +90,7 @@ discards the remainder; resuming in the same document can finish that one cycle.
 Known-field validation still drops retired `catchUpTicksRemaining` debt. The
 version-1 envelope and state schema are unchanged: existing project flags encode
 the upgrades. Export/import ignores source timestamps; prestige clears upgrades.
-Losing focus alone does not pause a visible game.
+Losing focus alone does not pause a game.
 
 Gameplay uses `random(state)`, a saved Mulberry32 stream. Do not call
 `Math.random()` inside game rules. A legacy save receives an initial seed on

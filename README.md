@@ -43,9 +43,11 @@ timestamp, simulation timers, and a saved random stream.
 
 ## AFK and background behavior
 
-The game runs at normal speed while open and visible, even without clicks.
-Before Autonomous Routines is purchased, progress pauses while away. Three
-projects unlock normal-rate offline automation with a per-absence execution horizon:
+Open browser tabs run at normal speed even when another tab or window has focus.
+The Android app saves and pauses when backgrounded. Closing the game, backgrounding
+the Android app, or a browser freezing/discarding the page uses offline progression
+on return. Before Autonomous Routines is purchased, these absences earn no progress.
+Three projects unlock normal-rate offline automation with a per-absence execution horizon:
 
 | Project | Unlock | Cost | Maximum offline time |
 | --- | --- | --- | --- |

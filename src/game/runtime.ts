@@ -1,5 +1,5 @@
 import { G, makeInitialState, type GameState } from './state';
-import { GameEngine } from './engine';
+import { ACTIVE_FRAME_GAP_MS, BACKGROUND_FRAME_GAP_MS, GameEngine } from './engine';
 import { GamePersistence, makeNextRun, type SaveResult } from './persistence';
 import { importSave, exportSave } from './saveCodec';
 import { hydrateGameState } from './hydrate';
@@ -14,6 +14,7 @@ export class GameRuntime {
   private engine: GameEngine;
   private initialized = false;
   private paused = false;
+  private backgroundRunning = false;
   private lastSavedAt = 0;
   private listeners = new Set<Listener>();
   private lastSaveError = '';
@@ -27,7 +28,7 @@ export class GameRuntime {
     private readonly now: () => number = Date.now,
     private readonly budgetClock: () => number = () => performance.now(),
   ) {
-    this.engine = new GameEngine(state, this.now());
+    this.engine = new GameEngine(state, this.now(), budgetClock);
   }
 
   initialize(active = true): void {
@@ -56,16 +57,30 @@ export class GameRuntime {
     for (const listener of this.listeners) listener(this.state, replaced);
   }
 
+  /** Browser visibility changes the timer allowance, not whether gameplay runs. */
+  setBackgroundRunning(background: boolean): void {
+    if (this.backgroundRunning === background) return;
+    // Account the final throttled interval before restoring the visible limit.
+    if (this.initialized && !this.paused) this.step();
+    this.backgroundRunning = background;
+  }
+
+  private get frameGapMs(): number {
+    return this.backgroundRunning ? BACKGROUND_FRAME_GAP_MS : ACTIVE_FRAME_GAP_MS;
+  }
+
+  get hasPendingWork(): boolean { return this.offlineCycle !== null || this.engine.hasPendingTicks; }
+
   step(): void {
     if (this.paused) return;
     if (this.offlineCycle) { this.advanceAutonomousCycle(); return; }
     const now = this.now();
-    if (now - this.lastActiveAt > 1000) {
-      this.beginAutonomousCycle(now - this.lastActiveAt);
+    if (now - this.lastActiveAt > this.frameGapMs) {
+      this.beginAutonomousCycle(now - Math.min(this.lastActiveAt, this.engine.simulatedAt));
       return;
     }
     this.lastActiveAt = now;
-    this.engine.advance(now);
+    this.engine.advance(now, 12, this.frameGapMs);
     if (this.completeReset()) return;
     if (now - this.lastSavedAt >= 2500) this.save();
   }
@@ -73,10 +88,14 @@ export class GameRuntime {
   pause(): void {
     if (this.paused) return;
     const now = this.now();
-    if (!this.offlineCycle) this.engine.advance(now);
+    if (!this.offlineCycle && now - this.lastActiveAt <= this.frameGapMs) {
+      this.engine.advance(now, 12, this.frameGapMs);
+      this.lastActiveAt = now;
+    }
     this.paused = true;
-    // Keep an unobserved suspension if pagehide arrives only after waking.
-    this.pausedAt = !this.offlineCycle && now - this.lastActiveAt > 1000 ? this.lastActiveAt : now;
+    // Save the time represented by actual ticks, including when closing partway
+    // through a throttled batch or after a suspension with no earlier event.
+    this.pausedAt = this.offlineCycle ? now : Math.min(this.lastActiveAt, this.engine.simulatedAt);
     this.engine.resetClock(now);
     this.save();
     this.publish();
@@ -91,9 +110,8 @@ export class GameRuntime {
 
   act<Args extends unknown[], Result>(action: (s: GameState, ...args: Args) => Result, ...args: Args): Result | undefined {
     if (this.paused || this.offlineCycle) return;
-    const elapsed = this.now() - this.lastActiveAt;
-    if (elapsed > 1000) this.beginAutonomousCycle(elapsed);
-    if (this.offlineCycle) return;
+    this.step();
+    if (this.hasPendingWork) return;
     const result = action(this.state, ...args);
     if (this.completeReset()) return result;
     updateProjects(this.state);
@@ -107,7 +125,8 @@ export class GameRuntime {
     const now = this.now();
     // Saving while hidden must not erase the start of the absence. During a
     // reconciliation save only earned progress; a reload discards unfinished work.
-    const checkpoint = this.offlineCycle ? now : this.paused ? this.pausedAt : this.lastActiveAt;
+    const checkpoint = this.offlineCycle ? now : this.paused ? this.pausedAt
+      : Math.min(this.lastActiveAt, this.engine.simulatedAt);
     const result = this.persistence.save(this.state, checkpoint);
     this.lastSavedAt = now;
     this.reportSaveError(result);

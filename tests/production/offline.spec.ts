@@ -1,6 +1,40 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
+test('the built browser keeps running through twenty minutes of throttled background callbacks', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const epoch = new Date('2026-09-20T00:00:00Z');
+  await page.clock.install({ time: epoch });
+  await page.clock.pauseAt(epoch);
+  const original = JSON.parse(readFileSync('dev-saves/03-phase1-late.json', 'utf8'));
+  await page.addInitScript(state => {
+    localStorage.setItem('upc_v2', JSON.stringify({ format: 'paperclips', version: 1, savedAt: Date.now(), state }));
+  }, original);
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Save game', exact: true })).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  for (let minute = 1; minute <= 20; minute++) {
+    await page.clock.setSystemTime(new Date(epoch.getTime() + minute * 60000 - 50));
+    await page.clock.runFor(50);
+  }
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.locator('.header-save-btn').click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('upc_v2')!));
+  expect(saved.state.ticks).toBe(original.ticks + 120000);
+  expect(saved.state.clips).toBeGreaterThan(original.clips);
+  expect(saved.savedAt).toBe(epoch.getTime() + 20 * 60000);
+  await page.getByRole('button', { name: 'Full history' }).click();
+  await expect(page.getByRole('dialog', { name: 'Log history' }).getByText(/^Autonomous cycle/)).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('the built PWA reconciles a month once, capped by its purchased project', async ({ page, context }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -46,13 +80,14 @@ test('the built app retains progress and reloads without a network', async ({ pa
   expect(errors).toEqual([]);
 });
 
-test('the built app retires old catch-up debt and pauses background production', async ({ page }) => {
+test('the built Android app view retires old catch-up debt and pauses background production', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.clock.install({ time: new Date('2026-09-13T00:00:00Z') });
   await page.clock.pauseAt(new Date('2026-09-13T00:00:00Z'));
   const original = JSON.parse(readFileSync('dev-saves/03-phase1-late.json', 'utf8'));
   await page.addInitScript(state => {
+    Object.defineProperty(document, 'referrer', { value: 'android-app://ps.papercli.app/' });
     localStorage.setItem('upc_v2', JSON.stringify({
       format: 'paperclips', version: 1, savedAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
       state: { ...state, randomState: 123, catchUpTicksRemaining: 817200000 },

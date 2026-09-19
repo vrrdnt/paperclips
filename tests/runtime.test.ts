@@ -18,6 +18,35 @@ function setup() {
 }
 
 describe('pause and resume', () => {
+  it('runs twenty minutes in an unfocused browser without an offline project or repeated return reports', () => {
+    const { runtime, elapse } = setup();
+    runtime.initialize();
+    runtime.setBackgroundRunning(true);
+    for (let minute = 0; minute < 20; minute++) {
+      elapse(60000); runtime.step();
+      while (runtime.hasPendingWork) runtime.step();
+    }
+    expect(runtime.state.ticks).toBe(120000);
+    expect(runtime.offlineProgress).toBeNull();
+    expect(runtime.state.readouts.some(line => line.includes('Autonomous cycle'))).toBe(false);
+    elapse(60000);
+    runtime.setBackgroundRunning(false);
+    while (runtime.hasPendingWork) runtime.step();
+    expect(runtime.state.ticks).toBe(126000);
+    runtime.setBackgroundRunning(false);
+    expect(runtime.state.ticks).toBe(126000);
+  });
+
+  it('does not turn a sleeping computer into a month of active browser time', () => {
+    const { runtime, elapse } = setup();
+    runtime.initialize(); runtime.setBackgroundRunning(true);
+    elapse(30 * 86400000); runtime.step();
+    expect(runtime.state.ticks).toBe(0);
+    elapse(60000); runtime.step();
+    while (runtime.hasPendingWork) runtime.step();
+    expect(runtime.state.ticks).toBe(6000);
+  });
+
   it('can initialize paused without processing even a short hidden interval', () => {
     const { runtime, elapse } = setup();
     runtime.initialize(false);
