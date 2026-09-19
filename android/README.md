@@ -1,8 +1,10 @@
 # Android releases
 
 Pushing an `android-v<N>` tag runs the game checks, builds a signed Android App
-Bundle, and submits it to **Google Play production**. Manual workflow runs build
-the signed bundle without submitting it. Ordinary branch pushes run verification.
+Bundle, and submits it to **Google Play production**. Manual workflow runs default
+to building the signed bundle without submitting it. The optional `publish` input
+submits to production after the same checks and is restricted to the default
+branch. Ordinary branch pushes run verification.
 
 This directory contains the existing Bubblewrap-generated wrapper for
 `ps.papercli.app`, opening `https://papercli.ps/`. Bubblewrap generates a regular
@@ -32,8 +34,9 @@ and store metadata such as the installed version name.
    upload key, whose alias is `android`.
 5. After the workflow is on the default branch, open **Actions → Android production
    release → Run workflow**. Select the branch to test and supply a future version
-   code. This verifies signing and saves a bundle artifact; it makes no Play API
-   calls. Test the bundle on Android before pushing a production tag.
+   code and leave **Submit to Google Play production** unchecked. This verifies
+   signing and saves a bundle artifact; it makes no Play API calls. Test the bundle
+   on Android before pushing a production tag.
 
 | Environment secret | Value |
 | --- | --- |
@@ -42,7 +45,7 @@ and store metadata such as the installed version name.
 | `ANDROID_KEY_PASSWORD` | Password for its `android` key entry; may be the same |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | Complete service account JSON key |
 
-The first three secrets are sufficient for a manual build. Production submissions
+The first three secrets are sufficient for a build-only run. Production submissions
 also require the service account secret. The workflow reports missing secrets
 before installing the Android toolchain, keeps the temporary keystore outside the
 checkout, and deletes it after the job. No signing credentials belong in Git.
@@ -83,6 +86,12 @@ The workflow retains the signed AAB and R8 mapping as a GitHub artifact for 30
 days, including when submission fails. Check Play Console before retrying a
 failed upload: if the version code was accepted, use a new code for a new upload.
 Do not move an existing release tag to another commit.
+
+If a tag's checks fail before any upload, fix and push the default branch, then
+manually run **Android production release** on that branch with the unused version
+code and **Submit to Google Play production** checked. This retries from the
+corrected commit while preserving the failed tag's history. The manual run still
+requires the full game checks, signing verification, and production credentials.
 
 ## Local build and maintenance
 

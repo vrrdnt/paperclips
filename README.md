@@ -87,7 +87,8 @@ measurements from the mobile app.
 
 The existing Bubblewrap wrapper is tracked in `android/`. Android release tags
 build signed app bundles and submit them to Google Play production after the
-game checks pass; manual runs build without publishing. See the
+game checks pass; manual runs default to building without publishing and offer an
+explicit production submission option on the default branch. See the
 [Android setup and release guide](android/README.md) for credentials, version codes,
 and local builds. The game itself continues to load from `papercli.ps`.
 
