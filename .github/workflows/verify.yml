@@ -1,7 +1,11 @@
 name: Verify
 on:
   push:
+    branches: ['**']
+    # The Android release workflow calls this workflow for its tags.
+    tags-ignore: ['android-v*']
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read

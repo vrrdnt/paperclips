@@ -83,6 +83,14 @@ The [mobile artifact audit](docs/mobile-artifacts.md) distinguishes verified cod
 behavior, corrections supported by mobile reports, and formulas still awaiting
 measurements from the mobile app.
 
+## Android releases
+
+The existing Bubblewrap wrapper is tracked in `android/`. Android release tags
+build signed app bundles and submit them to Google Play production after the
+game checks pass; manual runs build without publishing. See the
+[Android setup and release guide](android/README.md) for credentials, version codes,
+and local builds. The game itself continues to load from `papercli.ps`.
+
 ## Attribution & Copyright
 
 **Universal Paperclips** is copyright © Frank Lantz / NYU Game Center (2017).

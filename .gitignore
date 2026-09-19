@@ -24,6 +24,18 @@ coverage/
 !tests/browser/appearance.spec.ts-snapshots/*.png
 !tests/browser/autonomy.spec.ts-snapshots/*.png
 
+# Checked-in Bubblewrap sources; exclude machine settings and release outputs.
+!android/app/src/main/res/**/*.png
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.apk
+*.aab
+*.apks
+*.idsig
+
 # Local original-script references; keep out of the published app repo.
 combat.js
 globals.js

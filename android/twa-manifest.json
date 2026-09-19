@@ -1,0 +1,52 @@
+{
+  "packageId": "ps.papercli.app",
+  "host": "papercli.ps",
+  "name": "Paperclips",
+  "launcherName": "Paperclips",
+  "display": "fullscreen-sticky",
+  "themeColor": "#2E2E2E",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#2A2A2A",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://papercli.ps/favicon.svg",
+  "maskableIconUrl": "https://papercli.ps/icons/maskable-icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "upload.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "3",
+  "appVersionCode": 3,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://papercli.ps/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://papercli.ps/",
+  "minSdkVersion": 23,
+  "orientation": "default",
+  "fingerprints": [
+    {
+      "name": "upload key",
+      "value": "8D:F8:7C:C1:3B:FB:7B:1D:83:55:06:F3:E0:A8:72:20:20:27:A7:5E:9A:56:DC:0C:89:D3:6A:5B:A0:EA:37:31"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "3"
+}
