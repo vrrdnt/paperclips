@@ -50,6 +50,10 @@ closing the game, only progress already processed and saved is retained.
 
 ## Maintenance notes
 
+To contribute a translation, see the [localization guide](docs/localization.md).
+Languages use JSON catalogs with English fallback; gameplay and saves keep their
+existing identifiers. English is currently the only production language.
+
 The app uses React 18, TypeScript, Vite, and Zustand display snapshots over an
 independent simulation. Maintenance checks use Node.js 24 and Windows Chromium
 in CI. The notes below describe this app's behavior and the evidence behind it;

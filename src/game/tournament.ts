@@ -1,8 +1,9 @@
+import { strategyText, tournamentSummaryText } from '../i18n/gameText';
+import { message, numberValue } from '../i18n/message';
 import { GameState } from './state';
 import { random } from './random';
 import { A, activeArtifactMultiplier } from './artifacts';
 import { displayMessage } from './messages';
-import { formatWithCommas } from './format';
 
 export const STRATEGIES = ['RANDOM', 'A100', 'B100', 'GREEDY', 'GENEROUS', 'MINIMAX', 'TIT FOR TAT', 'BEAT LAST'] as const;
 
@@ -253,8 +254,8 @@ export function tickTournament(s: GameState): void {
     s.yomi += earned;
     tournament.pendingYomi = 0;
     if (tournament.baseYomi !== undefined) tournament.baseYomi = 0;
-    displayMessage(s, `Strategic modeling results: ${s.tourneyResult}`);
-    displayMessage(s, `${tournament.stratH} selected, ${formatWithCommas(earned)} yomi earned`);
+    displayMessage(s, message("log.strategicModelingResults", { tourneyResult: tournamentSummaryText(s.tourneyResult) }));
+    displayMessage(s, message("log.selectedYomiEarned", { stratH: strategyText(tournament.stratH), earned: numberValue(earned) }));
     s.autoTourneyTicks = 0;
     return;
   }

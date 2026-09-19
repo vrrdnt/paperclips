@@ -1,3 +1,4 @@
+import { message } from '../../i18n/message';
 import type { GameState } from '../state';
 import { A, activeArtifactMultiplier, hasActiveArtifact } from '../artifacts';
 import { displayMessage } from '../messages';
@@ -36,7 +37,7 @@ export function tickOps(s: GameState): void {
 export function tickTrust(s: GameState): void {
   if (s.clips > s.nextTrust - 1) {
     s.trust++;
-    displayMessage(s, 'Production target met: TRUST INCREASED, additional processor/memory capacity granted');
+    displayMessage(s, message("log.productionTargetMetTrustIncreasedAdditionalProcessorMemory"));
     const fibNext = s.fib1 + s.fib2;
     s.nextTrust = fibNext * 1000;
     s.fib1 = s.fib2;

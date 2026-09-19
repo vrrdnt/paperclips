@@ -1,3 +1,4 @@
+import { renderText } from '../src/i18n/core';
 import { describe, expect, it } from 'vitest';
 import { GameRuntime } from '../src/game/runtime';
 import { GamePersistence, SAVE_KEY, BACKUP_KEY } from '../src/game/persistence';
@@ -28,7 +29,7 @@ describe('pause and resume', () => {
     }
     expect(runtime.state.ticks).toBe(120000);
     expect(runtime.offlineProgress).toBeNull();
-    expect(runtime.state.readouts.some(line => line.includes('Autonomous cycle'))).toBe(false);
+    expect(runtime.state.readouts.some(line => renderText(line).includes('Autonomous cycle'))).toBe(false);
     elapse(60000);
     runtime.setBackgroundRunning(false);
     while (runtime.hasPendingWork) runtime.step();

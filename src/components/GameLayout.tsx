@@ -1,3 +1,5 @@
+import { tr } from '../i18n';
+import { useLocale } from '../i18n/react';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Factory, Cpu, FlaskConical, Swords, Rocket } from 'lucide-react';
 import { PanelVisibility } from './ui/PanelVisibility';
@@ -17,15 +19,19 @@ import { CombatPanel } from './panels/CombatPanel';
 import type { DisplaySnapshot } from '../store/useGameStore';
 
 type Section = 'Production' | 'Computing' | 'Projects' | 'Strategy' | 'Fleet';
+const sectionLabels = {"Production":"sections.production","Computing":"sections.computing","Projects":"sections.projects","Strategy":"sections.strategy","Fleet":"sections.fleet"} as const;
 const sectionIcons = { Production: Factory, Computing: Cpu, Projects: FlaskConical, Strategy: Swords, Fleet: Rocket };
 
 /** Panel placement and navigation are presentation state, never part of a save. */
 export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
+  useLocale();
   const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const [selected, setSelected] = useState<Section>('Production');
   const scrollPositions = useRef<Partial<Record<Section, number>>>({});
   const previous = useRef({ mobile, selected });
   const tabRefs = useRef<Partial<Record<Section, HTMLButtonElement | null>>>({});
+  const navRef = useRef<HTMLElement>(null);
+  const [navigationHeight, setNavigationHeight] = useState(60);
   const postHuman = s.humanFlag === 0;
   const space = s.spaceFlag === 1;
   const computing = !!s.compFlag && s.dismantle < 7;
@@ -43,6 +49,16 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
   if (space && (exploration || design || combat)) sections.push('Fleet');
   const active = sections.includes(selected) ? selected : 'Production';
   const hasTabs = sections.length > 1;
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const measure = () => setNavigationHeight(nav.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [mobile, hasTabs]);
 
   useLayoutEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -89,9 +105,10 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
   const combatPanel = panel('Fleet', <CombatPanel snap={s} />, 'combat');
 
   return (
-    <div className={hasTabs ? 'app-wrap has-section-tabs' : 'app-wrap'}>
+    <div className={hasTabs ? 'app-wrap has-section-tabs' : 'app-wrap'}
+      style={mobile && hasTabs ? { paddingBottom: navigationHeight + 15 } : undefined}>
       <div className="app-console"><Console readouts={s.readouts} /></div>
-      {mobile && hasTabs && <nav className="section-tabs" role="tablist" aria-label="Game sections">
+      {mobile && hasTabs && <nav ref={navRef} className="section-tabs" role="tablist" aria-label={tr("gameLayout.gameSections")}>
         {sections.map((section, index) => {
           const Icon = sectionIcons[section];
           return <button key={section} id={`section-tab-${section}`} ref={element => { tabRefs.current[section] = element; }}
@@ -105,7 +122,7 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
               event.preventDefault();
               select(sections[next]);
               tabRefs.current[sections[next]]?.focus({ preventScroll: true });
-            }}><Icon size={18} aria-hidden="true" /><span>{section}</span></button>;
+            }}><Icon size={18} aria-hidden="true" /><span>{tr(sectionLabels[section])}</span></button>;
         })}
       </nav>}
       <main id="game-section-panel" className={`app-body app-body-${postHuman ? space ? 'phase3' : 'phase2' : 'human'}`}
@@ -131,25 +148,15 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
         </div>
       </main>
 
-        <footer style={{ textAlign: 'center', padding: '16px 0 4px', fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-          Based on{' '}
+        <footer style={{ textAlign: 'center', padding: '16px 0 4px', fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6 }}>{tr("gameLayout.basedOn")}{' '}
           <a href="https://www.decisionproblem.com/paperclips/" target="_blank" rel="noopener noreferrer"
-            style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            Universal Paperclips
-          </a>
-          {' '}by Frank Lantz &amp; NYU Game Center.
-          All game design and mechanics are their work.
-          This is a non-commercial fan reskin - not affiliated with or endorsed by the original creators.
-          {' '}|{' '}
+            style={{ color: 'var(--accent)', textDecoration: 'none' }}>{tr("gameLayout.universalPaperclips")}</a>
+          {' '}{tr("gameLayout.byFrankLantzAmpNyuGameCenterAll")}{' '}|{' '}
           <a href="https://github.com/vrrdnt/paperclips" target="_blank" rel="noopener noreferrer"
-            style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            vrrdnt/paperclips
-          </a>
+            style={{ color: 'var(--accent)', textDecoration: 'none' }}>{tr("gameLayout.vrrdntPaperclips")}</a>
           {' '}|{' '}
           <a href="/privacy.html"
-            style={{ color: 'var(--accent)', textDecoration: 'none' }}>
-            Privacy Policy
-          </a>
+            style={{ color: 'var(--accent)', textDecoration: 'none' }}>{tr("gameLayout.privacyPolicy")}</a>
         </footer>
     </div>
   );

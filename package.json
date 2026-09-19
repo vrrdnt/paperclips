@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "playwright test",
-    "check": "npm run typecheck && npm test && npm run build",
+    "check:locales": "tsx scripts/check-locales.ts",
+    "locale:new": "tsx scripts/new-locale.ts",
+    "check": "npm run check:locales && npm run typecheck && npm test && npm run build",
     "benchmark": "tsx scripts/benchmark.ts",
     "verify:original": "tsx scripts/verify-original.ts",
     "test:production": "playwright test -c playwright.production.config.ts"

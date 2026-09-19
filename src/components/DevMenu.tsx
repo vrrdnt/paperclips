@@ -1,3 +1,5 @@
+import { tr, translate } from '../i18n';
+import { useLocale } from '../i18n/react';
 import { useEffect, useRef, useState } from 'react';
 import { DEV_SAVES } from '../devSaves';
 import { game } from '../game/runtime';
@@ -5,6 +7,7 @@ import { game } from '../game/runtime';
 const TRIGGER = 'paperclips';
 
 export function DevMenu() {
+  useLocale();
   const [open, setOpen] = useState(false);
   const bufRef = useRef('');
 
@@ -27,7 +30,7 @@ export function DevMenu() {
 
   function loadSave(data: object) {
     const result = game.loadStage(data);
-    if (!result.ok) window.alert(result.error);
+    if (!result.ok) window.alert(translate(result.detail ?? result.error));
     else setOpen(false);
   }
 
@@ -48,17 +51,13 @@ export function DevMenu() {
         width: 420, maxWidth: '92vw',
         boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
       }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
-          Dev: Load Stage
-        </div>
-        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 14 }}>
-          Replaces current save. No undo.
-        </div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{tr("devMenu.devLoadStage")}</div>
+        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 14 }}>{tr("devMenu.replacesCurrentSaveNoUndo")}</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {DEV_SAVES.map(save => (
             <button
-              key={save.label}
+              key={save.label.key}
               onClick={() => loadSave(save.data)}
               style={{
                 display: 'flex', alignItems: 'baseline', gap: 10,
@@ -80,18 +79,16 @@ export function DevMenu() {
               }}
             >
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap' }}>
-                {save.label}
+                {translate(save.label)}
               </span>
               <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                {save.desc}
+                {translate(save.desc)}
               </span>
             </button>
           ))}
         </div>
 
-        <div style={{ marginTop: 14, fontSize: 10, color: 'var(--text-muted)', textAlign: 'right' }}>
-          Press Esc or click outside to close
-        </div>
+        <div style={{ marginTop: 14, fontSize: 10, color: 'var(--text-muted)', textAlign: 'right' }}>{tr("adminMenu.pressEscOrClickOutsideToClose")}</div>
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import { tr, translate } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import { Dialog } from '../ui/Dialog';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { LucideIcon } from 'lucide-react';
@@ -105,6 +107,7 @@ const ARTIFACT_ICONS: Record<ArtifactId, LucideIcon> = {
 };
 
 function ArtifactGlyph({ id, size = 14 }: { id: ArtifactId; size?: number }) {
+  useLocale();
   const Icon = ARTIFACT_ICONS[id] ?? Gem;
   return <Icon size={size} strokeWidth={1.8} aria-hidden="true" />;
 }
@@ -223,6 +226,7 @@ function appendPathSegment(path: MapPoint[], target: MapPoint, nextTarget?: MapP
 }
 
 export function ArtifactsDropdown({ snap: s, onClose }: Props) {
+  useLocale();
   const [view, setView] = useState<'list' | 'map'>('list');
   const [filter, setFilter] = useState('');
   const id = useId();
@@ -239,7 +243,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
   const available = ARTIFACTS.filter(artifact => canUseArtifact(s, artifact.id));
   const guidePath = view === 'map' ? buildGuidePath(world, sim, completed) : '';
   const query = filter.trim().toLocaleLowerCase();
-  const filtered = available.filter(artifact => `${artifact.name} ${artifact.effect}`.toLocaleLowerCase().includes(query));
+  const filtered = available.filter(artifact => `${translate(artifact.name)} ${translate(artifact.effect)}`.toLocaleLowerCase().includes(query));
   function navigateTabs(event: KeyboardEvent) {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
@@ -249,34 +253,31 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
   }
 
   return (
-    <Dialog className="artifact-dropdown" title="Artifact map" onClose={() => onClose?.()}>
+    <Dialog className="artifact-dropdown" title={tr("gameHeader.artifactMap")} onClose={() => onClose?.()}>
       <div className="artifact-dropdown-head">
         <div className="artifact-dropdown-title">
-          <MapIcon size={13} />
-          Artifacts
-        </div>
-        <button type="button" className="artifact-close" onClick={onClose} title="Close">
+          <MapIcon size={13} />{tr("artifactsPanel.artifacts")}</div>
+        <button type="button" className="artifact-close" onClick={onClose} title={tr("console.close")}>
           <X size={13} />
         </button>
       </div>
 
       <div className="stat-row">
-        <span className="stat-label">Current square</span>
-        <span className="stat-value">World {world}, Sim {sim}</span>
+        <span className="stat-label">{tr("artifactsPanel.currentSquare")}</span>
+        <span className="stat-value">{tr("artifactsPanel.worldSim", { world: world, sim: sim })}</span>
       </div>
       <div className="stat-row">
-        <span className="stat-label">Active artifacts</span>
-        <span className="stat-value">{s.activeArtifacts.length} / {MAX_ACTIVE_ARTIFACTS}</span>
+        <span className="stat-label">{tr("artifactsPanel.activeArtifacts")}</span>
+        <span className="stat-value">{tr("artifactsPanel.text", { length: s.activeArtifacts.length, MAX_ACTIVE_ARTIFACTS: MAX_ACTIVE_ARTIFACTS })}</span>
       </div>
-      <div className="artifact-tabs" role="tablist" aria-label="Artifact views" onKeyDown={navigateTabs}>
+      <div className="artifact-tabs" role="tablist" aria-label={tr("artifactsPanel.artifactViews")} onKeyDown={navigateTabs}>
         <button ref={listTab} type="button" role="tab" id={`${id}-list-tab`} aria-controls={`${id}-list`}
           aria-selected={view === 'list'} tabIndex={view === 'list' ? 0 : -1} onClick={() => setView('list')}>
-          <Gem size={14} aria-hidden="true" /> Artifacts ({available.length})
+          <Gem size={14} aria-hidden="true" />{tr("artifactsPanel.artifacts2")}{available.length})
         </button>
         <button ref={mapTab} type="button" role="tab" id={`${id}-map-tab`} aria-controls={`${id}-map`}
           aria-selected={view === 'map'} tabIndex={view === 'map' ? 0 : -1} onClick={() => setView('map')}>
-          <Compass size={14} aria-hidden="true" /> World map
-        </button>
+          <Compass size={14} aria-hidden="true" />{tr("artifactsPanel.worldMap")}</button>
       </div>
 
       <div className="artifact-view artifact-map-wrap" role="tabpanel" id={`${id}-map`}
@@ -286,7 +287,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
           {current.map(artifact => (
             <span key={artifact.id}>
               <ArtifactGlyph id={artifact.id} size={12} />
-              {artifact.name}
+              {translate(artifact.name)}
             </span>
           ))}
         </div>
@@ -304,9 +305,9 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
                 const cellArtifacts = artifactsAt(cellWorld, cellSim);
                 const canWarp = isCompleted && !isCurrent;
                 const title = [
-                  `World ${cellWorld}, Simulation ${cellSim}`,
-                  isCompleted ? 'complete' : 'incomplete',
-                  cellArtifacts.map(a => a.name).join(', '),
+                  tr('artifacts.coordinates', { world: cellWorld, simulation: cellSim }),
+                  tr(isCompleted ? 'artifacts.complete' : 'artifacts.incomplete'),
+                  cellArtifacts.map(a => translate(a.name)).join(', '),
                 ].filter(Boolean).join(' - ');
 
                 return (
@@ -323,7 +324,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
                     aria-label={title}
                     disabled={!canWarp}
                     onClick={() => {
-                      if (!window.confirm(`Warp to World ${cellWorld}, Simulation ${cellSim}? Current run progress will reset.`)) return;
+                      if (!window.confirm(tr("artifactsPanel.warpToWorldSimulationCurrentRunProgressWill", { cellWorld: cellWorld, cellSim: cellSim }))) return;
                       game.act(warpToArtifactMapCell, cellWorld, cellSim);
                       onClose?.();
                     }}
@@ -349,12 +350,12 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
 
       <div className="artifact-view artifact-list-view" role="tabpanel" id={`${id}-list`}
         aria-labelledby={`${id}-list-tab`} hidden={view !== 'list'}>
-      {available.length > 8 && <input className="artifact-filter" type="search" aria-label="Filter artifacts"
-        placeholder="Filter by name or effect" value={filter} onChange={event => setFilter(event.target.value)} />}
+      {available.length > 8 && <input className="artifact-filter" type="search" aria-label={tr("artifactsPanel.filterArtifacts")}
+        placeholder={tr("artifactsPanel.filterByNameOrEffect")} value={filter} onChange={event => setFilter(event.target.value)} />}
       <div className="artifact-list">
         {available.length === 0 ? (
-          <div className="empty-state">No artifacts available.</div>
-        ) : filtered.length === 0 ? <div className="empty-state">No matching artifacts.</div> : filtered.map(artifact => {
+          <div className="empty-state">{tr("artifactsPanel.noArtifactsAvailable")}</div>
+        ) : filtered.length === 0 ? <div className="empty-state">{tr("artifactsPanel.noMatchingArtifacts")}</div> : filtered.map(artifact => {
           const isActive = active.has(artifact.id);
           const isPermanent = s.collectedArtifacts.includes(artifact.id);
           const useDisabled = !isActive && s.activeArtifacts.length >= MAX_ACTIVE_ARTIFACTS;
@@ -365,17 +366,17 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
                 <ArtifactGlyph id={artifact.id} size={18} />
               </div>
               <div className="artifact-item-main">
-                <div className="artifact-name">{artifact.name}</div>
-                <div className="artifact-effect">{artifact.effect}</div>
-                {!isPermanent && <div className="artifact-effect">current world only</div>}
+                <div className="artifact-name">{translate(artifact.name)}</div>
+                <div className="artifact-effect">{translate(artifact.effect)}</div>
+                {!isPermanent && <div className="artifact-effect">{tr("artifactsPanel.currentWorldOnly")}</div>}
               </div>
               <Btn
                 onClick={() => { isActive ? game.act(deactivateArtifact, artifact.id) : game.act(activateArtifact, artifact.id); }}
                 disabled={useDisabled}
                 variant={isActive ? 'success' : 'default'}
-                title={isActive ? 'Deactivate artifact' : 'Activate artifact'}
+                title={isActive ? tr("artifactsPanel.deactivateArtifact") : tr("artifactsPanel.activateArtifact")}
               >
-                {isActive ? 'On' : 'Use'}
+                {isActive ? tr("artifactsPanel.on") : tr("artifactsPanel.use")}
               </Btn>
             </div>
           );

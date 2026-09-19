@@ -1,3 +1,6 @@
+import type { MessageKey } from '../../i18n/message';
+import { tr } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import { Users } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Slider } from '../ui/Slider';
@@ -5,21 +8,22 @@ import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { game } from '../../game/runtime';
 import { entertainSwarm, synchSwarm } from '../../game/actions';
-import { formatWithCommas } from '../../game/format';
+import { localizedNumber as formatWithCommas } from '../../i18n';
 
 // Status labels matching original updateSwarm() — status 7 hides the row entirely
-const STATUS_LABEL: Record<number, string> = {
-  0: 'Active',
-  3: 'Bored',
-  5: 'Disorganized',
-  6: 'Sleeping',
-  8: 'Lonely',
-  9: 'NO RESPONSE...',
+const STATUS_LABEL: Partial<Record<number, MessageKey>> = {
+  0: "swarm.status.0",
+  3: "swarm.status.3",
+  5: "swarm.status.5",
+  6: "swarm.status.6",
+  8: "swarm.status.8",
+  9: "swarm.status.9",
 };
 
 interface Props { snap: DisplaySnapshot; }
 
 export function SwarmPanel({ snap: s }: Props) {
+  useLocale();
   if (!s.swarmFlag) return null;
   if (s.dismantle >= 2 && s.endTimer2 >= 150) return null;
 
@@ -34,19 +38,19 @@ export function SwarmPanel({ snap: s }: Props) {
   const isDisorg = s.swarmStatus === 5;
 
   return (
-    <SectionCard title={s.spaceFlag === 1 ? 'Probe Swarm' : 'Drone Swarm'} icon={<Users size={14} />}>
+    <SectionCard title={s.spaceFlag === 1 ? tr("swarmPanel.probeSwarm") : tr("swarmPanel.droneSwarm")} icon={<Users size={14} />}>
       <div className="stat-row">
-        <span className="stat-label">Swarm size</span>
+        <span className="stat-label">{tr("swarmPanel.swarmSize")}</span>
         <span className="stat-value">{formatWithCommas(d)}</span>
       </div>
 
       {showStatus && (
         <div className="stat-row">
-          <span className="stat-label">Status</span>
+          <span className="stat-label">{tr("swarmPanel.status")}</span>
           <span className="stat-value" style={{
             color: (isBored || isDisorg) ? 'var(--danger)' : undefined,
           }}>
-            {statusLabel}
+            {statusLabel ? tr(statusLabel) : ''}
           </span>
         </div>
       )}
@@ -54,7 +58,7 @@ export function SwarmPanel({ snap: s }: Props) {
       {showSlider && (
         <div style={{ marginTop: 10 }}>
           <div className="stat-row" style={{ marginBottom: 4 }}>
-            <span className="stat-label">{s.spaceFlag === 1 ? 'Probe focus' : 'Drone focus'}</span>
+            <span className="stat-label">{s.spaceFlag === 1 ? tr("swarmPanel.probeFocus") : tr("swarmPanel.droneFocus")}</span>
           </div>
           <Slider
             className="price-slider"
@@ -63,12 +67,12 @@ export function SwarmPanel({ snap: s }: Props) {
             value={s.sliderPos}
             fill
             mobileStep={5}
-            aria-label="Swarm work vs think balance"
+            aria-label={tr("swarmPanel.swarmWorkVsThinkBalance")}
             onInput={v => { game.act(state => { state.sliderPos = v; }); }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--mobile-label-size, 10px)', color: 'var(--text-muted)', marginTop: 2 }}>
-            <span>Work</span>
-            <span>Think</span>
+            <span>{tr("swarmPanel.work")}</span>
+            <span>{tr("swarmPanel.think")}</span>
           </div>
         </div>
       )}
@@ -76,12 +80,12 @@ export function SwarmPanel({ snap: s }: Props) {
       {isActive && showGiftInfo && (
         <>
           <div className="stat-row">
-            <span className="stat-label">Swarm gifts</span>
+            <span className="stat-label">{tr("computingPanel.swarmGifts")}</span>
             <span className="stat-value">{formatWithCommas(s.swarmGifts)}</span>
           </div>
           <div className="stat-row">
-            <span className="stat-label">Next gift in</span>
-            <span className="stat-value dim">{formatWithCommas(Math.round(s.giftCountdown))} ticks</span>
+            <span className="stat-label">{tr("swarmPanel.nextGiftIn")}</span>
+            <span className="stat-value dim">{tr("swarmPanel.ticks", { value1: formatWithCommas(Math.round(s.giftCountdown)) })}</span>
           </div>
         </>
       )}
@@ -89,18 +93,14 @@ export function SwarmPanel({ snap: s }: Props) {
       {isBored && showRecoveryControls && (
         <div className="row" style={{ marginTop: 8 }}>
           <Btn variant="primary" onClick={() => { game.act(entertainSwarm); }}
-            disabled={s.creativity < s.entertainCost}>
-            Entertain ({formatWithCommas(s.entertainCost)} creat)
-          </Btn>
+            disabled={s.creativity < s.entertainCost}>{tr("swarmPanel.entertainCreat", { entertainCost: formatWithCommas(s.entertainCost) })}</Btn>
         </div>
       )}
 
       {isDisorg && showRecoveryControls && (
         <div className="row" style={{ marginTop: 8 }}>
           <Btn variant="primary" onClick={() => { game.act(synchSwarm); }}
-            disabled={s.yomi < s.synchCost}>
-            Synchronize ({formatWithCommas(s.synchCost)} yomi)
-          </Btn>
+            disabled={s.yomi < s.synchCost}>{tr("swarmPanel.synchronizeYomi", { synchCost: formatWithCommas(s.synchCost) })}</Btn>
         </div>
       )}
     </SectionCard>

@@ -6,6 +6,26 @@
   font-display: swap;
 }
 
+.language-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  color: var(--text);
+  font-size: 14px;
+}
+.language-setting select {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px;
+  font: inherit;
+  color: var(--text);
+  background: var(--panel2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+}
+:lang(zh), :lang(ja), :lang(ko) { line-break: auto; }
+
 /* ── Reset & Base ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1926,7 +1946,8 @@ select {
     cursor: pointer; touch-action: manipulation;
   }
   .section-tabs button[aria-selected="true"] { color: #e0e0e0; background: #414141; border-color: #686868; }
-  .section-tabs span { white-space: nowrap; }
+  .section-tabs span { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+  html:not([lang="en"]) .section-tabs button { flex: 1 1 0; min-width: 0; }
   .section-title { font-size: 14px; letter-spacing: .06em; margin-bottom: 6px; padding-bottom: 4px; }
   .section-card { padding: 8px 10px; }
   .stat-row { padding: 2px 0; }

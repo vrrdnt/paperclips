@@ -44,7 +44,7 @@ export class GameRuntime {
     this.pausedAt = loaded.savedAt || now;
     updateProjects(this.state);
     if (active) this.beginAutonomousCycle(loaded.savedAt ? now - loaded.savedAt : 0);
-    if (loaded.warning) displayMessage(this.state, loaded.warning);
+    if (loaded.warning) displayMessage(this.state, loaded.warningText ?? loaded.warning);
     this.publish(true);
   }
 
@@ -186,7 +186,7 @@ export class GameRuntime {
     if (result.ok) { this.lastSaveError = ''; return; }
     if (result.error === this.lastSaveError) return;
     this.lastSaveError = result.error;
-    displayMessage(this.state, result.error);
+    displayMessage(this.state, result.detail ?? result.error);
     this.publish();
   }
 

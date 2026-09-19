@@ -23,6 +23,7 @@ rewards, production, project discovery, or elapsed game time.
 | `src/store/` | Independent display snapshots and bounded chart histories |
 | `src/hooks/useGameRuntime.ts` | Browser timers and lifecycle listeners, with cleanup |
 | `src/components/GameHeader.tsx`, `GameLayout.tsx` | Save/menu UI and phase-dependent panel placement |
+| `src/i18n/` | Deferred messages, English fallback catalogs, locale preferences and display formatting |
 
 The application has one `game` runtime. Tests use independent `GameRuntime` or
 `GameEngine` instances to isolate state and control time. Domain
@@ -131,6 +132,14 @@ smooth animation but never changes it. Tournament animation is decorative;
 closing, remounting, or suspending its panel cannot affect yomi rewards.
 
 ## Persistence contracts
+
+UI strings, project text, artifacts, changelog entries, and generated log messages
+resolve through the locale catalog at display time. Language selection uses the
+separate `paperclips.locale` preference and does not remount the game or change its
+revision. Deferred log messages are transient; readouts are omitted from exports
+and ignored on import. Canonical strategy and choice strings remain unchanged in
+saves and are mapped to labels when rendered. See [localization](localization.md)
+for contribution steps, fallback behavior, and validation commands.
 
 - `upc_v2` is a versioned envelope containing state and `savedAt` in one write.
 - `upc_v2_backup` retains the previous valid checkpoint.

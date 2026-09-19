@@ -1,3 +1,4 @@
+import { renderText } from '../src/i18n/core';
 import { describe, expect, it } from 'vitest';
 import { AUTONOMY, autonomousMinutes } from '../src/game/autonomy';
 import { AutonomousCycle } from '../src/game/offline';
@@ -85,7 +86,7 @@ describe('bounded offline simulation', () => {
     runtime.initialize(); drain(runtime);
     expect(runtime.state.ticks).toBe(minutes * 6000);
     expect(runtime.state.clips).toBeCloseTo(2000 + minutes * 600, 5);
-    expect(runtime.state.readouts.slice(0, 3).reverse()).toEqual([
+    expect(runtime.state.readouts.slice(0, 3).reverse().map(line => renderText(line))).toEqual([
       `Autonomous cycle complete. ${minutes * 600 === 3000 ? '3,000' : minutes * 600 === 6000 ? '6,000' : '9,000'} clips created in ${minutes}m.`,
       'Execution horizon reached. Systems entered standby.', 'Central coordination restored.',
     ]);
@@ -126,7 +127,7 @@ describe('bounded offline simulation', () => {
       const state = unlocked(); state.wire = wire; state.clipmakerLevel = 100;
       const cycle = new AutonomousCycle(state, 72000, () => 0);
       cycle.advance(); cycle.report();
-      expect(state.readouts[1]).toBe(`Autonomous cycle complete. ${wire} clips created in 1m 12s.`);
+      expect(renderText(state.readouts[1])).toBe(`Autonomous cycle complete. ${wire} clips created in 1m 12s.`);
     }
   });
 
@@ -138,7 +139,7 @@ describe('bounded offline simulation', () => {
     expect(state.ticks).toBe(1);
     expect(state.milestoneFlag).toBe(15);
     expect(state.projectFlags[140]).toBeUndefined();
-    expect(state.readouts[1]).toBe('Central coordination required. Systems entered standby.');
+    expect(renderText(state.readouts[1])).toBe('Central coordination required. Systems entered standby.');
     const ending = loadFixture('07-phase3-endgame.json'); ending.projectFlags[222] = 1;
     const before = structuredClone(ending);
     new AutonomousCycle(ending, MONTH, () => 0).advance();
@@ -158,7 +159,7 @@ describe('bounded offline simulation', () => {
     const cycle = new AutonomousCycle(state, 500, () => 0);
     cycle.advance(); cycle.report();
     expect(state.ticks).toBe(50);
-    expect(state.readouts.some(line => line.includes('Autonomous cycle'))).toBe(false);
+    expect(state.readouts.some(line => renderText(line).includes('Autonomous cycle'))).toBe(false);
   });
 });
 

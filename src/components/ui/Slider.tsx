@@ -1,3 +1,5 @@
+import { tr } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import React, { useState, useEffect, useRef } from 'react';
 import { Btn } from './Btn';
 
@@ -36,6 +38,7 @@ export function Slider({
   allowAboveMax = false,
   ...rest
 }: SliderProps) {
+  useLocale();
   const [local, setLocal] = useState(value);
   const [isCoarsePointer, setIsCoarsePointer] = useState(getIsCoarsePointer);
   const draggingRef = useRef(false);
@@ -127,7 +130,7 @@ export function Slider({
         type="text"
         inputMode={step < 1 ? 'decimal' : 'numeric'}
         value={draftValue}
-        aria-label={ariaLabel ? `${ariaLabel} value` : undefined}
+        aria-label={ariaLabel ? tr("slider.value", { ariaLabel: ariaLabel }) : undefined}
         onChange={handleValueTextChange}
         onFocus={handleValueFocus}
         onBlur={handleValueBlur}

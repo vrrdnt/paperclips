@@ -1,8 +1,10 @@
+import { tr } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import { Shield } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { CombatCanvas } from './CombatCanvas';
 import { DisplaySnapshot } from '../../store/useGameStore';
-import { spellf } from '../../game/format';
+import { localizedCompact as spellf } from '../../i18n';
 
 interface Props { snap: DisplaySnapshot; }
 
@@ -62,13 +64,14 @@ function displayedCombatants(
 }
 
 export function CombatPanel({ snap: s }: Props) {
+  useLocale();
   if (!s.battleFlag) return null;
   if (s.dismantle >= 1 && s.endTimer1 >= 190) return null;
 
   const active = visibleBattle(s);
   const showCanvas = !(s.dismantle >= 1 && s.endTimer1 >= 175);
   const visibleResult = active?.result && active.endDelay < battleEndTimer(s) ? active.result : null;
-  const battleName = active?.name || s.battleName || 'Drifter Attack';
+  const battleName = active?.name || s.battleName || tr('combat.drifterAttack');
   const battleScale = active?.scale || s.battleScale || originalBattleScale(s);
   const initialClips = active?.initialClipProbes ?? active?.clipProbes ?? 0;
   const initialDrifters = active?.initialDrifterProbes ?? active?.drifterProbes ?? 0;
@@ -82,35 +85,35 @@ export function CombatPanel({ snap: s }: Props) {
   const honorSign = honorDelta >= 0 ? '+' : '-';
 
   return (
-    <SectionCard title="Combat" icon={<Shield size={14} />}>
+    <SectionCard title={tr("combatPanel.combat")} icon={<Shield size={14} />}>
       <div className="battle-heading">
-        <span>{active ? battleName : 'Awaiting drifter attack'}</span>
+        <span>{active ? battleName : tr("combatPanel.awaitingDrifterAttack")}</span>
         {visibleResult && (
           <span className={`battle-outcome-pill ${visibleResult}`}>
-            {visibleResult === 'victory' ? 'VICTORY' : 'DEFEAT'}
+            {visibleResult === 'victory' ? tr("combatPanel.victory") : tr("combatPanel.defeat")}
           </span>
         )}
       </div>
       {showCanvas && <CombatCanvas />}
       {visibleResult && (
         <div className={`battle-outcome-row ${visibleResult}`}>
-          <span>{visibleResult === 'victory' ? 'Victory' : 'Defeat'}</span>
-          <span>{honorSign}{spellf(Math.abs(honorDelta))} honor</span>
+          <span>{visibleResult === 'victory' ? tr("combatPanel.victory2") : tr("combatPanel.defeat2")}</span>
+          <span>{tr("combatPanel.honor", { honorSign: honorSign, value2: spellf(Math.abs(honorDelta)) })}</span>
         </div>
       )}
       {active ? (
         <div className="battle-report-grid">
-          <span className="stat-label">Probes</span>
+          <span className="stat-label">{tr("combatPanel.probes")}</span>
           <span className="stat-value">{spellf(displayProbes)}</span>
-          <span className="stat-label">Drifters</span>
+          <span className="stat-label">{tr("combatPanel.drifters")}</span>
           <span className="stat-value">{spellf(displayDrifters)}</span>
-          <span className="stat-label">Ratio</span>
+          <span className="stat-label">{tr("combatPanel.ratio")}</span>
           <span className="stat-value">{battleRatio(initialClips, initialDrifters)}</span>
-          <span className="stat-label">Scale</span>
-          <span className="stat-value">1 dot = {spellf(battleScale)}</span>
+          <span className="stat-label">{tr("combatPanel.scale")}</span>
+          <span className="stat-value">{tr("combatPanel.1Dot", { battleScale: spellf(battleScale) })}</span>
         </div>
       ) : (
-        <div className="battle-idle">No active battle</div>
+        <div className="battle-idle">{tr("combatPanel.noActiveBattle")}</div>
       )}
     </SectionCard>
   );

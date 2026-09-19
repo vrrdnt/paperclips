@@ -1,3 +1,4 @@
+import { renderText } from '../src/i18n/core';
 import { describe, expect, it } from 'vitest';
 import { makeInitialState } from '../src/game/state';
 import { getActiveProjects, purchaseProject, updateProjects, PROJECT_BY_ID } from '../src/game/projects';
@@ -56,5 +57,5 @@ it('completes the disassembly ending and reaches the credits', () => {
   expect(state.finalClips).toBe(100);
   for (let i = 0; i < 1000; i++) tick(state);
   expect(state.milestoneFlag).toBe(20);
-  expect(state.readouts).toContain('© 2017 Everybody House Games');
+  expect(state.readouts.map(line => renderText(line))).toContain('© 2017 Everybody House Games');
 });

@@ -1,3 +1,5 @@
+import { renderText } from '../../src/i18n/core';
+import type { LocalizedText } from '../../src/i18n/message';
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
@@ -35,7 +37,7 @@ for (const width of [320, 390, 1280]) {
     await expect(page.getByRole('progressbar')).toHaveCount(0);
     const after = await live(page);
     expect(after.ticks).toBe(before.ticks + 30000);
-    expect(after.readouts.slice(0, 3).reverse()).toEqual([
+    expect(after.readouts.slice(0, 3).reverse().map((line: LocalizedText) => renderText(line))).toEqual([
       expect.stringMatching(/^Autonomous cycle complete\. .+ clips created in 5m\.$/),
       'Execution horizon reached. Systems entered standby.', 'Central coordination restored.',
     ]);

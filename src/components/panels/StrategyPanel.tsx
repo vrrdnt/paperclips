@@ -1,3 +1,6 @@
+import { strategyText, choiceText, tournamentSummaryText } from '../../i18n/gameText';
+import { tr, translate } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import React from 'react';
 import { useTournamentAnimation, type TournamentCell } from '../../hooks/useTournamentAnimation';
 import { Swords } from 'lucide-react';
@@ -6,7 +9,7 @@ import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { game } from '../../game/runtime';
 import { runTourney, toggleAutoTourney } from '../../game/actions';
-import { formatWithCommas } from '../../game/format';
+import { localizedNumber as formatWithCommas } from '../../i18n';
 
 interface Props { snap: DisplaySnapshot; }
 
@@ -17,6 +20,7 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
   choiceNames: [string, string];
   flash: Cell | null;
 }) {
+  useLocale();
   const [a, b] = choiceNames ?? ['A', 'B'];
   const cell = (id: Cell, hVal: number, vVal: number) => {
     const isFlashing = flash === id;
@@ -52,7 +56,7 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
   const labelStyle: React.CSSProperties = {
     fontSize: 'var(--mobile-label-size, 9px)', fontWeight: 600, color: 'var(--text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.04em',
-    padding: '0 2px', whiteSpace: 'nowrap',
+    padding: '0 2px', overflowWrap: 'anywhere',
   };
 
   return (
@@ -65,18 +69,18 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
       <thead>
         <tr>
           <td />
-          <th style={{ ...labelStyle, textAlign: 'center' }}>{a}</th>
-          <th style={{ ...labelStyle, textAlign: 'center' }}>{b}</th>
+          <th style={{ ...labelStyle, textAlign: 'center' }}>{translate(choiceText(a))}</th>
+          <th style={{ ...labelStyle, textAlign: 'center' }}>{translate(choiceText(b))}</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <th style={{ ...labelStyle, textAlign: 'right' }}>{a}</th>
+          <th style={{ ...labelStyle, textAlign: 'right' }}>{translate(choiceText(a))}</th>
           {cell('AA', payoff[0][0], payoff[0][0])}
           {cell('AB', payoff[0][1], payoff[1][0])}
         </tr>
         <tr>
-          <th style={{ ...labelStyle, textAlign: 'right' }}>{b}</th>
+          <th style={{ ...labelStyle, textAlign: 'right' }}>{translate(choiceText(b))}</th>
           {cell('BA', payoff[1][0], payoff[0][1])}
           {cell('BB', payoff[1][1], payoff[1][1])}
         </tr>
@@ -86,6 +90,7 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
 }
 
 export function StrategyPanel({ snap: s }: Props) {
+  useLocale();
   const picked = s.selectedStrategy;
   const ct = s.currentTournament;
   const running = (ct?.ticksRemaining ?? 0) > 0;
@@ -94,9 +99,9 @@ export function StrategyPanel({ snap: s }: Props) {
   if (!s.strategyEngineFlag || s.dismantle >= 4) return null;
 
   return (
-    <SectionCard title="Strategy" icon={<Swords size={14} />}>
+    <SectionCard title={tr("strategyPanel.strategy")} icon={<Swords size={14} />}>
       <div className="stat-row">
-        <span className="stat-label">Yomi</span>
+        <span className="stat-label">{tr("strategyPanel.yomi")}</span>
         <span className="stat-value-lg">{formatWithCommas(s.yomi)}</span>
       </div>
 
@@ -105,14 +110,14 @@ export function StrategyPanel({ snap: s }: Props) {
       <div className="col" style={{ gap: 6 }}>
         <select
           className="strat-select"
-          aria-label="Tournament strategy"
+          aria-label={tr("strategyPanel.tournamentStrategy")}
           value={picked}
           onChange={e => {
             game.act(state => { state.selectedStrategy = e.target.value; });
           }}
         >
           {s.strategies.map(name => (
-            <option key={name} value={name}>{name}</option>
+            <option key={name} value={name}>{translate(strategyText(name))}</option>
           ))}
         </select>
 
@@ -123,14 +128,10 @@ export function StrategyPanel({ snap: s }: Props) {
               if (game.act(runTourney, picked)) game.save();
             }}
             disabled={tournamentRunning || s.operations < s.newTourneyCost}
-          >
-            Run Tournament ({formatWithCommas(s.newTourneyCost)} ops)
-          </Btn>
+          >{tr("strategyPanel.runTournamentOps", { newTourneyCost: formatWithCommas(s.newTourneyCost) })}</Btn>
           {s.autoTourneyFlag === 1 && (
             <Btn onClick={() => { game.act(toggleAutoTourney); }}
-              variant={s.autoTourneyStatus === 1 ? 'success' : 'default'}>
-              Auto {s.autoTourneyStatus === 1 ? 'ON' : 'OFF'}
-            </Btn>
+              variant={s.autoTourneyStatus === 1 ? 'success' : 'default'}>{tr("strategyPanel.auto", { value1: s.autoTourneyStatus === 1 ? tr("businessPanel.on") : tr("businessPanel.off") })}</Btn>
           )}
         </div>
 
@@ -139,9 +140,7 @@ export function StrategyPanel({ snap: s }: Props) {
             <PayoffGrid payoff={ct.payoff} choiceNames={ct.choiceNames} flash={flash} />
 
             <div style={{ fontSize: 'var(--mobile-label-size, 9px)', color: 'var(--text-muted)', textAlign: 'center', marginTop: 2 }}>
-              {running
-                ? `Round ${animRound} / ${ct.totalRounds} — ${animMatchup ? `${animMatchup[0]} vs ${animMatchup[1]}` : '…'}`
-                : `Winner: ${ct.stratV} · ${ct.totalRounds} matchups`}
+              {running ? tr("strategyPanel.round", { animRound: animRound, totalRounds: ct.totalRounds, value3: animMatchup ? tr("strategyPanel.vs", { value1: strategyText(animMatchup[0]), value2: strategyText(animMatchup[1]) }) : "…" }) : tr("strategyPanel.winnerMatchups", { stratV: strategyText(ct.stratV), totalRounds: ct.totalRounds })}
             </div>
 
             {!running && (
@@ -156,7 +155,7 @@ export function StrategyPanel({ snap: s }: Props) {
                       color: isMe ? 'var(--text)' : 'var(--text-muted)',
                       fontWeight: isMe ? 700 : 400,
                     }}>
-                      <span>{i + 1}. {name}</span>
+                      <span>{i + 1}. {translate(strategyText(name))}</span>
                       <span style={{ fontVariantNumeric: 'tabular-nums' }}>{r.split(': ')[1]}</span>
                     </div>
                   );
@@ -165,7 +164,7 @@ export function StrategyPanel({ snap: s }: Props) {
             )}
           </>
         ) : (
-          <div className="dim" style={{ fontSize: 'var(--mobile-label-size, 11px)' }}>{s.tourneyResult}</div>
+          <div className="dim" style={{ fontSize: 'var(--mobile-label-size, 11px)' }}>{translate(tournamentSummaryText(s.tourneyResult))}</div>
         )}
       </div>
     </SectionCard>

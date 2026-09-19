@@ -1,3 +1,4 @@
+import { message } from '../i18n/message';
 import type { GameState } from './state';
 import { hydrateGameState } from './hydrate';
 import { SaveFormatError } from './saveValidation';
@@ -16,8 +17,8 @@ export function parseSave(raw: string): { state: GameState; savedAt: number } {
   const value: unknown = JSON.parse(raw);
   if (value && typeof value === 'object' && 'format' in value) {
     const envelope = value as Record<string, unknown>;
-    if (envelope.format !== 'paperclips' || envelope.version !== SAVE_VERSION) throw new SaveFormatError('Unsupported save version.');
-    if (typeof envelope.savedAt !== 'number' || !Number.isFinite(envelope.savedAt) || envelope.savedAt < 0) throw new SaveFormatError('Invalid save timestamp.');
+    if (envelope.format !== 'paperclips' || envelope.version !== SAVE_VERSION) throw new SaveFormatError(message('save.unsupported.save.version'));
+    if (typeof envelope.savedAt !== 'number' || !Number.isFinite(envelope.savedAt) || envelope.savedAt < 0) throw new SaveFormatError(message('save.invalid.save.timestamp'));
     return { state: hydrateGameState(envelope.state), savedAt: envelope.savedAt };
   }
   return { state: hydrateGameState(value), savedAt: 0 };
@@ -39,6 +40,6 @@ export function importSave(encoded: string): GameState {
     return parseSave(new TextDecoder('utf-8', { fatal: true }).decode(bytes)).state;
   } catch (error) {
     if (error instanceof SaveFormatError) throw error;
-    throw new SaveFormatError('Invalid save string — make sure you copied the full export.');
+    throw new SaveFormatError(message('save.invalid.save.string.make.sure.you.copied.the.full'));
   }
 }

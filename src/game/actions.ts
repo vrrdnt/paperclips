@@ -1,3 +1,4 @@
+import { numberValue, message } from '../i18n/message';
 // Player commands mutate only the supplied GameState. No browser or storage I/O.
 import { GameState } from './state';
 import { displayMessage } from './messages';
@@ -5,7 +6,6 @@ import { buyWire as autoBuyWire } from './systems/business';
 import { produceClips } from './production';
 import { creativitySpeedForProcessors } from './systems/computing';
 import { random } from './random';
-import { formatWithCommas } from './format';
 import {
   A,
   ARTIFACT_BY_ID,
@@ -47,7 +47,7 @@ export function makeClipper(s: GameState): void {
   if (hasActiveArtifact(s, A.SATOSHIS_PYRAMID) && random(s) < 0.05) {
     const payout = s.clipmakerLevel * 1000;
     s.funds += payout;
-    displayMessage(s, `Satoshi's Pyramid generated $${formatWithCommas(payout, 0)}`);
+    displayMessage(s, message("log.satoshiSPyramidGenerated", { payout: numberValue(payout, 0) }));
   }
 }
 
@@ -57,7 +57,7 @@ export function makeMegaClipper(s: GameState): void {
   s.megaClipperLevel++;
   if (hasActiveArtifact(s, A.HEX_MEGA_LOYALTY) && random(s) < 0.06) {
     s.megaClipperLevel += 6;
-    displayMessage(s, 'Hex-Dimensional MegaClipper Loyalty Chip added 6 MegaClippers');
+    displayMessage(s, message("log.hexDimensionalMegaclipperLoyaltyChipAdded6Megaclippers"));
   }
   s.megaClipperCost = Math.pow(1.07, s.megaClipperLevel) * 1000;
 }
@@ -84,7 +84,7 @@ export function buyAds(s: GameState): void {
   s.marketingLvl++;
   s.marketing = Math.pow(1.1, s.marketingLvl - 1);
   s.adCost = Math.floor(s.adCost * 2);
-  displayMessage(s, `Marketing level increased to ${s.marketingLvl}`);
+  displayMessage(s, message("log.marketingLevelIncreasedTo", { marketingLvl: s.marketingLvl }));
 }
 
 export function effectiveAdCost(s: Pick<GameState, 'adCost' | 'activeArtifacts'>): number {
@@ -101,9 +101,7 @@ export function addProc(s: GameState): void {
   s.creativitySpeed = creativitySpeedForProcessors(s.processors);
   displayMessage(
     s,
-    s.creativityOn
-      ? 'Processor added, operations (or creativity) per sec increased'
-      : 'Processor added, operations per sec increased',
+    s.creativityOn ? message("log.processorAddedOperationsOrCreativityPerSecIncreased") : message("log.processorAddedOperationsPerSecIncreased"),
   );
 }
 
@@ -114,9 +112,7 @@ export function addProcAmount(s: GameState, rawAmount: number): void {
   s.creativitySpeed = creativitySpeedForProcessors(s.processors);
   displayMessage(
     s,
-    s.creativityOn
-      ? `${formatWithCommas(amount)} processors added, operations (or creativity) per sec increased`
-      : `${formatWithCommas(amount)} processors added, operations per sec increased`,
+    s.creativityOn ? message("log.processorsAddedOperationsOrCreativityPerSecIncreased", { amount: numberValue(amount) }) : message("log.processorsAddedOperationsPerSecIncreased", { amount: numberValue(amount) }),
   );
 }
 
@@ -126,14 +122,14 @@ export function addMem(s: GameState): void {
   if (!hasTrustCapacity && !hasSwarmGift) return;
   if (hasSwarmGift && !s.humanFlag) s.swarmGifts--;
   s.memory++;
-  displayMessage(s, 'Memory added, max operations increased');
+  displayMessage(s, message("log.memoryAddedMaxOperationsIncreased"));
 }
 
 export function addMemAmount(s: GameState, rawAmount: number): void {
   const amount = claimComputeAllocation(s, rawAmount);
   if (amount <= 0) return;
   s.memory += amount;
-  displayMessage(s, `${formatWithCommas(amount)} memory added, max operations increased`);
+  displayMessage(s, message("log.memoryAddedMaxOperationsIncreased2", { amount: numberValue(amount) }));
 }
 
 function claimComputeAllocation(s: GameState, rawAmount: number): number {
@@ -154,7 +150,7 @@ function claimComputeAllocation(s: GameState, rawAmount: number): number {
 export function qComp(s: GameState): void {
   s.qFade = 1;
   if (s.nextQchip === 0) {
-    displayMessage(s, 'Need Photonic Chips');
+    displayMessage(s, message("log.needPhotonicChips"));
     return;
   }
   let q = 0;
@@ -182,7 +178,7 @@ export function investDeposit(s: GameState): void {
   if (hasActiveArtifact(s, A.MARTINGALES_DEMON) && runArtifactTriggerUnused(s, A.MARTINGALES_DEMON)) {
     amount *= 2;
     markRunArtifactTriggerUsed(s, A.MARTINGALES_DEMON);
-    displayMessage(s, "Martingale's Demon doubled your first deposit");
+    displayMessage(s, message("log.martingaleSDemonDoubledYourFirstDeposit"));
   }
   s.ledger -= funds;
   s.bankroll += amount;
@@ -194,7 +190,7 @@ export function investWithdraw(s: GameState): void {
   if (hasActiveArtifact(s, A.MUNGERS_REGRET) && runArtifactTriggerUnused(s, A.MUNGERS_REGRET)) {
     amount *= 2;
     markRunArtifactTriggerUsed(s, A.MUNGERS_REGRET);
-    displayMessage(s, "Munger's Regret doubled your first withdrawal");
+    displayMessage(s, message("log.mungerSRegretDoubledYourFirstWithdrawal"));
   }
   s.ledger += amount;
   s.funds += amount;
@@ -207,7 +203,7 @@ export function investUpgrade(s: GameState): void {
   s.investLevel++;
   s.stockGainThreshold += 0.01;
   s.investUpgradeCost = Math.floor(Math.pow(s.investLevel + 1, Math.E) * 100);
-  displayMessage(s, `Investment engine upgraded, expected profit/loss ratio now ${s.stockGainThreshold}`);
+  displayMessage(s, message("log.investmentEngineUpgradedExpectedProfitLossRatioNow", { stockGainThreshold: s.stockGainThreshold }));
 }
 
 // ── Strategy / Tournament ─────────────────────────────────────────────────
@@ -326,7 +322,7 @@ export function activateArtifact(s: GameState, id: string): void {
   if (!activateMapArtifact(s, artifactId)) return;
   if (!wasActive) {
     const def = ARTIFACT_BY_ID.get(artifactId);
-    if (def) displayMessage(s, `Artifact active: ${def.name}`);
+    if (def) displayMessage(s, message("log.artifactActive", { name: def.name }));
   }
 
   if (artifactId === A.BANACH_TARSKI_CATALYST && artifactTriggerUnused(s, artifactId)) {
@@ -334,13 +330,13 @@ export function activateArtifact(s: GameState, id: string): void {
     s.unusedClips *= 10;
     s.unsoldClips *= 10;
     markArtifactTriggerUsed(s, artifactId);
-    displayMessage(s, 'Banach Tarski Catalyst multiplied current paperclips by 10');
+    displayMessage(s, message("log.banachTarskiCatalystMultipliedCurrentPaperclipsBy10"));
   }
 
   if (artifactId === A.SUPERLUMINOUS_SUPERNOVA && artifactTriggerUnused(s, artifactId)) {
     s.creativity *= 2;
     markArtifactTriggerUsed(s, artifactId);
-    displayMessage(s, 'Superluminous Supernova doubled current creativity');
+    displayMessage(s, message("log.superluminousSupernovaDoubledCurrentCreativity"));
   }
 }
 
@@ -352,7 +348,7 @@ export function deactivateArtifact(s: GameState, id: string): void {
 
 export function warpToArtifactMapCell(s: GameState, world: number, sim: number): void {
   if (!warpToCompletedCell(s, world, sim)) return;
-  displayMessage(s, `Warping to World ${world}, Simulation ${sim}`);
+  displayMessage(s, message("log.warpingToWorldSimulation", { world: world, sim: sim }));
   s.resetFlag = 1;
 }
 
@@ -413,7 +409,7 @@ export function entertainSwarm(s: GameState): void {
   s.boredomLevel = 0;
   s.boredomFlag = 0;
   s.boredomMsg = 0;
-  displayMessage(s, 'Swarm entertained');
+  displayMessage(s, message("log.swarmEntertained"));
 }
 
 export function synchSwarm(s: GameState): void {
@@ -422,5 +418,5 @@ export function synchSwarm(s: GameState): void {
   s.disorgFlag = 0;
   s.disorgCounter = 0;
   s.disorgMsg = 0;
-  displayMessage(s, 'Swarm synchronized');
+  displayMessage(s, message("log.swarmSynchronized"));
 }

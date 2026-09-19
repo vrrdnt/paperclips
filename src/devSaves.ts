@@ -1,3 +1,4 @@
+import { message } from './i18n/message';
 import s01 from '../dev-saves/01-phase1-start.json';
 import s02 from '../dev-saves/02-phase1-strategy.json';
 import s03 from '../dev-saves/03-phase1-late.json';
@@ -7,11 +8,11 @@ import s06 from '../dev-saves/06-phase3-space.json';
 import s07 from '../dev-saves/07-phase3-endgame.json';
 
 export const DEV_SAVES = [
-  { label: 'Phase 1 — Start',    desc: 'Computing just unlocked, ~5k clips, 10 autoclippers',       data: s01 },
-  { label: 'Phase 1 — Strategy', desc: 'Strategy engine active, trust 30, A100/B100/GREEDY unlocked', data: s02 },
-  { label: 'Phase 1 — Late',     desc: 'Trust 97 (3 from HypnoDrones), all strategies, AutoTourney',  data: s03 },
-  { label: 'Phase 2 — Drones',   desc: 'Phase transition done, first 5 harvesters + wire drones',     data: s04 },
-  { label: 'Phase 2 — Swarm',    desc: '100+100 drones, swarm computing active, 5 factories',         data: s05 },
-  { label: 'Phase 3 — Space',    desc: 'Probes launched, 100k probes, matter being acquired',         data: s06 },
-  { label: 'Phase 3 — Endgame',  desc: 'All matter consumed, Reject chosen, Dismantle imminent',      data: s07 },
+  { label: message("devSaves.phase1Start"),    desc: message("devSaves.computingJustUnlocked5kClips10Autoclippers"),       data: s01 },
+  { label: message("devSaves.phase1Strategy"), desc: message("devSaves.strategyEngineActiveTrust30A100B100Greedy"), data: s02 },
+  { label: message("devSaves.phase1Late"),     desc: message("devSaves.trust973FromHypnodronesAllStrategiesAutotourney"),  data: s03 },
+  { label: message("devSaves.phase2Drones"),   desc: message("devSaves.phaseTransitionDoneFirst5HarvestersWireDrones"),     data: s04 },
+  { label: message("devSaves.phase2Swarm"),    desc: message("devSaves.100100DronesSwarmComputingActive5Factories"),         data: s05 },
+  { label: message("devSaves.phase3Space"),    desc: message("devSaves.probesLaunched100kProbesMatterBeingAcquired"),         data: s06 },
+  { label: message("devSaves.phase3Endgame"),  desc: message("devSaves.allMatterConsumedRejectChosenDismantleImminent"),      data: s07 },
 ] as const;

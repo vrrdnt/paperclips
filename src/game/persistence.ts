@@ -1,3 +1,4 @@
+import { message, type LocalizedText } from '../i18n/message';
 import { makeInitialState, type GameState } from './state';
 import { normalizeArtifactState } from './artifacts';
 import { parseSave, serializeSave } from './saveCodec';
@@ -7,8 +8,8 @@ export const BACKUP_KEY = 'upc_v2_backup';
 const LEGACY_TIME_KEY = 'upc_v2_saved_at';
 const LEGACY_PRESTIGE_KEY = 'upc_v2_prestige';
 type StorageAccess = () => Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
-export type SaveResult = { ok: true } | { ok: false; error: string };
-export interface LoadedGame { state: GameState; savedAt: number; warning?: string }
+export type SaveResult = { ok: true } | { ok: false; error: string; detail?: LocalizedText };
+export interface LoadedGame { state: GameState; savedAt: number; warning?: string; warningText?: LocalizedText }
 
 /** Browser storage is isolated here; the engine never saves or reads the clock. */
 export class GamePersistence {
@@ -35,18 +36,18 @@ export class GamePersistence {
             const loaded = parseSave(backup);
             this.lastGoodRaw = backup;
             this.preserveUnreadableSave = false;
-            return { ...loaded, warning: 'Recovered the previous save because the latest save could not be read.' };
+            return { ...loaded, warning: 'Recovered the previous save because the latest save could not be read.', warningText: message('save.recovered.the.previous.save.because.the.latest.save.could') };
           } catch { /* Preserve both unreadable records for recovery. */ }
         }
-        return { state: makeInitialState(), savedAt: 0, warning: 'Your saved game could not be read. It has been preserved. Import a valid save or reset to resume saving.' };
+        return { state: makeInitialState(), savedAt: 0, warning: 'Your saved game could not be read. It has been preserved. Import a valid save or reset to resume saving.', warningText: message('save.your.saved.game.could.not.be.read.it.has') };
       }
     } catch {
-      return { state: makeInitialState(), savedAt: 0, warning: 'Browser storage is unavailable. Export your game to keep a backup.' };
+      return { state: makeInitialState(), savedAt: 0, warning: 'Browser storage is unavailable. Export your game to keep a backup.', warningText: message('save.browser.storage.is.unavailable.export.your.game.to.keep') };
     }
   }
 
   save(state: GameState, savedAt: number, replace = false): SaveResult {
-    if (this.preserveUnreadableSave && !replace) return { ok: false, error: 'The unreadable save is preserved. Import a valid save or reset before saving.' };
+    if (this.preserveUnreadableSave && !replace) return { ok: false, error: 'The unreadable save is preserved. Import a valid save or reset before saving.', detail: message('save.the.unreadable.save.is.preserved.import.a.valid.save') };
     try {
       const storage = this.storage();
       const next = serializeSave(state, savedAt);
@@ -57,7 +58,7 @@ export class GamePersistence {
       this.preserveUnreadableSave = false;
       return { ok: true };
     } catch {
-      return { ok: false, error: 'Game could not be saved. Browser storage may be full or unavailable. Export a backup.' };
+      return { ok: false, error: 'Game could not be saved. Browser storage may be full or unavailable. Export a backup.', detail: message('save.game.could.not.be.saved.browser.storage.may.be') };
     }
   }
 

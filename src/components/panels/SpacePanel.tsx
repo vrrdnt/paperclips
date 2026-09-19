@@ -1,3 +1,5 @@
+import { tr } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import { Globe, Rocket, Cable } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
@@ -7,7 +9,7 @@ import {
   makeProbe, makeHarvester, makeWireDrone,
   harvesterReboot, wireDroneReboot,
 } from '../../game/actions';
-import { spellf, formatWithCommas } from '../../game/format';
+import { localizedCompact as spellf, localizedNumber as formatWithCommas } from '../../i18n';
 import { A, effectiveProbeAttr } from '../../game/artifacts';
 
 interface Props { snap: DisplaySnapshot; }
@@ -20,6 +22,7 @@ function droneBulkCost(baseLevel: number, qty: number): number {
 }
 
 export function WireProductionPanel({ snap: s }: Props) {
+  useLocale();
   const hideSpaceExploration = s.dismantle >= 1 && s.endTimer1 >= 150;
   const hideWireProduction = s.dismantle >= 2;
   const showUniverse  = s.spaceFlag === 1 && !hideSpaceExploration;
@@ -44,19 +47,19 @@ export function WireProductionPanel({ snap: s }: Props) {
     <>
       {/* Wire Production: matter + wire resources, then drone counts/controls */}
       {showInfra && (
-        <SectionCard title="Wire Production" icon={<Cable size={14} />}>
+        <SectionCard title={tr("spacePanel.wireProduction")} icon={<Cable size={14} />}>
           {showHarvesters && (
             <>
               <div className="stat-row">
-                <span className="stat-label">Matter available</span>
+                <span className="stat-label">{tr("spacePanel.matterAvailable")}</span>
                 <span className="stat-value">{spellf(s.availableMatter)}</span>
               </div>
               <div className="stat-row">
-                <span className="stat-label">Matter unused</span>
+                <span className="stat-label">{tr("spacePanel.matterUnused")}</span>
                 <span className="stat-value">{spellf(s.acquiredMatter)}</span>
               </div>
               <div className="stat-row">
-                <span className="stat-label">Matter/sec</span>
+                <span className="stat-label">{tr("spacePanel.matterSec")}</span>
                 <span className="stat-value">{spellf(s.mps)}</span>
               </div>
             </>
@@ -64,12 +67,12 @@ export function WireProductionPanel({ snap: s }: Props) {
           {showWireDrones && (
             <>
               <div className="stat-row">
-                <span className="stat-label">Wire</span>
+                <span className="stat-label">{tr("businessPanel.wire")}</span>
                 <span className="stat-value">{spellf(s.nanoWire)}</span>
               </div>
               {s.wireProductionFlag === 1 && (
                 <div className="stat-row">
-                  <span className="stat-label">Wire/sec</span>
+                  <span className="stat-label">{tr("spacePanel.wireSec")}</span>
                   <span className="stat-value">{spellf(s.wpps)}</span>
                 </div>
               )}
@@ -77,9 +80,7 @@ export function WireProductionPanel({ snap: s }: Props) {
           )}
           {matterPipelineIdle && (
             <div className="idle-note">
-              {explorationIdle
-                ? 'Matter idle: assign probe trust to Speed and Exploration.'
-                : 'Matter idle: no explored matter available.'}
+              {explorationIdle ? tr("spacePanel.matterIdleAssignProbeTrustToSpeedAnd") : tr("spacePanel.matterIdleNoExploredMatterAvailable")}
             </div>
           )}
 
@@ -89,14 +90,14 @@ export function WireProductionPanel({ snap: s }: Props) {
           {showHarvesters && (
             <>
               <div className="stat-row">
-                <span className="stat-label">{showUniverse ? 'Harvester Probes' : 'Harvester Drones'}</span>
+                <span className="stat-label">{showUniverse ? tr("spacePanel.harvesterProbes") : tr("spacePanel.harvesterDrones")}</span>
                 <span className="stat-value">{showUniverse ? spellf(s.harvesterLevel) : formatWithCommas(s.harvesterLevel)}</span>
               </div>
               {!showUniverse && (
                 <div className="drone-build-controls">
                   <Btn className="drone-build-primary" holdRepeat onClick={() => { game.act(makeHarvester); }}
                     disabled={s.unusedClips < s.harvesterCost}>
-                    <span>Build</span>
+                    <span>{tr("powerPanel.build")}</span>
                     <span className="drone-build-cost">({spellf(s.harvesterCost)})</span>
                   </Btn>
                   <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeHarvester, 10); }}
@@ -114,9 +115,7 @@ export function WireProductionPanel({ snap: s }: Props) {
                   {s.harvesterLevel > 0 && (
                     <div className="drone-disassemble-row">
                       <Btn variant="danger" onClick={() => { game.act(harvesterReboot); }}
-                        title={`+${spellf(s.harvesterBill)} clips`}>
-                        Disassemble All
-                      </Btn>
+                        title={tr("spacePanel.clips", { harvesterBill: spellf(s.harvesterBill) })}>{tr("businessPanel.disassembleAll")}</Btn>
                     </div>
                   )}
                 </div>
@@ -128,14 +127,14 @@ export function WireProductionPanel({ snap: s }: Props) {
           {showWireDrones && (
             <>
               <div className="stat-row" style={{ marginTop: showHarvesters ? 6 : 0 }}>
-                <span className="stat-label">{showUniverse ? 'Wire Probes' : 'Wire Drones'}</span>
+                <span className="stat-label">{showUniverse ? tr("spacePanel.wireProbes") : tr("spacePanel.wireDrones")}</span>
                 <span className="stat-value">{showUniverse ? spellf(s.wireDroneLevel) : formatWithCommas(s.wireDroneLevel)}</span>
               </div>
               {!showUniverse && (
                 <div className="drone-build-controls">
                   <Btn className="drone-build-primary" holdRepeat onClick={() => { game.act(makeWireDrone); }}
                     disabled={s.unusedClips < s.wireDroneCost}>
-                    <span>Build</span>
+                    <span>{tr("powerPanel.build")}</span>
                     <span className="drone-build-cost">({spellf(s.wireDroneCost)})</span>
                   </Btn>
                   <Btn className="drone-batch-btn" holdRepeat onClick={() => { game.act(makeWireDrone, 10); }}
@@ -153,9 +152,7 @@ export function WireProductionPanel({ snap: s }: Props) {
                   {s.wireDroneLevel > 0 && (
                     <div className="drone-disassemble-row">
                       <Btn variant="danger" onClick={() => { game.act(wireDroneReboot); }}
-                        title={`+${spellf(s.wireDroneBill)} clips`}>
-                        Disassemble All
-                      </Btn>
+                        title={tr("spacePanel.clips2", { wireDroneBill: spellf(s.wireDroneBill) })}>{tr("businessPanel.disassembleAll")}</Btn>
                     </div>
                   )}
                 </div>
@@ -166,9 +163,9 @@ export function WireProductionPanel({ snap: s }: Props) {
       )}
 
       {showRecoveredWire && (
-        <SectionCard title="Wire" icon={<Cable size={14} />}>
+        <SectionCard title={tr("businessPanel.wire")} icon={<Cable size={14} />}>
           <div className="stat-row">
-            <span className="stat-label">Recovered wire</span>
+            <span className="stat-label">{tr("spacePanel.recoveredWire")}</span>
             <span className="stat-value">{formatWithCommas(s.wire)}</span>
           </div>
         </SectionCard>
@@ -179,6 +176,7 @@ export function WireProductionPanel({ snap: s }: Props) {
 }
 
 export function SpaceExplorationPanel({ snap: s }: Props) {
+  useLocale();
   const showUniverse = s.spaceFlag === 1 && !(s.dismantle >= 1 && s.endTimer1 >= 150);
   const universeProgress = Number.isFinite(s.colonized)
     ? Math.max(0, Math.min(100, s.colonized))
@@ -190,15 +188,15 @@ export function SpaceExplorationPanel({ snap: s }: Props) {
   return (<>
       {/* Space Exploration: probe fleet — only after the Space Exploration project */}
       {showUniverse && (
-        <SectionCard title="Space Exploration" icon={<Globe size={14} />}>
+        <SectionCard title={tr("spacePanel.spaceExploration")} icon={<Globe size={14} />}>
           <div className="stat-row">
-            <span className="stat-label">Universe explored</span>
+            <span className="stat-label">{tr("spacePanel.universeExplored")}</span>
             <span className="stat-value">{s.colonized.toFixed(12)}%</span>
           </div>
           <div
             className="universe-progress"
             role="progressbar"
-            aria-label="Universe explored"
+            aria-label={tr("spacePanel.universeExplored")}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={universeProgress}
@@ -214,60 +212,58 @@ export function SpaceExplorationPanel({ snap: s }: Props) {
             <div className="universe-progress-marker" style={{ left: `${universeProgress}%` }} />
           </div>
           {explorationIdle && (
-            <div className="idle-note">Exploration idle: Speed and Exploration are required.</div>
+            <div className="idle-note">{tr("spacePanel.explorationIdleSpeedAndExplorationAreRequired")}</div>
           )}
 
           <div style={{ marginTop: 8 }}>
             <Btn variant="primary" full holdRepeat
               onClick={() => { game.act(makeProbe); }}
               disabled={s.unusedClips <= Math.pow(10, 17)}>
-              <Rocket size={13} />
-              Launch Probe ({spellf(Math.pow(10, 17))} clips)
-            </Btn>
+              <Rocket size={13} />{tr("spacePanel.launchProbe")}{spellf(Math.pow(10, 17))}{tr("spacePanel.clips3")}</Btn>
           </div>
 
           <hr className="divider" />
 
           <div className="stat-row">
-            <span className="stat-label">Launched</span>
+            <span className="stat-label">{tr("spacePanel.launched")}</span>
             <span className="stat-value">{spellf(s.probesLaunched)}</span>
           </div>
           <div className="stat-row">
-            <span className="stat-label">Descendents</span>
+            <span className="stat-label">{tr("spacePanel.descendents")}</span>
             <span className="stat-value">{spellf(s.probesBorn)}</span>
           </div>
           {s.probesLostHazards >= 1 && (
             <div className="stat-row">
-              <span className="stat-label">Lost to hazards</span>
+              <span className="stat-label">{tr("spacePanel.lostToHazards")}</span>
               <span className="stat-value">{spellf(s.probesLostHazards)}</span>
             </div>
           )}
           {s.probesLostDrift >= 1 && (
             <div className="stat-row">
-              <span className="stat-label">Lost to value drift</span>
+              <span className="stat-label">{tr("spacePanel.lostToValueDrift")}</span>
               <span className="stat-value">{spellf(s.probesLostDrift)}</span>
             </div>
           )}
           {s.probesLostCombat >= 1 && (
             <div className="stat-row">
-              <span className="stat-label">Lost to combat</span>
+              <span className="stat-label">{tr("spacePanel.lostToCombat")}</span>
               <span className="stat-value">{spellf(s.probesLostCombat)}</span>
             </div>
           )}
           <div className="stat-row">
-            <span className="stat-label">Total</span>
+            <span className="stat-label">{tr("spacePanel.total")}</span>
             <span className="stat-value">{spellf(s.probeCount)}</span>
           </div>
 
           {s.drifterCount >= 1 && (
             <div className="stat-row">
-              <span className="stat-label">Drifters</span>
+              <span className="stat-label">{tr("combatPanel.drifters")}</span>
               <span className="stat-value">{spellf(s.drifterCount)}</span>
             </div>
           )}
           {s.driftersKilled >= 1 && (
             <div className="stat-row">
-              <span className="stat-label">Drifters killed</span>
+              <span className="stat-label">{tr("spacePanel.driftersKilled")}</span>
               <span className="stat-value">{spellf(s.driftersKilled)}</span>
             </div>
           )}

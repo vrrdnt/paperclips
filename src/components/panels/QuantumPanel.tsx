@@ -1,3 +1,6 @@
+import type { MessageKey } from '../../i18n/message';
+import { tr } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import React from 'react';
 import { Atom } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
@@ -5,7 +8,7 @@ import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { game } from '../../game/runtime';
 import { qComp } from '../../game/actions';
-import { formatWithCommas } from '../../game/format';
+import { localizedNumber as formatWithCommas } from '../../i18n';
 
 interface Props { snap: DisplaySnapshot; }
 
@@ -39,6 +42,7 @@ function qWaveStopColor(index: number, value: number, active: boolean, alpha: nu
 }
 
 function QWave({ chips, activeCount }: { chips: number[]; activeCount: number }) {
+  useLocale();
   const W = 100, H = 28, MID = 14, AMP = 11;
   const pts: [number, number][] = chips.map((v, i) => [
     (i / (chips.length - 1)) * W,
@@ -107,8 +111,8 @@ function clamp(n: number, min: number, max: number): number {
 type ParticleFamily = 'photon' | 'charged-lepton' | 'neutrino' | 'quark' | 'boson';
 
 interface ParticleChannel {
-  symbol: string;
-  name: string;
+  symbol: MessageKey;
+  name: MessageKey;
   family: ParticleFamily;
   accent: string;
   soft: string;
@@ -118,16 +122,16 @@ interface ParticleChannel {
 }
 
 const PARTICLE_CHANNELS: ParticleChannel[] = [
-  { symbol: 'gamma', name: 'Photon', family: 'photon', accent: 'rgba(238,224,128,0.95)', soft: 'rgba(238,224,128,0.16)', mid: 'rgba(238,224,128,0.42)', phase: 0.00, waveScale: 1.22 },
-  { symbol: 'electron', name: 'Electron', family: 'charged-lepton', accent: 'rgba(118,202,230,0.95)', soft: 'rgba(118,202,230,0.16)', mid: 'rgba(118,202,230,0.42)', phase: 0.56, waveScale: 0.86 },
-  { symbol: 'muon', name: 'Muon', family: 'charged-lepton', accent: 'rgba(138,156,236,0.95)', soft: 'rgba(138,156,236,0.16)', mid: 'rgba(138,156,236,0.42)', phase: 1.07, waveScale: 0.92 },
-  { symbol: 'tau', name: 'Tau', family: 'charged-lepton', accent: 'rgba(182,132,226,0.95)', soft: 'rgba(182,132,226,0.16)', mid: 'rgba(182,132,226,0.42)', phase: 1.61, waveScale: 0.72 },
-  { symbol: 'neutrino', name: 'Neutrino', family: 'neutrino', accent: 'rgba(128,216,166,0.95)', soft: 'rgba(128,216,166,0.14)', mid: 'rgba(128,216,166,0.36)', phase: 2.18, waveScale: 0.58 },
-  { symbol: 'up', name: 'Up quark', family: 'quark', accent: 'rgba(228,116,106,0.95)', soft: 'rgba(228,116,106,0.15)', mid: 'rgba(228,116,106,0.38)', phase: 2.71, waveScale: 1.00 },
-  { symbol: 'down', name: 'Down quark', family: 'quark', accent: 'rgba(116,176,232,0.95)', soft: 'rgba(116,176,232,0.15)', mid: 'rgba(116,176,232,0.38)', phase: 3.24, waveScale: 1.04 },
-  { symbol: 'strange', name: 'Strange quark', family: 'quark', accent: 'rgba(218,166,94,0.95)', soft: 'rgba(218,166,94,0.15)', mid: 'rgba(218,166,94,0.38)', phase: 3.76, waveScale: 0.88 },
-  { symbol: 'charm', name: 'Charm quark', family: 'quark', accent: 'rgba(128,190,214,0.95)', soft: 'rgba(128,190,214,0.15)', mid: 'rgba(128,190,214,0.38)', phase: 4.32, waveScale: 1.12 },
-  { symbol: 'gluon', name: 'Gluon', family: 'boson', accent: 'rgba(218,218,218,0.95)', soft: 'rgba(218,218,218,0.13)', mid: 'rgba(218,218,218,0.34)', phase: 4.88, waveScale: 1.32 },
+  { symbol: "quantum.symbol.gamma", name: 'quantum.particle.gamma', family: 'photon', accent: 'rgba(238,224,128,0.95)', soft: 'rgba(238,224,128,0.16)', mid: 'rgba(238,224,128,0.42)', phase: 0.00, waveScale: 1.22 },
+  { symbol: "quantum.symbol.electron", name: 'quantum.particle.electron', family: 'charged-lepton', accent: 'rgba(118,202,230,0.95)', soft: 'rgba(118,202,230,0.16)', mid: 'rgba(118,202,230,0.42)', phase: 0.56, waveScale: 0.86 },
+  { symbol: "quantum.symbol.muon", name: 'quantum.particle.muon', family: 'charged-lepton', accent: 'rgba(138,156,236,0.95)', soft: 'rgba(138,156,236,0.16)', mid: 'rgba(138,156,236,0.42)', phase: 1.07, waveScale: 0.92 },
+  { symbol: "quantum.symbol.tau", name: 'quantum.particle.tau', family: 'charged-lepton', accent: 'rgba(182,132,226,0.95)', soft: 'rgba(182,132,226,0.16)', mid: 'rgba(182,132,226,0.42)', phase: 1.61, waveScale: 0.72 },
+  { symbol: "quantum.symbol.neutrino", name: 'quantum.particle.neutrino', family: 'neutrino', accent: 'rgba(128,216,166,0.95)', soft: 'rgba(128,216,166,0.14)', mid: 'rgba(128,216,166,0.36)', phase: 2.18, waveScale: 0.58 },
+  { symbol: "quantum.symbol.up", name: 'quantum.particle.up', family: 'quark', accent: 'rgba(228,116,106,0.95)', soft: 'rgba(228,116,106,0.15)', mid: 'rgba(228,116,106,0.38)', phase: 2.71, waveScale: 1.00 },
+  { symbol: "quantum.symbol.down", name: 'quantum.particle.down', family: 'quark', accent: 'rgba(116,176,232,0.95)', soft: 'rgba(116,176,232,0.15)', mid: 'rgba(116,176,232,0.38)', phase: 3.24, waveScale: 1.04 },
+  { symbol: "quantum.symbol.strange", name: 'quantum.particle.strange', family: 'quark', accent: 'rgba(218,166,94,0.95)', soft: 'rgba(218,166,94,0.15)', mid: 'rgba(218,166,94,0.38)', phase: 3.76, waveScale: 0.88 },
+  { symbol: "quantum.symbol.charm", name: 'quantum.particle.charm', family: 'quark', accent: 'rgba(128,190,214,0.95)', soft: 'rgba(128,190,214,0.15)', mid: 'rgba(128,190,214,0.38)', phase: 4.32, waveScale: 1.12 },
+  { symbol: "quantum.symbol.gluon", name: 'quantum.particle.gluon', family: 'boson', accent: 'rgba(218,218,218,0.95)', soft: 'rgba(218,218,218,0.13)', mid: 'rgba(218,218,218,0.34)', phase: 4.88, waveScale: 1.32 },
 ];
 
 function ParticleMark({ particle, phase, active, positive, abs }: {
@@ -137,6 +141,7 @@ function ParticleMark({ particle, phase, active, positive, abs }: {
   positive: number;
   abs: number;
 }) {
+  useLocale();
   const opacity = active ? 0.22 + positive * 0.52 : 0.14;
   const pulse = 1 + positive * 0.42;
   const driftX = Math.sin(phase * 1.7) * (0.7 + abs * 1.8);
@@ -200,6 +205,7 @@ function ParticleMark({ particle, phase, active, positive, abs }: {
 }
 
 const QChip = React.memo(function QChip({ value, index, active }: { value: number; index: number; active: boolean }) {
+  useLocale();
   const particle = PARTICLE_CHANNELS[index % PARTICLE_CHANNELS.length];
   const v = clamp(value, -1, 1);
   const positive = Math.max(0, v);
@@ -233,7 +239,7 @@ const QChip = React.memo(function QChip({ value, index, active }: { value: numbe
   } as React.CSSProperties & Record<string, string | number>;
 
   return (
-    <div className={tileClass} style={tileStyle} title={`${particle.name} channel`}>
+    <div className={tileClass} style={tileStyle} title={tr("quantumPanel.channel", { name: tr(particle.name) })}>
       <svg className="qchip-scope" viewBox="0 0 64 48" preserveAspectRatio="none" aria-hidden="true">
         <path className="qchip-guide" d="M4 26 C13 26 15 18 25 18 L38 18 C48 18 50 26 60 26" />
         <path className="qchip-guide" d="M4 26 C13 26 15 34 25 34 L38 34 C48 34 50 26 60 26" />
@@ -252,7 +258,7 @@ const QChip = React.memo(function QChip({ value, index, active }: { value: numbe
           <circle key={j} cx={p.cx} cy={p.cy} r={p.r} opacity={p.opacity} className="qchip-noise" />
         ))}
       </svg>
-      <span className="qchip-label">{particle.symbol}</span>
+      <span className="qchip-label">{tr(particle.symbol)}</span>
     </div>
   );
 }, (a, b) =>
@@ -264,6 +270,7 @@ const QChip = React.memo(function QChip({ value, index, active }: { value: numbe
 );
 
 export function QuantumPanel({ snap: s }: Props) {
+  useLocale();
   if (s.qFlag !== 1) return null;
   if (s.dismantle >= 5 && s.endTimer4 >= 250) return null;
 
@@ -273,16 +280,14 @@ export function QuantumPanel({ snap: s }: Props) {
   const qCoherence = s.nextQchip > 0 ? clamp(Math.max(0, qSum) / s.nextQchip, 0, 1) : 0;
 
   return (
-    <SectionCard title="Quantum Computing" icon={<Atom size={14} />}>
+    <SectionCard title={tr("quantumPanel.quantumComputing")} icon={<Atom size={14} />}>
       <div className="stat-row">
-        <span className="stat-label">Qubits active</span>
-        <span className="stat-value">{s.nextQchip} / {s.qChips.length}</span>
+        <span className="stat-label">{tr("quantumPanel.qubitsActive")}</span>
+        <span className="stat-value">{tr("quantumPanel.text", { nextQchip: s.nextQchip, length: s.qChips.length })}</span>
       </div>
       <div className="stat-row">
-        <span className="stat-label">Compute potential</span>
-        <span className="stat-value" style={{ color: qPotential > 0 ? 'var(--success)' : qPotential < 0 ? 'var(--danger)' : 'var(--text-dim)' }}>
-          {qPotential > 0 ? '+' : ''}{formatWithCommas(qPotential)} ops
-        </span>
+        <span className="stat-label">{tr("quantumPanel.computePotential")}</span>
+        <span className="stat-value" style={{ color: qPotential > 0 ? 'var(--success)' : qPotential < 0 ? 'var(--danger)' : 'var(--text-dim)' }}>{tr("quantumPanel.ops", { value1: qPotential > 0 ? "+" : '', qPotential: formatWithCommas(qPotential) })}</span>
       </div>
       <div className="quantum-readiness">
         <div className="quantum-readiness-fill" style={{ width: `${qCoherence * 100}%` }} />
@@ -299,9 +304,7 @@ export function QuantumPanel({ snap: s }: Props) {
       <QWave chips={s.qChips} activeCount={s.nextQchip} />
 
       {s.dismantle < 5 && (
-        <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} holdRepeat onClick={() => { game.act(qComp); }} style={{ marginTop: 2 }}>
-          Quantum Compute
-        </Btn>
+        <Btn variant={qCoherence > 0.72 ? 'success' : 'default'} holdRepeat onClick={() => { game.act(qComp); }} style={{ marginTop: 2 }}>{tr("quantumPanel.quantumCompute")}</Btn>
       )}
     </SectionCard>
   );

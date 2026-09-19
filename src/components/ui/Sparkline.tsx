@@ -1,4 +1,5 @@
-
+import { localizedCompact, localizedNumber } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 interface Props {
   data: number[];
   yMax?: number;
@@ -10,6 +11,7 @@ interface Props {
 const FLAT_EPSILON = 1e-9;
 
 export function Sparkline({ data, yMax, height = 32, invertTrend = false, valuePrefix = '' }: Props) {
+  const locale = useLocale();
   if (data.length < 2) return <div style={{ width: '100%', height }} />;
 
   const vw = 100;
@@ -74,8 +76,10 @@ export function Sparkline({ data, yMax, height = 32, invertTrend = false, valueP
   const trend = data[data.length - 1] - data[0];
   const adjustedTrend = invertTrend ? -trend : trend;
   const latestTrendClass = Math.abs(adjustedTrend) <= FLAT_EPSILON ? 'flat' : adjustedTrend > 0 ? 'up' : 'down';
-  const minLabel = `${valuePrefix}${formatAxisValue(floor)}`;
-  const maxLabel = `${valuePrefix}${formatAxisValue(ceil)}`;
+  const axis = (value: number) => locale === 'en' || locale === 'en-XA' ? formatAxisValue(value)
+    : Math.abs(value) >= 1000 ? localizedCompact(value) : localizedNumber(value, Math.abs(value) >= 100 ? 0 : Math.abs(value) >= 10 ? 1 : 2);
+  const minLabel = `${valuePrefix}${axis(floor)}`;
+  const maxLabel = `${valuePrefix}${axis(ceil)}`;
 
   return (
     <div className={`sparkline is-${latestTrendClass}`} style={{ height }}>

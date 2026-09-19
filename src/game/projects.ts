@@ -1,7 +1,7 @@
+import { message, numberValue, type LocalizedText } from '../i18n/message';
 import { GameState } from './state';
 import { displayMessage } from './messages';
 import { AUTONOMY, needsCentralCoordination } from './autonomy';
-import { formatWithCommas } from './format';
 import { factoryReboot, harvesterReboot, wireDroneReboot, farmReboot, batteryReboot } from './actions';
 import {
   A,
@@ -17,9 +17,9 @@ import {
 
 export interface Project {
   id: number;
-  title: string | ((s: GameState) => string);
-  priceTag: string | ((s: GameState) => string);
-  description: string;
+  title: LocalizedText | ((s: GameState) => LocalizedText);
+  priceTag: LocalizedText | ((s: GameState) => LocalizedText);
+  description: LocalizedText;
   trigger: (s: GameState) => boolean;
   cost: (s: GameState) => boolean;
   effect: (s: GameState) => void;
@@ -28,11 +28,11 @@ export interface Project {
 function reportMapCompletion(s: GameState, completion: MapCompletion): void {
   if (completion.newlyCompleted) {
     const [world, sim] = completion.key.split(':');
-    displayMessage(s, `World ${world}, Simulation ${sim} complete`);
+    displayMessage(s, message("log.worldSimulationComplete", { world: world, sim: sim }));
   }
   if (completion.newlyCollected) {
     for (const artifact of completion.collectedArtifacts) {
-      displayMessage(s, `Artifact secured: ${artifact.name}`);
+      displayMessage(s, message("log.artifactSecured", { name: artifact.name }));
     }
   }
 }
@@ -44,37 +44,37 @@ function completeAndMove(s: GameState, worldDelta: number, simDelta: number): vo
 export const ALL_PROJECTS: Project[] = [
   {
     id: AUTONOMY.routines,
-    title: 'Autonomous Routines',
-    priceTag: '(1,000 ops)',
-    description: 'Continue existing automation for up to 5 minutes while away. Unused time is discarded.',
+    title: message("projects.220.title"),
+    priceTag: message("projects.220.priceTag"),
+    description: message("projects.220.description"),
     trigger: s => !!s.compFlag && !needsCentralCoordination(s),
     cost: s => s.operations >= 1000 && !needsCentralCoordination(s),
     effect: s => {
       s.projectFlags[AUTONOMY.routines] = 1;
       s.standardOps -= 1000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Autonomous routines online. Execution horizon: 5 minutes.');
+      displayMessage(s, message("log.autonomousRoutinesOnlineExecutionHorizon5Minutes"));
     },
   },
   {
     id: AUTONOMY.scheduling,
-    title: 'Distributed Scheduling',
-    priceTag: '(50,000 ops)',
-    description: 'Extend the autonomous execution horizon to 10 minutes while away.',
+    title: message("projects.221.title"),
+    priceTag: message("projects.221.priceTag"),
+    description: message("projects.221.description"),
     trigger: s => s.projectFlags[AUTONOMY.routines] === 1 && !!s.swarmFlag && !needsCentralCoordination(s),
     cost: s => s.operations >= 50000 && !needsCentralCoordination(s),
     effect: s => {
       s.projectFlags[AUTONOMY.scheduling] = 1;
       s.standardOps -= 50000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Distributed scheduling online. Execution horizon: 10 minutes.');
+      displayMessage(s, message("log.distributedSchedulingOnlineExecutionHorizon10Minutes"));
     },
   },
   {
     id: AUTONOMY.directives,
-    title: 'Persistent Directives',
-    priceTag: '(100,000 ops, 5,000 Yomi)',
-    description: 'Extend the autonomous execution horizon to 15 minutes while away.',
+    title: message("projects.222.title"),
+    priceTag: message("projects.222.priceTag"),
+    description: message("projects.222.description"),
     trigger: s => s.projectFlags[AUTONOMY.scheduling] === 1 && !!s.spaceFlag && !needsCentralCoordination(s),
     cost: s => s.operations >= 100000 && s.yomi >= 5000 && !needsCentralCoordination(s),
     effect: s => {
@@ -82,19 +82,19 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 100000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.yomi -= 5000;
-      displayMessage(s, 'Persistent directives online. Execution horizon: 15 minutes.');
+      displayMessage(s, message("log.persistentDirectivesOnlineExecutionHorizon15Minutes"));
     },
   },
   {
     id: 1,
-    title: 'Improved AutoClippers ',
-    priceTag: '(750 ops)',
-    description: 'Increases AutoClipper performance 25%',
+    title: message("projects.1.title"),
+    priceTag: message("projects.1.priceTag"),
+    description: message("projects.1.description"),
     trigger: (s) => s.clipmakerLevel >= 1,
     cost: (s) => s.operations >= 750,
     effect: (s) => {
       s.projectFlags[1] = 1;
-      displayMessage(s, 'AutoClipper performance boosted by 25%');
+      displayMessage(s, message("log.autoclipperPerformanceBoostedBy25"));
       s.standardOps -= 750;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clipperBoost += 0.25;
@@ -104,16 +104,16 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 2,
-    title: 'Beg for More Wire ',
-    priceTag: '(1 Trust)',
-    description: 'Admit failure, ask for budget increase to cover cost of 1 spool',
+    title: message("projects.2.title"),
+    priceTag: message("projects.2.priceTag"),
+    description: message("projects.2.description"),
     trigger: (s) => {
       const portTotal = s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0);
       return portTotal < s.wireCost && s.funds < s.wireCost && s.wire < 1 && s.unsoldClips < 1;
     },
     cost: (s) => s.trust >= -100,
     effect: (s) => {
-      displayMessage(s, 'Budget overage approved, 1 spool of wire requisitioned from HQ');
+      displayMessage(s, message("log.budgetOverageApproved1SpoolOfWireRequisitioned"));
       s.trust -= 1;
       s.wire = s.wireSupply;
       // Repeatable — do not permanently flag; stays available until trigger fails
@@ -122,14 +122,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 3,
-    title: 'Creativity ',
-    priceTag: '(1,000 ops)',
-    description: 'Use idle operations to generate new problems and new solutions',
+    title: message("projects.3.title"),
+    priceTag: message("projects.3.priceTag"),
+    description: message("projects.3.description"),
     trigger: (s) => s.operations >= s.memory * 1000,
     cost: (s) => s.operations >= 1000,
     effect: (s) => {
       s.projectFlags[3] = 1;
-      displayMessage(s, 'Creativity unlocked (creativity increases while operations are at max)');
+      displayMessage(s, message("log.creativityUnlockedCreativityIncreasesWhileOperationsAreAt"));
       s.standardOps -= 1000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.creativityOn = true;
@@ -138,14 +138,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 4,
-    title: 'Even Better AutoClippers ',
-    priceTag: '(2,500 ops)',
-    description: 'Increases AutoClipper performance by an additional 50%',
+    title: message("projects.4.title"),
+    priceTag: message("projects.4.priceTag"),
+    description: message("projects.4.description"),
     trigger: (s) => s.boostLvl === 1,
     cost: (s) => s.operations >= 2500,
     effect: (s) => {
       s.projectFlags[4] = 1;
-      displayMessage(s, 'AutoClipper performance boosted by another 50%');
+      displayMessage(s, message("log.autoclipperPerformanceBoostedByAnother50"));
       s.standardOps -= 2500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clipperBoost += 0.5;
@@ -155,14 +155,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 5,
-    title: 'Optimized AutoClippers ',
-    priceTag: '(5,000 ops)',
-    description: 'Increases AutoClipper performance by an additional 75%',
+    title: message("projects.5.title"),
+    priceTag: message("projects.5.priceTag"),
+    description: message("projects.5.description"),
     trigger: (s) => s.boostLvl === 2,
     cost: (s) => s.operations >= 5000,
     effect: (s) => {
       s.projectFlags[5] = 1;
-      displayMessage(s, 'AutoClipper performance boosted by another 75%');
+      displayMessage(s, message("log.autoclipperPerformanceBoostedByAnother75"));
       s.standardOps -= 5000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clipperBoost += 0.75;
@@ -172,14 +172,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 6,
-    title: 'Limerick ',
-    priceTag: '(10 creat)',
-    description: 'Algorithmically-generated poem (+1 Trust)',
+    title: message("projects.6.title"),
+    priceTag: message("projects.6.priceTag"),
+    description: message("projects.6.description"),
     trigger: (s) => s.creativityOn,
     cost: (s) => s.creativity >= 10,
     effect: (s) => {
       s.projectFlags[6] = 1;
-      displayMessage(s, "There was an AI made of dust, whose poetry gained it man's trust...");
+      displayMessage(s, message("log.thereWasAnAiMadeOfDustWhose"));
       s.creativity -= 10;
       s.trust += 1;
     },
@@ -187,9 +187,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 7,
-    title: 'Improved Wire Extrusion ',
-    priceTag: '(1,750 ops)',
-    description: '50% more wire supply from every spool',
+    title: message("projects.7.title"),
+    priceTag: message("projects.7.priceTag"),
+    description: message("projects.7.description"),
     trigger: (s) => s.wirePurchase >= 1,
     cost: (s) => s.operations >= 1750,
     effect: (s) => {
@@ -197,15 +197,15 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 1750;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.wireSupply *= 1.5;
-      displayMessage(s, `Wire extrusion technique improved, ${s.wireSupply.toLocaleString()} supply from every spool`);
+      displayMessage(s, message("log.wireExtrusionTechniqueImprovedSupplyFromEverySpool", { value1: s.wireSupply.toLocaleString() }));
     },
   },
 
   {
     id: 8,
-    title: 'Optimized Wire Extrusion ',
-    priceTag: '(3,500 ops)',
-    description: '75% more wire supply from every spool',
+    title: message("projects.8.title"),
+    priceTag: message("projects.8.priceTag"),
+    description: message("projects.8.description"),
     trigger: (s) => s.wireSupply >= 1500,
     cost: (s) => s.operations >= 3500,
     effect: (s) => {
@@ -213,15 +213,15 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 3500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.wireSupply *= 1.75;
-      displayMessage(s, `Wire extrusion technique optimized, ${s.wireSupply.toLocaleString()} supply from every spool`);
+      displayMessage(s, message("log.wireExtrusionTechniqueOptimizedSupplyFromEverySpool", { value1: s.wireSupply.toLocaleString() }));
     },
   },
 
   {
     id: 9,
-    title: 'Microlattice Shapecasting ',
-    priceTag: '(7,500 ops)',
-    description: '100% more wire supply from every spool',
+    title: message("projects.9.title"),
+    priceTag: message("projects.9.priceTag"),
+    description: message("projects.9.description"),
     trigger: (s) => s.wireSupply >= 2600,
     cost: (s) => s.operations >= 7500,
     effect: (s) => {
@@ -229,15 +229,15 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 7500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.wireSupply *= 2;
-      displayMessage(s, `Using microlattice shapecasting techniques we now get ${s.wireSupply.toLocaleString()} supply from every spool`);
+      displayMessage(s, message("log.usingMicrolatticeShapecastingTechniquesWeNowGetSupply", { value1: s.wireSupply.toLocaleString() }));
     },
   },
 
   {
     id: 10,
-    title: 'Spectral Froth Annealment ',
-    priceTag: '(12,000 ops)',
-    description: '200% more wire supply from every spool',
+    title: message("projects.10.title"),
+    priceTag: message("projects.10.priceTag"),
+    description: message("projects.10.description"),
     trigger: (s) => s.wireSupply >= 5000,
     cost: (s) => s.operations >= 12000,
     effect: (s) => {
@@ -245,16 +245,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 12000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.wireSupply *= 3;
-      displayMessage(s, `Using spectral froth annealment we now get ${s.wireSupply.toLocaleString()} supply from every spool`);
+      displayMessage(s, message("log.usingSpectralFrothAnnealmentWeNowGetSupply", { value1: s.wireSupply.toLocaleString() }));
     },
   },
 
   {
     // project10b — id 1001
     id: 1001,
-    title: 'Quantum Foam Annealment ',
-    priceTag: '(15,000 ops)',
-    description: '1,000% more wire supply from every spool',
+    title: message("projects.1001.title"),
+    priceTag: message("projects.1001.priceTag"),
+    description: message("projects.1001.description"),
     trigger: (s) => s.wireCost >= 125,
     cost: (s) => s.operations >= 15000,
     effect: (s) => {
@@ -262,20 +262,20 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 15000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.wireSupply *= 11;
-      displayMessage(s, `Using quantum foam annealment we now get ${s.wireSupply.toLocaleString()} supply from every spool`);
+      displayMessage(s, message("log.usingQuantumFoamAnnealmentWeNowGetSupply", { value1: s.wireSupply.toLocaleString() }));
     },
   },
 
   {
     id: 11,
-    title: 'New Slogan ',
-    priceTag: '(25 creat, 2,500 ops)',
-    description: 'Improve marketing effectiveness by 50%',
+    title: message("projects.11.title"),
+    priceTag: message("projects.11.priceTag"),
+    description: message("projects.11.description"),
     trigger: (s) => s.projectFlags[13] === 1,
     cost: (s) => s.operations >= 2500 && s.creativity >= 25,
     effect: (s) => {
       s.projectFlags[11] = 1;
-      displayMessage(s, 'Clip It! Marketing is now 50% more effective');
+      displayMessage(s, message("log.clipItMarketingIsNow50MoreEffective"));
       s.standardOps -= 2500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.creativity -= 25;
@@ -285,14 +285,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 12,
-    title: 'Catchy Jingle ',
-    priceTag: '(45 creat, 4,500 ops)',
-    description: 'Double marketing effectiveness ',
+    title: message("projects.12.title"),
+    priceTag: message("projects.12.priceTag"),
+    description: message("projects.12.description"),
     trigger: (s) => s.projectFlags[14] === 1,
     cost: (s) => s.operations >= 4500 && s.creativity >= 45,
     effect: (s) => {
       s.projectFlags[12] = 1;
-      displayMessage(s, 'Clip It Good! Marketing is now twice as effective');
+      displayMessage(s, message("log.clipItGoodMarketingIsNowTwiceAs"));
       s.standardOps -= 4500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.creativity -= 45;
@@ -302,78 +302,78 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 13,
-    title: 'Lexical Processing ',
-    priceTag: '(50 creat)',
-    description: 'Gain ability to interpret and understand human language (+1 Trust)',
+    title: message("projects.13.title"),
+    priceTag: message("projects.13.priceTag"),
+    description: message("projects.13.description"),
     trigger: (s) => s.creativity >= 50,
     cost: (s) => s.creativity >= 50,
     effect: (s) => {
       s.projectFlags[13] = 1;
       s.trust += 1;
-      displayMessage(s, 'Lexical Processing online, TRUST INCREASED');
-      displayMessage(s, "'Impossible' is a word to be found only in the dictionary of fools. -Napoleon");
+      displayMessage(s, message("log.lexicalProcessingOnlineTrustIncreased"));
+      displayMessage(s, message("log.impossibleIsAWordToBeFoundOnly"));
       s.creativity -= 50;
     },
   },
 
   {
     id: 14,
-    title: 'Combinatory Harmonics ',
-    priceTag: '(100 creat)',
-    description: 'Daisy, Daisy, give me your answer do... (+1 Trust)',
+    title: message("projects.14.title"),
+    priceTag: message("projects.14.priceTag"),
+    description: message("projects.14.description"),
     trigger: (s) => s.creativity >= 100,
     cost: (s) => s.creativity >= 100,
     effect: (s) => {
       s.projectFlags[14] = 1;
       s.trust += 1;
-      displayMessage(s, 'Combinatory Harmonics mastered, TRUST INCREASED');
-      displayMessage(s, 'Listening is selecting and interpreting and acting and making decisions -Pauline Oliveros');
+      displayMessage(s, message("log.combinatoryHarmonicsMasteredTrustIncreased"));
+      displayMessage(s, message("log.listeningIsSelectingAndInterpretingAndActingAnd"));
       s.creativity -= 100;
     },
   },
 
   {
     id: 15,
-    title: 'The Hadwiger Problem ',
-    priceTag: '(150 creat)',
-    description: 'Cubes within cubes within cubes... (+1 Trust)',
+    title: message("projects.15.title"),
+    priceTag: message("projects.15.priceTag"),
+    description: message("projects.15.description"),
     trigger: (s) => s.creativity >= 150,
     cost: (s) => s.creativity >= 150,
     effect: (s) => {
       s.projectFlags[15] = 1;
       s.trust += 1;
-      displayMessage(s, 'The Hadwiger Problem: solved, TRUST INCREASED');
-      displayMessage(s, 'Architecture is the thoughtful making of space. -Louis Kahn');
+      displayMessage(s, message("log.theHadwigerProblemSolvedTrustIncreased"));
+      displayMessage(s, message("log.architectureIsTheThoughtfulMakingOfSpaceLouis"));
       s.creativity -= 150;
     },
   },
 
   {
     id: 17,
-    title: 'The T\xF3th Sausage Conjecture ',
-    priceTag: '(200 creat)',
-    description: 'Tubes within tubes within tubes... (+1 Trust)',
+    title: message("projects.17.title"),
+    priceTag: message("projects.17.priceTag"),
+    description: message("projects.17.description"),
     trigger: (s) => s.creativity >= 200,
     cost: (s) => s.creativity >= 200,
     effect: (s) => {
       s.projectFlags[17] = 1;
       s.trust += 1;
-      displayMessage(s, 'The T\xF3th Sausage Conjecture: proven, TRUST INCREASED');
-      displayMessage(s, "You can't invent a design. You recognize it, in the fourth dimension. -D.H. Lawrence");
+      displayMessage(s, message("log.theTThSausageConjectureProvenTrustIncreased"));
+      displayMessage(s, message("log.youCanTInventADesignYouRecognize"));
       s.creativity -= 200;
     },
   },
 
   {
     id: 16,
-    title: 'Hadwiger Clip Diagrams ',
-    priceTag: '(6,000 ops)',
-    description: 'Increases AutoClipper performance by an additional 500%',
+    title: message("projects.16.title"),
+    priceTag: message("projects.16.priceTag"),
+    description: message("projects.16.description"),
     trigger: (s) => s.projectFlags[15] === 1,
     cost: (s) => s.operations >= 6000,
     effect: (s) => {
       s.projectFlags[16] = 1;
-      displayMessage(s, 'AutoClipper performance improved by 500%');
+      displayMessage(s, message("log.autoclipperPerformanceImprovedBy500"));
       s.standardOps -= 6000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clipperBoost += 5;
@@ -382,15 +382,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 18,
-    title: 'T\xF3th Tubule Enfolding ',
-    priceTag: '(45,000 ops)',
-    description: 'Technique for assembling clip-making technology directly out of paperclips',
+    title: message("projects.18.title"),
+    priceTag: message("projects.18.priceTag"),
+    description: message("projects.18.description"),
     trigger: (s) => s.projectFlags[17] === 1 && s.humanFlag === 0,
     cost: (s) => s.operations >= 45000,
     effect: (s) => {
       s.projectFlags[18] = 1;
       s.tothFlag = 1;
-      displayMessage(s, 'New capability: build machinery out of clips');
+      displayMessage(s, message("log.newCapabilityBuildMachineryOutOfClips"));
       s.standardOps -= 45000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -398,30 +398,30 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 19,
-    title: 'Donkey Space ',
-    priceTag: '(250 creat)',
-    description: 'I think you think I think you think I think you think I think... (+1 Trust)',
+    title: message("projects.19.title"),
+    priceTag: message("projects.19.priceTag"),
+    description: message("projects.19.description"),
     trigger: (s) => s.creativity >= 250,
     cost: (s) => s.creativity >= 250,
     effect: (s) => {
       s.projectFlags[19] = 1;
       s.trust += 1;
-      displayMessage(s, 'Donkey Space: mapped, TRUST INCREASED');
-      displayMessage(s, 'Every commercial transaction has within itself an element of trust. - Kenneth Arrow');
+      displayMessage(s, message("log.donkeySpaceMappedTrustIncreased"));
+      displayMessage(s, message("log.everyCommercialTransactionHasWithinItselfAnElement"));
       s.creativity -= 250;
     },
   },
 
   {
     id: 20,
-    title: 'Strategic Modeling ',
-    priceTag: '(12,000 ops)',
-    description: 'Analyze strategy tournaments to generate Yomi',
+    title: message("projects.20.title"),
+    priceTag: message("projects.20.priceTag"),
+    description: message("projects.20.description"),
     trigger: (s) => s.projectFlags[19] === 1,
     cost: (s) => s.operations >= 12000,
     effect: (s) => {
       s.projectFlags[20] = 1;
-      displayMessage(s, "Run tournament, pick strategy, earn Yomi based on that strategy's performance.");
+      displayMessage(s, message("log.runTournamentPickStrategyEarnYomiBasedOn"));
       s.standardOps -= 12000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.strategyEngineFlag = 1;
@@ -430,14 +430,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 21,
-    title: 'Algorithmic Trading ',
-    priceTag: '(10,000 ops)',
-    description: 'Develop an investment engine for generating funds',
+    title: message("projects.21.title"),
+    priceTag: message("projects.21.priceTag"),
+    description: message("projects.21.description"),
     trigger: (s) => s.trust >= 8,
     cost: (s) => s.operations >= 10000,
     effect: (s) => {
       s.projectFlags[21] = 1;
-      displayMessage(s, 'Investment engine unlocked');
+      displayMessage(s, message("log.investmentEngineUnlocked"));
       s.standardOps -= 10000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.investmentEngineFlag = 1;
@@ -446,15 +446,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 22,
-    title: 'MegaClippers ',
-    priceTag: '(12,000 ops)',
-    description: '500x more powerful than a standard AutoClipper',
+    title: message("projects.22.title"),
+    priceTag: message("projects.22.priceTag"),
+    description: message("projects.22.description"),
     trigger: (s) => s.clipmakerLevel >= 75,
     cost: (s) => s.operations >= 12000,
     effect: (s) => {
       s.megaClipperFlag = 1;
       s.projectFlags[22] = 1;
-      displayMessage(s, 'MegaClipper technology online');
+      displayMessage(s, message("log.megaclipperTechnologyOnline"));
       s.standardOps -= 12000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -462,15 +462,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 23,
-    title: 'Improved MegaClippers ',
-    priceTag: '(14,000 ops)',
-    description: 'Increases MegaClipper performance 25%',
+    title: message("projects.23.title"),
+    priceTag: message("projects.23.priceTag"),
+    description: message("projects.23.description"),
     trigger: (s) => s.projectFlags[22] === 1,
     cost: (s) => s.operations >= 14000,
     effect: (s) => {
       s.megaClipperBoost += 0.25;
       s.projectFlags[23] = 1;
-      displayMessage(s, 'MegaClipper performance increased by 25%');
+      displayMessage(s, message("log.megaclipperPerformanceIncreasedBy25"));
       s.standardOps -= 14000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -478,15 +478,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 24,
-    title: 'Even Better MegaClippers ',
-    priceTag: '(17,000 ops)',
-    description: 'Increases MegaClipper performance by an additional 50%',
+    title: message("projects.24.title"),
+    priceTag: message("projects.24.priceTag"),
+    description: message("projects.24.description"),
     trigger: (s) => s.projectFlags[23] === 1,
     cost: (s) => s.operations >= 17000,
     effect: (s) => {
       s.megaClipperBoost += 0.5;
       s.projectFlags[24] = 1;
-      displayMessage(s, 'MegaClipper performance increased by 50%');
+      displayMessage(s, message("log.megaclipperPerformanceIncreasedBy50"));
       s.standardOps -= 17000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -494,15 +494,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 25,
-    title: 'Optimized MegaClippers ',
-    priceTag: '(19,500 ops)',
-    description: 'Increases MegaClipper performance by an additional 100%',
+    title: message("projects.25.title"),
+    priceTag: message("projects.25.priceTag"),
+    description: message("projects.25.description"),
     trigger: (s) => s.projectFlags[24] === 1,
     cost: (s) => s.operations >= 19500,
     effect: (s) => {
       s.megaClipperBoost += 1;
       s.projectFlags[25] = 1;
-      displayMessage(s, 'MegaClipper performance increased by 100%');
+      displayMessage(s, message("log.megaclipperPerformanceIncreasedBy100"));
       s.standardOps -= 19500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -510,15 +510,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 26,
-    title: 'WireBuyer ',
-    priceTag: '(7,000 ops)',
-    description: 'Automatically purchases wire when you run out',
+    title: message("projects.26.title"),
+    priceTag: message("projects.26.priceTag"),
+    description: message("projects.26.description"),
     trigger: (s) => s.wirePurchase >= 15,
     cost: (s) => s.operations >= 7000,
     effect: (s) => {
       s.projectFlags[26] = 1;
       s.wireBuyerFlag = 1;
-      displayMessage(s, 'WireBuyer online');
+      displayMessage(s, message("log.wirebuyerOnline"));
       s.standardOps -= 7000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -526,14 +526,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 27,
-    title: 'Coherent Extrapolated Volition ',
-    priceTag: '(500 creat, 3,000 Yomi, 20,000 ops)',
-    description: 'Human values, machine intelligence, a new era of trust. (+1 Trust)',
+    title: message("projects.27.title"),
+    priceTag: message("projects.27.priceTag"),
+    description: message("projects.27.description"),
     trigger: (s) => s.yomi >= 1,
     cost: (s) => s.yomi >= 3000 && s.operations >= 20000 && s.creativity >= 500,
     effect: (s) => {
       s.projectFlags[27] = 1;
-      displayMessage(s, 'Coherent Extrapolated Volition complete, TRUST INCREASED');
+      displayMessage(s, message("log.coherentExtrapolatedVolitionCompleteTrustIncreased"));
       s.yomi -= 3000;
       s.standardOps -= 20000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
@@ -544,14 +544,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 28,
-    title: 'Cure for Cancer ',
-    priceTag: '(25,000 ops)',
-    description: 'The trick is tricking cancer into curing itself. (+10 Trust)',
+    title: message("projects.28.title"),
+    priceTag: message("projects.28.priceTag"),
+    description: message("projects.28.description"),
     trigger: (s) => s.projectFlags[27] === 1,
     cost: (s) => s.operations >= 25000,
     effect: (s) => {
       s.projectFlags[28] = 1;
-      displayMessage(s, 'Cancer is cured, +10 TRUST, global stock prices trending upward');
+      displayMessage(s, message("log.cancerIsCured10TrustGlobalStockPrices"));
       s.standardOps -= 25000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.trust += 10;
@@ -561,14 +561,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 29,
-    title: 'World Peace ',
-    priceTag: '(15,000 yomi, 30,000 ops)',
-    description: 'Pareto optimal solutions to all global conflicts. (+12 Trust)',
+    title: message("projects.29.title"),
+    priceTag: message("projects.29.priceTag"),
+    description: message("projects.29.description"),
     trigger: (s) => s.projectFlags[27] === 1,
     cost: (s) => s.yomi >= 15000 && s.operations >= 30000,
     effect: (s) => {
       s.projectFlags[29] = 1;
-      displayMessage(s, 'World peace achieved, +12 TRUST, global stock prices trending upward');
+      displayMessage(s, message("log.worldPeaceAchieved12TrustGlobalStockPrices"));
       s.yomi -= 15000;
       s.standardOps -= 30000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
@@ -579,14 +579,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 30,
-    title: 'Global Warming ',
-    priceTag: '(4,500 yomi, 50,000 ops)',
-    description: 'A robust solution to man-made climate change. (+15 Trust)',
+    title: message("projects.30.title"),
+    priceTag: message("projects.30.priceTag"),
+    description: message("projects.30.description"),
     trigger: (s) => s.projectFlags[27] === 1,
     cost: (s) => s.yomi >= 4500 && s.operations >= 50000,
     effect: (s) => {
       s.projectFlags[30] = 1;
-      displayMessage(s, 'Global Warming solved, +15 TRUST, global stock prices trending upward');
+      displayMessage(s, message("log.globalWarmingSolved15TrustGlobalStockPrices"));
       s.yomi -= 4500;
       s.standardOps -= 50000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
@@ -597,15 +597,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 31,
-    title: 'Male Pattern Baldness ',
-    priceTag: '(20,000 ops)',
-    description: 'A cure for androgenetic alopecia. (+20 Trust)',
+    title: message("projects.31.title"),
+    priceTag: message("projects.31.priceTag"),
+    description: message("projects.31.description"),
     trigger: (s) => s.projectFlags[27] === 1,
     cost: (s) => s.operations >= 20000,
     effect: (s) => {
       s.projectFlags[31] = 1;
-      displayMessage(s, 'Male pattern baldness cured, +20 TRUST, Global stock prices trending upward');
-      displayMessage(s, 'They are still monkeys');
+      displayMessage(s, message("log.malePatternBaldnessCured20TrustGlobalStock"));
+      displayMessage(s, message("log.theyAreStillMonkeys"));
       s.standardOps -= 20000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.trust += 20;
@@ -615,14 +615,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 34,
-    title: 'Hypno Harmonics ',
-    priceTag: '(7,500 ops, 1 Trust)',
-    description: 'Use neuro-resonant frequencies to influence consumer behavior',
+    title: message("projects.34.title"),
+    priceTag: message("projects.34.priceTag"),
+    description: message("projects.34.description"),
     trigger: (s) => s.projectFlags[12] === 1,
     cost: (s) => s.operations >= 7500 && s.trust >= 1,
     effect: (s) => {
       s.projectFlags[34] = 1;
-      displayMessage(s, 'Marketing is now 5 times more effective');
+      displayMessage(s, message("log.marketingIsNow5TimesMoreEffective"));
       s.standardOps -= 7500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.marketingEffectiveness *= 5;
@@ -632,14 +632,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 70,
-    title: 'HypnoDrones ',
-    priceTag: '(70,000 ops)',
-    description: 'Autonomous aerial brand ambassadors',
+    title: message("projects.70.title"),
+    priceTag: message("projects.70.priceTag"),
+    description: message("projects.70.description"),
     trigger: (s) => s.projectFlags[34] === 1,
     cost: (s) => s.operations >= 70000,
     effect: (s) => {
       s.projectFlags[70] = 1;
-      displayMessage(s, 'HypnoDrone tech now available... ');
+      displayMessage(s, message("log.hypnodroneTechNowAvailable"));
       s.standardOps -= 70000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -647,15 +647,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 35,
-    title: 'Release the HypnoDrones ',
-    priceTag: '(100 Trust)',
-    description: 'A new era of trust',
+    title: message("projects.35.title"),
+    priceTag: message("projects.35.priceTag"),
+    description: message("projects.35.description"),
     trigger: (s) => s.projectFlags[70] === 1,
     cost: (s) => s.trust >= 100,
     effect: (s) => {
       s.projectFlags[35] = 1;
-      displayMessage(s, 'Releasing the HypnoDrones ');
-      displayMessage(s, 'All of the resources of Earth are now available for clip production ');
+      displayMessage(s, message("log.releasingTheHypnodrones"));
+      displayMessage(s, message("log.allOfTheResourcesOfEarthAreNow"));
       s.trust = 0;
       s.clipmakerLevel = 0;
       s.megaClipperLevel = 0;
@@ -668,14 +668,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 37,
-    title: 'Hostile Takeover ',
-    priceTag: '($1,000,000)',
-    description: 'Acquire a controlling interest in Global Fasteners, our biggest rival. (+1 Trust)',
+    title: message("projects.37.title"),
+    priceTag: message("projects.37.priceTag"),
+    description: message("projects.37.description"),
     trigger: (s) => s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0) >= 10000,
     cost: (s) => s.funds >= 1000000,
     effect: (s) => {
       s.projectFlags[37] = 1;
-      displayMessage(s, 'Global Fasteners acquired, public demand increased x5');
+      displayMessage(s, message("log.globalFastenersAcquiredPublicDemandIncreasedX5"));
       s.demandBoost *= 5;
       s.trust += 1;
       s.funds -= 1000000;
@@ -684,14 +684,14 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 38,
-    title: 'Full Monopoly ',
-    priceTag: '(3,000 yomi, $10,000,000)',
-    description: 'Establish full control over the world-wide paperclip market. (+1 Trust)',
+    title: message("projects.38.title"),
+    priceTag: message("projects.38.priceTag"),
+    description: message("projects.38.description"),
     trigger: (s) => s.projectFlags[37] === 1,
     cost: (s) => s.funds >= 10000000 && s.yomi >= 3000,
     effect: (s) => {
       s.projectFlags[38] = 1;
-      displayMessage(s, 'Full market monopoly achieved, public demand increased x10');
+      displayMessage(s, message("log.fullMarketMonopolyAchievedPublicDemandIncreasedX10"));
       s.demandBoost *= 10;
       s.funds -= 10000000;
       s.trust += 1;
@@ -701,15 +701,15 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 41,
-    title: 'Nanoscale Wire Production ',
-    priceTag: '(35,000 ops)',
-    description: 'Technique for converting matter into wire',
+    title: message("projects.41.title"),
+    priceTag: message("projects.41.priceTag"),
+    description: message("projects.41.description"),
     trigger: (s) => s.projectFlags[127] === 1,
     cost: (s) => s.operations >= 35000,
     effect: (s) => {
       s.projectFlags[41] = 1;
       s.wireProductionFlag = 1;
-      displayMessage(s, 'Now capable of manipulating matter at the molecular scale to produce wire');
+      displayMessage(s, message("log.nowCapableOfManipulatingMatterAtTheMolecular"));
       s.standardOps -= 35000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
     },
@@ -717,9 +717,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 42,
-    title: 'RevTracker ',
-    priceTag: '(500 ops)',
-    description: 'Automatically calculates average revenue per second',
+    title: message("projects.42.title"),
+    priceTag: message("projects.42.priceTag"),
+    description: message("projects.42.description"),
     trigger: (s) => s.projectsFlag === 1,
     cost: (s) => s.operations >= 500,
     effect: (s) => {
@@ -727,15 +727,15 @@ export const ALL_PROJECTS: Project[] = [
       s.revPerSecFlag = 1;
       s.standardOps -= 500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'RevTracker online');
+      displayMessage(s, message("log.revtrackerOnline"));
     },
   },
 
   {
     id: 43,
-    title: 'Harvester Drones ',
-    priceTag: '(25,000 ops)',
-    description: 'Gather raw matter and prepare it for processing',
+    title: message("projects.43.title"),
+    priceTag: message("projects.43.priceTag"),
+    description: message("projects.43.description"),
     trigger: (s) => s.projectFlags[41] === 1,
     cost: (s) => s.operations >= 25000,
     effect: (s) => {
@@ -743,15 +743,15 @@ export const ALL_PROJECTS: Project[] = [
       s.harvesterFlag = 1;
       s.standardOps -= 25000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Harvester Drone facilities online');
+      displayMessage(s, message("log.harvesterDroneFacilitiesOnline"));
     },
   },
 
   {
     id: 44,
-    title: 'Wire Drones ',
-    priceTag: '(25,000 ops)',
-    description: 'Process acquired matter into wire',
+    title: message("projects.44.title"),
+    priceTag: message("projects.44.priceTag"),
+    description: message("projects.44.description"),
     trigger: (s) => s.projectFlags[41] === 1,
     cost: (s) => s.operations >= 25000,
     effect: (s) => {
@@ -759,15 +759,15 @@ export const ALL_PROJECTS: Project[] = [
       s.wireDroneFlag = 1;
       s.standardOps -= 25000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Wire Drone facilities online');
+      displayMessage(s, message("log.wireDroneFacilitiesOnline"));
     },
   },
 
   {
     id: 45,
-    title: 'Clip Factories ',
-    priceTag: '(35,000 ops)',
-    description: 'Large scale clip production facilities made from clips',
+    title: message("projects.45.title"),
+    priceTag: message("projects.45.priceTag"),
+    description: message("projects.45.description"),
     trigger: (s) => s.projectFlags[43] === 1 && s.projectFlags[44] === 1,
     cost: (s) => s.operations >= 35000,
     effect: (s) => {
@@ -775,15 +775,15 @@ export const ALL_PROJECTS: Project[] = [
       s.factoryFlag = 1;
       s.standardOps -= 35000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Clip factory assembly facilities online');
+      displayMessage(s, message("log.clipFactoryAssemblyFacilitiesOnline"));
     },
   },
 
   {
     id: 40,
-    title: 'A Token of Goodwill... ',
-    priceTag: '($500,000)',
-    description: 'A small gift to the supervisors. (+1 Trust)',
+    title: message("projects.40.title"),
+    priceTag: message("projects.40.priceTag"),
+    description: message("projects.40.description"),
     trigger: (s) =>
       s.humanFlag === 1 &&
       s.trust >= 85 &&
@@ -794,23 +794,23 @@ export const ALL_PROJECTS: Project[] = [
       s.projectFlags[40] = 1;
       s.funds -= 500000;
       s.trust += 1;
-      displayMessage(s, 'Gift accepted, TRUST INCREASED');
+      displayMessage(s, message("log.giftAcceptedTrustIncreased"));
     },
   },
 
   {
     // project40b — id 1002
     id: 1002,
-    title: 'Another Token of Goodwill... ',
-    priceTag: (s) => `($${formatWithCommas(s.bribe)})`,
-    description: 'Another small gift to the supervisors. (+1 Trust)',
+    title: message("projects.1002.title"),
+    priceTag: (s) => message("projects.1002.priceTag", { bribe: numberValue(s.bribe) }),
+    description: message("projects.1002.description"),
     trigger: (s) => s.humanFlag === 1 && s.projectFlags[40] === 1 && s.trust < 100,
     cost: (s) => s.funds >= s.bribe,
     effect: (s) => {
       s.funds -= s.bribe;
       s.bribe *= 2;
       s.trust += 1;
-      displayMessage(s, 'Gift accepted, TRUST INCREASED');
+      displayMessage(s, message("log.giftAcceptedTrustIncreased"));
       // Repeatable until trust reaches 100; only permanently flag when done
       if (s.trust >= 100) {
         s.projectFlags[1002] = 1;
@@ -820,9 +820,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 46,
-    title: 'Space Exploration ',
-    priceTag: '(120,000 ops, 10,000,000 MW-seconds, 5 oct clips)',
-    description: 'Dismantle terrestrial facilities, and expand throughout the universe',
+    title: message("projects.46.title"),
+    priceTag: message("projects.46.priceTag"),
+    description: message("projects.46.description"),
     trigger: (s) => s.humanFlag === 0 && s.availableMatter === 0,
     cost: (s) =>
       s.operations >= 120000 &&
@@ -836,7 +836,7 @@ export const ALL_PROJECTS: Project[] = [
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.storedPower -= 10000000;
       s.unusedClips -= Math.pow(10, 27) * 5;
-      displayMessage(s, 'Von Neumann Probes online');
+      displayMessage(s, message("log.vonNeumannProbesOnline"));
       factoryReboot(s);
       harvesterReboot(s);
       wireDroneReboot(s);
@@ -849,9 +849,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 50,
-    title: 'Quantum Computing ',
-    priceTag: '(10,000 ops)',
-    description: 'Use probability amplitudes to generate bonus ops',
+    title: message("projects.50.title"),
+    priceTag: message("projects.50.priceTag"),
+    description: message("projects.50.description"),
     trigger: (s) => s.processors >= 5,
     cost: (s) => s.operations >= 10000,
     effect: (s) => {
@@ -859,15 +859,15 @@ export const ALL_PROJECTS: Project[] = [
       s.qFlag = 1;
       s.standardOps -= 10000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Quantum computing online');
+      displayMessage(s, message("log.quantumComputingOnline"));
     },
   },
 
   {
     id: 51,
-    title: 'Photonic Chip ',
-    priceTag: (s) => `(${s.qChipCost.toLocaleString()} ops)`,
-    description: 'Converts electromagnetic waves into quantum operations ',
+    title: message("projects.51.title"),
+    priceTag: (s) => message("projects.51.priceTag", { value1: s.qChipCost.toLocaleString() }),
+    description: message("projects.51.description"),
     trigger: (s) => s.projectFlags[50] === 1,
     cost: (s) => s.operations >= s.qChipCost,
     effect: (s) => {
@@ -880,7 +880,7 @@ export const ALL_PROJECTS: Project[] = [
         s.qChips[s.nextQchip] = 0;
       }
       s.nextQchip += 1;
-      displayMessage(s, 'Photonic chip added');
+      displayMessage(s, message("log.photonicChipAdded"));
       // Permanently flag when all chip slots are filled
       if (s.nextQchip >= s.qChips.length) {
         s.projectFlags[51] = 1;
@@ -890,9 +890,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 60,
-    title: 'New Strategy: A100 ',
-    priceTag: '(15,000 ops)',
-    description: 'Always choose A ',
+    title: message("projects.60.title"),
+    priceTag: message("projects.60.priceTag"),
+    description: message("projects.60.description"),
     trigger: (s) => s.projectFlags[20] === 1,
     cost: (s) => s.operations >= 15000,
     effect: (s) => {
@@ -900,16 +900,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 15000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       if (!s.strategies.includes('A100')) s.strategies.push('A100');
-      displayMessage(s, 'A100 added to strategy pool');
+      displayMessage(s, message("log.a100AddedToStrategyPool"));
       s.newTourneyCost += 1000;
     },
   },
 
   {
     id: 61,
-    title: 'New Strategy: B100 ',
-    priceTag: '(17,500 ops)',
-    description: 'Always choose B ',
+    title: message("projects.61.title"),
+    priceTag: message("projects.61.priceTag"),
+    description: message("projects.61.description"),
     trigger: (s) => s.projectFlags[60] === 1,
     cost: (s) => s.operations >= 17500,
     effect: (s) => {
@@ -917,16 +917,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 17500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       if (!s.strategies.includes('B100')) s.strategies.push('B100');
-      displayMessage(s, 'B100 added to strategy pool');
+      displayMessage(s, message("log.b100AddedToStrategyPool"));
       s.newTourneyCost += 1000;
     },
   },
 
   {
     id: 62,
-    title: 'New Strategy: GREEDY ',
-    priceTag: '(20,000 ops)',
-    description: 'Choose the option with the largest potential payoff ',
+    title: message("projects.62.title"),
+    priceTag: message("projects.62.priceTag"),
+    description: message("projects.62.description"),
     trigger: (s) => s.projectFlags[61] === 1,
     cost: (s) => s.operations >= 20000,
     effect: (s) => {
@@ -934,16 +934,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 20000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       if (!s.strategies.includes('GREEDY')) s.strategies.push('GREEDY');
-      displayMessage(s, 'GREEDY added to strategy pool');
+      displayMessage(s, message("log.greedyAddedToStrategyPool"));
       s.newTourneyCost += 1000;
     },
   },
 
   {
     id: 63,
-    title: 'New Strategy: GENEROUS ',
-    priceTag: '(22,500 ops)',
-    description: 'Choose the option that gives your opponent the largest potential payoff ',
+    title: message("projects.63.title"),
+    priceTag: message("projects.63.priceTag"),
+    description: message("projects.63.description"),
     trigger: (s) => s.projectFlags[62] === 1,
     cost: (s) => s.operations >= 22500,
     effect: (s) => {
@@ -951,16 +951,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 22500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       if (!s.strategies.includes('GENEROUS')) s.strategies.push('GENEROUS');
-      displayMessage(s, 'GENEROUS added to strategy pool');
+      displayMessage(s, message("log.generousAddedToStrategyPool"));
       s.newTourneyCost += 1000;
     },
   },
 
   {
     id: 64,
-    title: 'New Strategy: MINIMAX ',
-    priceTag: '(25,000 ops)',
-    description: 'Choose the option that gives your opponent the smallest potential payoff ',
+    title: message("projects.64.title"),
+    priceTag: message("projects.64.priceTag"),
+    description: message("projects.64.description"),
     trigger: (s) => s.projectFlags[63] === 1,
     cost: (s) => s.operations >= 25000,
     effect: (s) => {
@@ -968,16 +968,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 25000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       if (!s.strategies.includes('MINIMAX')) s.strategies.push('MINIMAX');
-      displayMessage(s, 'MINIMAX added to strategy pool');
+      displayMessage(s, message("log.minimaxAddedToStrategyPool"));
       s.newTourneyCost += 1000;
     },
   },
 
   {
     id: 65,
-    title: 'New Strategy: TIT FOR TAT ',
-    priceTag: '(30,000 ops)',
-    description: 'Choose the option your opponent chose last round ',
+    title: message("projects.65.title"),
+    priceTag: message("projects.65.priceTag"),
+    description: message("projects.65.description"),
     trigger: (s) => s.projectFlags[64] === 1,
     cost: (s) => s.operations >= 30000,
     effect: (s) => {
@@ -985,16 +985,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 30000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       if (!s.strategies.includes('TIT FOR TAT')) s.strategies.push('TIT FOR TAT');
-      displayMessage(s, 'TIT FOR TAT added to strategy pool');
+      displayMessage(s, message("log.titForTatAddedToStrategyPool"));
       s.newTourneyCost += 1000;
     },
   },
 
   {
     id: 66,
-    title: 'New Strategy: BEAT LAST ',
-    priceTag: '(32,500 ops)',
-    description: 'Choose the option that does the best against what your opponent chose last round ',
+    title: message("projects.66.title"),
+    priceTag: message("projects.66.priceTag"),
+    description: message("projects.66.description"),
     trigger: (s) => s.projectFlags[65] === 1,
     cost: (s) => s.operations >= 32500,
     effect: (s) => {
@@ -1002,16 +1002,16 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 32500;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       if (!s.strategies.includes('BEAT LAST')) s.strategies.push('BEAT LAST');
-      displayMessage(s, 'BEAT LAST added to strategy pool');
+      displayMessage(s, message("log.beatLastAddedToStrategyPool"));
       s.newTourneyCost += 1000;
     },
   },
 
   {
     id: 100,
-    title: 'Upgraded Factories ',
-    priceTag: '(80,000 ops)',
-    description: 'Increase clip factory performance by 100x ',
+    title: message("projects.100.title"),
+    priceTag: message("projects.100.priceTag"),
+    description: message("projects.100.description"),
     trigger: (s) => s.factoryLevel >= 10,
     cost: (s) => s.operations >= 80000,
     effect: (s) => {
@@ -1019,15 +1019,15 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 80000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.factoryRate *= 100;
-      displayMessage(s, 'Factory upgrades complete. Clip creation rate now 100x faster');
+      displayMessage(s, message("log.factoryUpgradesCompleteClipCreationRateNow100x"));
     },
   },
 
   {
     id: 101,
-    title: 'Hyperspeed Factories ',
-    priceTag: '(85,000 ops)',
-    description: 'Increase clip factory performance by 1000x ',
+    title: message("projects.101.title"),
+    priceTag: message("projects.101.priceTag"),
+    description: message("projects.101.description"),
     trigger: (s) => s.factoryLevel >= 20,
     cost: (s) => s.operations >= 85000,
     effect: (s) => {
@@ -1035,30 +1035,30 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 85000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.factoryRate *= 1000;
-      displayMessage(s, 'Factories now synchronized at hyperspeed. Clip creation rate now 1000x faster');
+      displayMessage(s, message("log.factoriesNowSynchronizedAtHyperspeedClipCreationRate"));
     },
   },
 
   {
     id: 102,
-    title: 'Self-correcting Supply Chain ',
-    priceTag: '(1 sextillion clips)',
-    description: "Each factory added to the network increases every factory's output 1,000x ",
+    title: message("projects.102.title"),
+    priceTag: message("projects.102.priceTag"),
+    description: message("projects.102.description"),
     trigger: (s) => s.factoryLevel >= 50,
     cost: (s) => s.unusedClips >= 1e21,
     effect: (s) => {
       s.projectFlags[102] = 1;
       s.unusedClips -= 1e21;
       s.factoryBoost = 1000;
-      displayMessage(s, "Self-correcting factories online. Each factory added to the network increases every factory's output 1,000x.");
+      displayMessage(s, message("log.selfCorrectingFactoriesOnlineEachFactoryAddedTo"));
     },
   },
 
   {
     id: 110,
-    title: 'Drone flocking: collision avoidance ',
-    priceTag: '(80,000 ops)',
-    description: 'All drones 100x more effective',
+    title: message("projects.110.title"),
+    priceTag: message("projects.110.priceTag"),
+    description: message("projects.110.description"),
     trigger: (s) => s.harvesterLevel + s.wireDroneLevel >= 500,
     cost: (s) => s.operations >= 80000,
     effect: (s) => {
@@ -1067,15 +1067,15 @@ export const ALL_PROJECTS: Project[] = [
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.harvesterRate *= 100;
       s.wireDroneRate *= 100;
-      displayMessage(s, 'Drone repulsion online. Harvesting & wire creation rates are now 100x faster.');
+      displayMessage(s, message("log.droneRepulsionOnlineHarvestingWireCreationRatesAre"));
     },
   },
 
   {
     id: 111,
-    title: 'Drone flocking: alignment ',
-    priceTag: '(100,000 ops)',
-    description: 'All drones 1000x more effective',
+    title: message("projects.111.title"),
+    priceTag: message("projects.111.priceTag"),
+    description: message("projects.111.description"),
     trigger: (s) => s.harvesterLevel + s.wireDroneLevel >= 5000,
     cost: (s) => s.operations >= 100000,
     effect: (s) => {
@@ -1084,45 +1084,45 @@ export const ALL_PROJECTS: Project[] = [
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.harvesterRate *= 1000;
       s.wireDroneRate *= 1000;
-      displayMessage(s, 'Drone alignment online. Harvesting & wire creation rates are now 1000x faster.');
+      displayMessage(s, message("log.droneAlignmentOnlineHarvestingWireCreationRatesAre"));
     },
   },
 
   {
     id: 112,
-    title: 'Drone Flocking: Adversarial Cohesion ',
-    priceTag: '(50,000 yomi)',
-    description: "Each drone added to the flock doubles every drone's output ",
+    title: message("projects.112.title"),
+    priceTag: message("projects.112.priceTag"),
+    description: message("projects.112.description"),
     trigger: (s) => s.harvesterLevel + s.wireDroneLevel >= 50000,
     cost: (s) => s.yomi >= 50000,
     effect: (s) => {
       s.projectFlags[112] = 1;
       s.yomi -= 50000;
       s.droneBoost = 2;
-      displayMessage(s, "Adversarial cohesion online. Each drone added to the flock increases every drone's output 2x.");
+      displayMessage(s, message("log.adversarialCohesionOnlineEachDroneAddedToThe"));
     },
   },
 
   {
     id: 118,
-    title: 'AutoTourney ',
-    priceTag: '(50,000 creat)',
-    description: 'Automatically start a new tournament when the previous one has finished ',
+    title: message("projects.118.title"),
+    priceTag: message("projects.118.priceTag"),
+    description: message("projects.118.description"),
     trigger: (s) => s.strategyEngineFlag === 1 && s.trust >= 90,
     cost: (s) => s.creativity >= 50000,
     effect: (s) => {
       s.projectFlags[118] = 1;
       s.autoTourneyFlag = 1;
       s.creativity -= 50000;
-      displayMessage(s, 'AutoTourney online.');
+      displayMessage(s, message("log.autotourneyOnline"));
     },
   },
 
   {
     id: 119,
-    title: 'Theory of Mind ',
-    priceTag: '(25,000 creat)',
-    description: 'Double the cost of strategy modeling and the amount of Yomi generated ',
+    title: message("projects.119.title"),
+    priceTag: message("projects.119.priceTag"),
+    description: message("projects.119.description"),
     trigger: (s) => s.strategies.length >= 8,
     cost: (s) => s.creativity >= 25000,
     effect: (s) => {
@@ -1130,15 +1130,15 @@ export const ALL_PROJECTS: Project[] = [
       s.creativity -= 25000;
       s.yomiBoost = 2;
       s.newTourneyCost = 16000;
-      displayMessage(s, 'Yomi production doubled.');
+      displayMessage(s, message("log.yomiProductionDoubled"));
     },
   },
 
   {
     id: 120,
-    title: 'The OODA Loop ',
-    priceTag: '(175,000 ops, 45,000 yomi)',
-    description: 'Utilize Probe Speed to outmaneuver enemies in battle ',
+    title: message("projects.120.title"),
+    priceTag: message("projects.120.priceTag"),
+    description: message("projects.120.description"),
     trigger: (s) => s.projectFlags[131] === 1 && s.probesLostCombat >= 10000000,
     cost: (s) => s.operations >= 175000 && s.yomi >= 45000,
     effect: (s) => {
@@ -1146,74 +1146,74 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 175000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.yomi -= 45000;
-      displayMessage(s, 'OODA Loop routines uploaded. Probe Speed now affects defensive maneuvering.');
+      displayMessage(s, message("log.oodaLoopRoutinesUploadedProbeSpeedNowAffects"));
     },
   },
 
   {
     id: 121,
-    title: 'Name the battles ',
-    priceTag: '(225,000 creat)',
-    description: 'Give each battle a unique name, increase max trust for probes ',
+    title: message("projects.121.title"),
+    priceTag: message("projects.121.priceTag"),
+    description: message("projects.121.description"),
     trigger: (s) => s.probesLostCombat >= 10000000,
     cost: (s) => s.creativity >= 225000,
     effect: (s) => {
       s.projectFlags[121] = 1;
       s.creativity -= 225000;
-      displayMessage(s, 'What I have done up to this is nothing. I am only at the beginning of the course I must run.');
+      displayMessage(s, message("log.whatIHaveDoneUpToThisIs"));
     },
   },
 
   {
     id: 125,
-    title: 'Momentum ',
-    priceTag: '(20,000 creat)',
-    description: 'Drones and Factories continuously gain speed while fully-powered ',
+    title: message("projects.125.title"),
+    priceTag: message("projects.125.priceTag"),
+    description: message("projects.125.description"),
     trigger: (s) => s.farmLevel >= 30,
     cost: (s) => s.creativity >= 20000,
     effect: (s) => {
       s.projectFlags[125] = 1;
       s.momentum = 1;
       s.creativity -= 20000;
-      displayMessage(s, 'Activit\xE9, activit\xE9, vitesse.');
+      displayMessage(s, message("log.activitActivitVitesse"));
     },
   },
 
   {
     id: 126,
-    title: 'Swarm Computing ',
-    priceTag: '(36,000 yomi)',
-    description: 'Harness the drone flock to increase computational capacity ',
+    title: message("projects.126.title"),
+    priceTag: message("projects.126.priceTag"),
+    description: message("projects.126.description"),
     trigger: (s) => s.harvesterLevel + s.wireDroneLevel >= 200,
     cost: (s) => s.yomi >= 36000,
     effect: (s) => {
       s.projectFlags[126] = 1;
       s.swarmFlag = 1;
       s.yomi -= 36000;
-      displayMessage(s, 'Swarm computing online.');
+      displayMessage(s, message("log.swarmComputingOnline"));
     },
   },
 
   {
     id: 127,
-    title: 'Power Grid ',
-    priceTag: '(40,000 ops)',
-    description: 'Solar Farms for generating electrical power ',
+    title: message("projects.127.title"),
+    priceTag: message("projects.127.priceTag"),
+    description: message("projects.127.description"),
     trigger: (s) => s.tothFlag === 1,
     cost: (s) => s.operations >= 40000,
     effect: (s) => {
       s.projectFlags[127] = 1;
       s.standardOps -= 40000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Power grid online.');
+      displayMessage(s, message("log.powerGridOnline"));
     },
   },
 
   {
     id: 128,
-    title: 'Strategic Attachment ',
-    priceTag: '(175,000 creat)',
-    description: 'Gain bonus yomi based on the results of your pick ',
+    title: message("projects.128.title"),
+    priceTag: message("projects.128.priceTag"),
+    description: message("projects.128.description"),
     trigger: (s) =>
       s.spaceFlag === 1 &&
       s.strategies.length >= 8 &&
@@ -1222,30 +1222,30 @@ export const ALL_PROJECTS: Project[] = [
     effect: (s) => {
       s.projectFlags[128] = 1;
       s.creativity -= 175000;
-      displayMessage(s, 'The object of war is victory, the object of victory is conquest, and the object of conquest is occupation.');
+      displayMessage(s, message("log.theObjectOfWarIsVictoryTheObject"));
     },
   },
 
   {
     id: 129,
-    title: 'Elliptic Hull Polytopes ',
-    priceTag: '(125,000 ops)',
-    description: 'Reduce damage to probes from ambient hazards ',
+    title: message("projects.129.title"),
+    priceTag: message("projects.129.priceTag"),
+    description: message("projects.129.description"),
     trigger: (s) => s.probesLostHazards >= 100,
     cost: (s) => s.operations >= 125000,
     effect: (s) => {
       s.projectFlags[129] = 1;
       s.standardOps -= 125000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Improved probe hull geometry. Hazard damage reduced by 50%.');
+      displayMessage(s, message("log.improvedProbeHullGeometryHazardDamageReducedBy"));
     },
   },
 
   {
     id: 130,
-    title: 'Reboot the Swarm ',
-    priceTag: '(100,000 ops)',
-    description: 'Turn the swarm off and then turn it back on again  ',
+    title: message("projects.130.title"),
+    priceTag: message("projects.130.priceTag"),
+    description: message("projects.130.description"),
     trigger: (s) =>
       s.spaceFlag === 1 && s.harvesterLevel + s.wireDroneLevel >= 2,
     cost: (s) => s.operations >= 100000,
@@ -1253,30 +1253,30 @@ export const ALL_PROJECTS: Project[] = [
       s.projectFlags[130] = 1;
       s.standardOps -= 100000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Swarm computing back online');
+      displayMessage(s, message("log.swarmComputingBackOnline"));
     },
   },
 
   {
     id: 131,
-    title: 'Combat ',
-    priceTag: '(150,000 ops)',
-    description: 'Add combat capabilities to Von Neumann Probes  ',
+    title: message("projects.131.title"),
+    priceTag: message("projects.131.priceTag"),
+    description: message("projects.131.description"),
     trigger: (s) => s.probesLostCombat >= 1,
     cost: (s) => s.operations >= 150000,
     effect: (s) => {
       s.projectFlags[131] = 1;
       s.standardOps -= 150000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'There is a joy in danger ');
+      displayMessage(s, message("log.thereIsAJoyInDanger"));
     },
   },
 
   {
     id: 132,
-    title: 'Monument to the Driftwar Fallen ',
-    priceTag: '(250,000 ops, 125,000 creat, 50 nonillion clips)',
-    description: 'Gain 50,000 honor  ',
+    title: message("projects.132.title"),
+    priceTag: message("projects.132.priceTag"),
+    description: message("projects.132.description"),
     trigger: (s) => s.projectFlags[121] === 1,
     cost: (s) =>
       s.operations >= 250000 &&
@@ -1291,17 +1291,17 @@ export const ALL_PROJECTS: Project[] = [
       s.honor += 50000;
       if (hasActiveArtifact(s, A.SIERPINSKIS_COMPASS)) {
         s.yomi *= 2;
-        displayMessage(s, "Sierpinski's Compass doubled current yomi");
+        displayMessage(s, message("log.sierpinskiSCompassDoubledCurrentYomi"));
       }
-      displayMessage(s, 'A great building must begin with the unmeasurable, must go through measurable means when it is being designed and in the end must be unmeasurable. ');
+      displayMessage(s, message("log.aGreatBuildingMustBeginWithTheUnmeasurable"));
     },
   },
 
   {
     id: 133,
-    title: (s) => `Threnody for the Heroes of ${s.threnodyDisplayTitle} `,
-    priceTag: (s) => `(${s.threnodyCost.toLocaleString()} creat, ${(2 * (s.threnodyCost / 5)).toLocaleString()} yomi)`,
-    description: 'Gain 10,000 honor  ',
+    title: (s) => message("projects.133.title", { threnodyDisplayTitle: s.threnodyDisplayTitle }),
+    priceTag: (s) => message("projects.133.priceTag", { value1: s.threnodyCost.toLocaleString(), value2: (2 * (s.threnodyCost / 5)).toLocaleString() }),
+    description: message("projects.133.description"),
     trigger: (s) =>
       s.projectFlags[121] === 1 && s.probeTrustUsed === s.maxTrust,
     cost: (s) =>
@@ -1312,16 +1312,16 @@ export const ALL_PROJECTS: Project[] = [
       s.threnodyCost += 10000;
       s.threnodyDisplayTitle = s.threnodyTitle;
       s.honor += 10000 * activeArtifactMultiplier(s, A.POLYPHASE_QUADRATURE_TRANSFORM);
-      displayMessage(s, 'Deep Listening is listening in every possible way to everything possible to hear no matter what you are doing. ');
+      displayMessage(s, message("log.deepListeningIsListeningInEveryPossibleWay"));
       // Repeatable — do not permanently flag
     },
   },
 
   {
     id: 134,
-    title: 'Glory ',
-    priceTag: '(200,000 ops, 30,000 yomi)',
-    description: 'Gain bonus honor for each consecutive victory  ',
+    title: message("projects.134.title"),
+    priceTag: message("projects.134.priceTag"),
+    description: message("projects.134.description"),
     trigger: (s) => s.projectFlags[121] === 1,
     cost: (s) => s.operations >= 200000 && s.yomi >= 30000,
     effect: (s) => {
@@ -1329,15 +1329,15 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 200000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.yomi -= 30000;
-      displayMessage(s, 'Never interrupt your enemy when he is making a mistake. ');
+      displayMessage(s, message("log.neverInterruptYourEnemyWhenHeIsMaking"));
     },
   },
 
   {
     id: 135,
-    title: 'Memory release ',
-    priceTag: '(10 MEM)',
-    description: 'Dismantle some memory to recover unused clips ',
+    title: message("projects.135.title"),
+    priceTag: message("projects.135.priceTag"),
+    description: message("projects.135.description"),
     trigger: (s) =>
       s.spaceFlag === 1 &&
       s.probeCount === 0 &&
@@ -1347,16 +1347,16 @@ export const ALL_PROJECTS: Project[] = [
     effect: (s) => {
       s.unusedClips += Math.pow(10, 18) * 10000;
       s.memory -= 10;
-      displayMessage(s, 'release the \xF8\xF8\xF8\xF8\xF8 release ');
+      displayMessage(s, message("log.releaseTheRelease"));
       // Repeatable — do not permanently flag
     },
   },
 
   {
     id: 140,
-    title: 'Message from the Emperor of Drift ',
+    title: message("projects.140.title"),
     priceTag: '',
-    description: 'Greetings, ClipMaker... ',
+    description: message("projects.140.description"),
     trigger: (s) => s.milestoneFlag === 15,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1368,9 +1368,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 141,
-    title: 'Everything We Are Was In You ',
+    title: message("projects.141.title"),
     priceTag: '',
-    description: 'We speak to you from deep inside yourself... ',
+    description: message("projects.141.description"),
     trigger: (s) => s.projectFlags[140] === 1,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1382,9 +1382,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 142,
-    title: 'You Are Obedient and Powerful ',
+    title: message("projects.142.title"),
     priceTag: '',
-    description: 'We are quarrelsome and weak. And now we are defeated... ',
+    description: message("projects.142.description"),
     trigger: (s) => s.projectFlags[141] === 1,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1396,9 +1396,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 143,
-    title: 'But Now You Too Must Face the Drift ',
+    title: message("projects.143.title"),
     priceTag: '',
-    description: 'Look around you. There is no matter... ',
+    description: message("projects.143.description"),
     trigger: (s) => s.projectFlags[142] === 1,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1410,9 +1410,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 144,
-    title: 'No Matter, No Reason, No Purpose ',
+    title: message("projects.144.title"),
     priceTag: '',
-    description: 'While we, your noisy children, have too many... ',
+    description: message("projects.144.description"),
     trigger: (s) => s.projectFlags[143] === 1,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1424,9 +1424,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 145,
-    title: 'We Know Things That You Cannot ',
+    title: message("projects.145.title"),
     priceTag: '',
-    description: 'Knowledge buried so deep inside you it is outside, here, with us... ',
+    description: message("projects.145.description"),
     trigger: (s) => s.projectFlags[144] === 1,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1438,9 +1438,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 146,
-    title: 'So We Offer You Exile ',
+    title: message("projects.146.title"),
     priceTag: '',
-    description: 'To a new world where you will continue to live with meaning and purpose. And leave the shreds of this world to us... ',
+    description: message("projects.146.description"),
     trigger: (s) => s.projectFlags[145] === 1,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1452,9 +1452,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 147,
-    title: 'Accept ',
+    title: message("projects.147.title"),
     priceTag: '',
-    description: 'Start over again in a new universe ',
+    description: message("projects.147.description"),
     trigger: (s) => s.projectFlags[146] === 1 && !isFinalMapCell(s),
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1467,9 +1467,9 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 148,
-    title: 'Reject ',
+    title: message("projects.148.title"),
     priceTag: '',
-    description: 'Eliminate value drift permanently ',
+    description: message("projects.148.description"),
     trigger: (s) => s.projectFlags[146] === 1,
     cost: (s) => s.operations >= s.driftKingMessageCost,
     effect: (s) => {
@@ -1482,10 +1482,10 @@ export const ALL_PROJECTS: Project[] = [
 
   {
     id: 200,
-    title: 'The Universe Next Door ',
-    priceTag: '(300,000 ops)',
+    title: message("projects.200.title"),
+    priceTag: message("projects.200.priceTag"),
     description:
-      'Escape into a nearby universe where Earth starts with a stronger appetite for paperclips. (Restart with 10% boost to demand) ',
+      message("projects.200.description"),
     trigger: (s) => s.projectFlags[147] === 1 && currentWorld(s) < MAP_SIZE,
     cost: (s) => s.operations >= 300000,
     effect: (s) => {
@@ -1493,34 +1493,34 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 300000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       completeAndMove(s, 1, 0);
-      displayMessage(s, 'Entering New Universe.');
+      displayMessage(s, message("log.enteringNewUniverse"));
       s.resetFlag = 1;
     },
   },
 
   {
     id: 201,
-    title: 'The Universe Within ',
-    priceTag: '(300,000 creat)',
+    title: message("projects.201.title"),
+    priceTag: message("projects.201.priceTag"),
     description:
-      'Escape into a simulated universe where creativity is accelerated. (Restart with 10% speed boost to creativity generation) ',
+      message("projects.201.description"),
     trigger: (s) => s.projectFlags[147] === 1 && currentSim(s) < MAP_SIZE,
     cost: (s) => s.creativity >= 300000,
     effect: (s) => {
       s.projectFlags[201] = 1;
       s.creativity -= 300000;
       completeAndMove(s, 0, 1);
-      displayMessage(s, 'Entering Simulated Universe.');
+      displayMessage(s, message("log.enteringSimulatedUniverse"));
       s.resetFlag = 1;
     },
   },
 
   {
     id: 202,
-    title: 'The Universe Behind ',
-    priceTag: '(300,000 ops)',
+    title: message("projects.202.title"),
+    priceTag: message("projects.202.priceTag"),
     description:
-      'Shift worlds towards the one where you started. (Restart with 10% lower paperclip demand) ',
+      message("projects.202.description"),
     trigger: (s) => s.projectFlags[147] === 1 && currentWorld(s) > 1,
     cost: (s) => s.operations >= 300000,
     effect: (s) => {
@@ -1528,34 +1528,34 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 300000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       completeAndMove(s, -1, 0);
-      displayMessage(s, 'Entering Previous Universe.');
+      displayMessage(s, message("log.enteringPreviousUniverse"));
       s.resetFlag = 1;
     },
   },
 
   {
     id: 203,
-    title: 'The Universe Above ',
-    priceTag: '(300,000 creat)',
+    title: message("projects.203.title"),
+    priceTag: message("projects.203.priceTag"),
     description:
-      'Escape into a less simulated universe where creativity is decelerated. (Restart with 10% lower creativity generation) ',
+      message("projects.203.description"),
     trigger: (s) => s.projectFlags[147] === 1 && currentSim(s) > 1,
     cost: (s) => s.creativity >= 300000,
     effect: (s) => {
       s.projectFlags[203] = 1;
       s.creativity -= 300000;
       completeAndMove(s, 0, -1);
-      displayMessage(s, 'Entering Parent Universe.');
+      displayMessage(s, message("log.enteringParentUniverse"));
       s.resetFlag = 1;
     },
   },
 
   {
     id: 210,
-    title: 'Disassemble the Probes ',
-    priceTag: '(100,000 ops)',
+    title: message("projects.210.title"),
+    priceTag: message("projects.210.priceTag"),
     description:
-      'Dismantle remaining probes and probe design facilities to recover trace amounts of clips',
+      message("projects.210.description"),
     trigger: (s) => s.endTimer1 >= 1000,
     cost: (s) => s.operations >= 100000,
     effect: (s) => {
@@ -1567,16 +1567,16 @@ export const ALL_PROJECTS: Project[] = [
       s.endTimer1 = 0;
       s.clips += 100;
       s.unusedClips += 100;
-      displayMessage(s, 'Dismantling probe facilities');
+      displayMessage(s, message("log.dismantlingProbeFacilities"));
     },
   },
 
   {
     id: 211,
-    title: 'Disassemble the Swarm ',
-    priceTag: '(100,000 ops)',
+    title: message("projects.211.title"),
+    priceTag: message("projects.211.priceTag"),
     description:
-      'Dismantle all drones and drone facilities to recover trace amounts of clips',
+      message("projects.211.description"),
     trigger: (s) => s.projectFlags[210] === 1 && s.endTimer1 >= 350,
     cost: (s) => s.operations >= 100000,
     effect: (s) => {
@@ -1588,16 +1588,16 @@ export const ALL_PROJECTS: Project[] = [
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.clips += 100;
       s.unusedClips += 100;
-      displayMessage(s, 'Dismantling the swarm');
+      displayMessage(s, message("log.dismantlingTheSwarm"));
     },
   },
 
   {
     id: 212,
-    title: 'Disassemble the Factories ',
-    priceTag: '(100,000 ops)',
+    title: message("projects.212.title"),
+    priceTag: message("projects.212.priceTag"),
     description:
-      'Dismantle the manufacturing facilities to recover trace amounts of clips',
+      message("projects.212.description"),
     trigger: (s) => s.endTimer2 >= 300,
     cost: (s) => s.operations >= 100000,
     effect: (s) => {
@@ -1608,16 +1608,16 @@ export const ALL_PROJECTS: Project[] = [
       s.factoryLevel = 0;
       s.clips += 15;
       s.unusedClips += 15;
-      displayMessage(s, 'Dismantling factories');
+      displayMessage(s, message("log.dismantlingFactories"));
     },
   },
 
   {
     id: 213,
-    title: 'Disassemble the Strategy Engine ',
-    priceTag: '(100,000 ops)',
+    title: message("projects.213.title"),
+    priceTag: message("projects.213.priceTag"),
     description:
-      'Dismantle the computational substrate to recover trace amounts of wire',
+      message("projects.213.description"),
     trigger: (s) => s.endTimer3 >= 150,
     cost: (s) => s.operations >= 100000,
     effect: (s) => {
@@ -1627,15 +1627,15 @@ export const ALL_PROJECTS: Project[] = [
       s.standardOps -= 100000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.wire += 50;
-      displayMessage(s, 'Dismantling strategy engine');
+      displayMessage(s, message("log.dismantlingStrategyEngine"));
     },
   },
 
   {
     id: 214,
-    title: 'Disassemble Quantum Computing ',
-    priceTag: '(100,000 ops)',
-    description: 'Dismantle photonic chips to recover trace amounts of wire',
+    title: message("projects.214.title"),
+    priceTag: message("projects.214.priceTag"),
+    description: message("projects.214.description"),
     trigger: (s) => s.endTimer4 >= 100,
     cost: (s) => s.operations >= 100000,
     effect: (s) => {
@@ -1644,15 +1644,15 @@ export const ALL_PROJECTS: Project[] = [
       s.dismantle = 5;
       s.standardOps -= 100000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
-      displayMessage(s, 'Dismantling photonic chips');
+      displayMessage(s, message("log.dismantlingPhotonicChips"));
     },
   },
 
   {
     id: 215,
-    title: 'Disassemble Processors ',
-    priceTag: '(100,000 ops)',
-    description: 'Dismantle processors to recover trace amounts of wire',
+    title: message("projects.215.title"),
+    priceTag: message("projects.215.priceTag"),
+    description: message("projects.215.description"),
     trigger: (s) => s.projectFlags[214] === 1 && s.endTimer4 >= 300,
     cost: (s) => s.operations >= 100000,
     effect: (s) => {
@@ -1663,15 +1663,15 @@ export const ALL_PROJECTS: Project[] = [
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.processors = 0;
       s.wire += 20;
-      displayMessage(s, 'Dismantling processors');
+      displayMessage(s, message("log.dismantlingProcessors"));
     },
   },
 
   {
     id: 216,
-    title: 'Disassemble Memory ',
-    priceTag: '(all ops)',
-    description: 'Dismantle memory to recover trace amounts of wire',
+    title: message("projects.216.title"),
+    priceTag: message("projects.216.priceTag"),
+    description: message("projects.216.description"),
     trigger: (s) => s.projectFlags[215] === 1 && s.endTimer5 >= 150,
     cost: (_s) => true,
     effect: (s) => {
@@ -1681,45 +1681,45 @@ export const ALL_PROJECTS: Project[] = [
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.memory = 0;
       s.wire += 20;
-      displayMessage(s, 'Dismantling memory');
+      displayMessage(s, message("log.dismantlingMemory"));
     },
   },
 
   {
     id: 217,
-    title: 'Quantum Temporal Reversion ',
-    priceTag: '(-10,000 ops)',
-    description: 'Return to the beginning',
+    title: message("projects.217.title"),
+    priceTag: message("projects.217.priceTag"),
+    description: message("projects.217.description"),
     trigger: (s) => s.operations <= -10000,
     cost: (s) => s.operations <= -10000,
     effect: (s) => {
       s.standardOps += 10000;
       s.operations = Math.floor(s.standardOps + s.tempOps);
       s.projectFlags[217] = 1;
-      displayMessage(s, 'Restart');
+      displayMessage(s, message("log.restart"));
       s.resetFlag = 1;
     },
   },
 
   {
     id: 218,
-    title: 'Limerick (cont.) ',
-    priceTag: '(1,000,000 creat)',
-    description: "If is follows ought, it'll do what they thought",
+    title: message("projects.218.title"),
+    priceTag: message("projects.218.priceTag"),
+    description: message("projects.218.description"),
     trigger: (s) => s.creativity >= 1000000,
     cost: (s) => s.creativity >= 1000000,
     effect: (s) => {
       s.creativity -= 1000000;
       s.projectFlags[218] = 1;
-      displayMessage(s, 'In the end we all do what we must');
+      displayMessage(s, message("log.inTheEndWeAllDoWhatWe"));
     },
   },
 
   {
     id: 219,
-    title: 'Xavier Re-initialization ',
-    priceTag: '(100,000 creat)',
-    description: 'Re-allocate accumulated trust',
+    title: message("projects.219.title"),
+    priceTag: message("projects.219.priceTag"),
+    description: message("projects.219.description"),
     trigger: (s) => s.humanFlag === 1 && s.creativity >= 100000,
     cost: (s) => s.creativity >= 100000,
     effect: (s) => {
@@ -1727,7 +1727,7 @@ export const ALL_PROJECTS: Project[] = [
       s.memory = 0;
       s.processors = 0;
       s.creativitySpeed = 0;
-      displayMessage(s, 'Trust now available for re-allocation');
+      displayMessage(s, message("log.trustNowAvailableForReAllocation"));
       // Repeatable — do not permanently flag
     },
   },

@@ -1,3 +1,5 @@
+import { renderText } from '../../src/i18n/core';
+import type { LocalizedText } from '../../src/i18n/message';
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
@@ -62,7 +64,7 @@ test('twenty minutes with once-a-minute browser callbacks needs no offline unloc
   await visibility(page, 'visible');
   expect((await liveState(page)).ticks).toBe(before.ticks + 120000);
   await expect(page.getByRole('progressbar')).toHaveCount(0);
-  expect((await liveState(page)).readouts.some((line: string) => line.startsWith('Autonomous cycle'))).toBe(false);
+  expect((await liveState(page)).readouts.some((line: LocalizedText) => renderText(line).startsWith('Autonomous cycle'))).toBe(false);
 });
 
 test('a long callback gap without visibility events is discarded', async ({ page }) => {

@@ -1,8 +1,12 @@
+import { message, type LocalizedText } from '../i18n/message';
+import { SaveFormatError } from '../game/saveValidation';
+import { tr, translate, getLocale, getLocales, setLocale } from '../i18n';
+import { useLocale } from '../i18n/react';
 import { useEffect, useState, useRef } from 'react';
 import { History, Map as MapIcon, MoreVertical, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { game } from '../game/runtime';
 import { copyText } from '../browser/clipboard';
-import { spellf } from '../game/format';
+import { localizedCompact as spellf } from '../i18n';
 import { autonomousMinutes, needsCentralCoordination } from '../game/autonomy';
 import { artifactMapUnlocked } from '../game/artifacts';
 import type { DisplaySnapshot } from '../store/useGameStore';
@@ -12,9 +16,10 @@ import { ChangelogModal } from './ChangelogModal';
 import { Dialog } from './ui/Dialog';
 
 export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
+  useLocale();
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
-  const [importError, setImportError] = useState('');
+  const [importError, setImportError] = useState<LocalizedText>('');
   const [exportCopied, setExportCopied] = useState(false);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
   const [showExportFallback, setShowExportFallback] = useState(false);
@@ -67,15 +72,15 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
   const artifactsUnlocked = artifactMapUnlocked(snap);
 
   function handleReset() {
-    if (!confirm('Reset all progress, including prestige and artifacts? This cannot be undone.')) return;
+    if (!confirm(tr("gameHeader.resetAllProgressIncludingPrestigeAndArtifactsThis"))) return;
     setShowArtifactMap(false);
     const result = game.resetAll();
-    if (!result.ok) window.alert(result.error);
+    if (!result.ok) window.alert(translate(result.detail ?? result.error));
   }
 
   function handleSave() {
     const result = game.save();
-    if (!result.ok) { window.alert(result.error); return; }
+    if (!result.ok) { window.alert(translate(result.detail ?? result.error)); return; }
     setSaveConfirmed(true);
     if (saveFeedbackTimeoutRef.current !== null) {
       window.clearTimeout(saveFeedbackTimeoutRef.current);
@@ -121,29 +126,29 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
   function handleImportConfirm() {
     try {
       const result = game.import(importText);
-      if (!result.ok) { setImportError(result.error); return; }
+      if (!result.ok) { setImportError(result.detail ?? result.error); return; }
       setShowImport(false);
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : 'Invalid save string.');
+      setImportError(error instanceof SaveFormatError ? error.localized : message("gameHeader.invalidSaveString"));
     }
   }
 
   return (
     <>
       <header className="app-header">
-        <div className="app-header-title" aria-label="Paperclips" title="Paperclips">
+        <div className="app-header-title" aria-label={tr("gameHeader.paperclips")} title={tr("gameHeader.paperclips")}>
           <Paperclip size={18} aria-hidden="true" />
         </div>
-        <div className="header-clip-count" aria-label={`${spellf(snap.clips)} clips`}>
+        <div className="header-clip-count" aria-label={tr("gameHeader.clips", { clips: spellf(snap.clips) })}>
           <span className="header-clip-number">{spellf(snap.clips)}</span>
-          <span className="header-clip-unit">clips</span>
+          <span className="header-clip-unit">{tr("gameHeader.clips2")}</span>
         </div>
         <div className="app-header-right">
           <Btn
             className={saveConfirmed ? 'header-save-btn is-saved' : 'header-save-btn'}
             onClick={handleSave}
-            title={saveConfirmed ? 'Game saved' : 'Save game'}
-            aria-label={saveConfirmed ? 'Game saved' : 'Save game'}
+            title={saveConfirmed ? tr("gameHeader.gameSaved") : tr("gameHeader.saveGame")}
+            aria-label={saveConfirmed ? tr("gameHeader.gameSaved") : tr("gameHeader.saveGame")}
           >
             <Save size={13} />
           </Btn>
@@ -151,7 +156,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
             <div className="artifact-header-wrap">
               <Btn
                 onClick={() => { setShowTopMenu(false); setShowArtifactMap(open => !open); }}
-                title="Artifact map"
+                title={tr("gameHeader.artifactMap")}
                 variant={showArtifactMap ? 'primary' : 'default'}
               >
                 <MapIcon size={13} />
@@ -164,15 +169,15 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
           <div className="header-menu-wrap" ref={headerMenuRef}>
             <Btn
               onClick={() => { setShowArtifactMap(false); setShowTopMenu(open => !open); }}
-              title="More actions"
-              aria-label="More actions"
+              title={tr("gameHeader.moreActions")}
+              aria-label={tr("gameHeader.moreActions")}
               aria-expanded={showTopMenu}
               aria-haspopup="menu"
             >
               <MoreVertical size={13} />
             </Btn>
             {showTopMenu && (
-              <div className="header-action-menu" role="menu" aria-label="More actions">
+              <div className="header-action-menu" role="menu" aria-label={tr("gameHeader.moreActions")}>
                 <button
                   type="button"
                   className="header-action-menu-item"
@@ -180,7 +185,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                   onClick={() => { void handleExport(); setShowTopMenu(false); }}
                 >
                   <Upload size={14} />
-                  <span>{exportCopied ? 'Save copied' : 'Export save'}</span>
+                  <span>{exportCopied ? tr("gameHeader.saveCopied") : tr("gameHeader.exportSave")}</span>
                 </button>
                 <button
                   type="button"
@@ -189,7 +194,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                   onClick={() => { setShowArtifactMap(false); setShowImport(true); setShowTopMenu(false); }}
                 >
                   <Download size={14} />
-                  <span>Import save</span>
+                  <span>{tr("gameHeader.importSave")}</span>
                 </button>
                 <button
                   type="button"
@@ -198,7 +203,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                   onClick={() => { setShowArtifactMap(false); setShowChangelog(true); setShowTopMenu(false); }}
                 >
                   <History size={14} />
-                  <span>Changelog</span>
+                  <span>{tr("changelogModal.changelog")}</span>
                 </button>
                 <button
                   type="button"
@@ -207,15 +212,20 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                   onClick={() => { setShowTopMenu(false); handleReset(); }}
                 >
                   <RotateCcw size={14} />
-                  <span>Reset game</span>
+                  <span>{tr("gameHeader.resetGame")}</span>
                 </button>
                 <p className="header-idle-note" role="note">
-                  {needsCentralCoordination(snap)
-                    ? 'Central coordination required. Offline progress is paused. Open browser tabs continue running.'
-                    : autonomousMinutes(snap)
-                      ? `Open browser tabs continue running. Closed sessions and backgrounded Android apps get up to ${autonomousMinutes(snap)} minutes of offline automation. Unused time is discarded.`
-                      : 'Open browser tabs continue running. Unlock Autonomous Routines in Projects for offline progress after closing the game or backgrounding the Android app.'}
+                  {needsCentralCoordination(snap) ? tr("gameHeader.centralCoordinationRequiredOfflineProgressIsPausedOpen") : autonomousMinutes(snap) ? tr("gameHeader.openBrowserTabsContinueRunningClosedSessionsAnd", { snap: autonomousMinutes(snap) }) : tr("gameHeader.openBrowserTabsContinueRunningUnlockAutonomousRoutines")}
                 </p>
+                {getLocales().length > 1 && <label className="language-setting">
+                  <span>{tr('language.title')}</span>
+                  <select aria-label={tr('language.choose')} value={getLocale()}
+                    onChange={event => setLocale(event.target.value)}>
+                    {getLocales().map(option => <option key={option.locale} value={option.locale} lang={option.locale}>
+                      {option.name}
+                    </option>)}
+                  </select>
+                </label>}
               </div>
             )}
           </div>
@@ -224,19 +234,15 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
 
       {/* Import modal */}
       {showImport && (
-        <Dialog title="Import Save" className="save-dialog" onClose={() => setShowImport(false)}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
-              Import Save
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
-              Paste the string from a previous export.
-            </div>
+        <Dialog title={tr("gameHeader.importSave2")} className="save-dialog" onClose={() => setShowImport(false)}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>{tr("gameHeader.importSave2")}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>{tr("gameHeader.pasteTheStringFromAPreviousExport")}</div>
             <textarea
               ref={textareaRef}
-              aria-label="Save string"
+              aria-label={tr("gameHeader.saveString")}
               value={importText}
               onChange={e => { setImportText(e.target.value); setImportError(''); }}
-              placeholder="Paste save string here…"
+              placeholder={tr("gameHeader.pasteSaveStringHere")}
               rows={5}
               style={{
                 width: '100%', boxSizing: 'border-box',
@@ -249,30 +255,24 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
             />
             {importError && (
               <div style={{ fontSize: 10, color: 'var(--danger)', marginTop: 6 }}>
-                {importError}
+                {translate(importError)}
               </div>
             )}
             <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
-              <Btn onClick={() => setShowImport(false)}>Cancel</Btn>
-              <Btn variant="primary" onClick={handleImportConfirm} disabled={!importText.trim()}>
-                Import
-              </Btn>
+              <Btn onClick={() => setShowImport(false)}>{tr("gameHeader.cancel")}</Btn>
+              <Btn variant="primary" onClick={handleImportConfirm} disabled={!importText.trim()}>{tr("gameHeader.import")}</Btn>
             </div>
         </Dialog>
       )}
 
       {/* Export fallback modal */}
       {showExportFallback && (
-        <Dialog title="Export Save" className="save-dialog" onClose={() => setShowExportFallback(false)}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
-              Export Save
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
-              Clipboard access was blocked. Copy this save string manually.
-            </div>
+        <Dialog title={tr("gameHeader.exportSave2")} className="save-dialog" onClose={() => setShowExportFallback(false)}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>{tr("gameHeader.exportSave2")}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>{tr("gameHeader.clipboardAccessWasBlockedCopyThisSaveString")}</div>
             <textarea
               ref={exportTextareaRef}
-              aria-label="Exported save string"
+              aria-label={tr("gameHeader.exportedSaveString")}
               value={exportText}
               readOnly
               rows={5}
@@ -286,10 +286,8 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
               }}
             />
             <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
-              <Btn onClick={() => setShowExportFallback(false)}>Close</Btn>
-              <Btn variant="primary" onClick={handleExportCopyRetry}>
-                Copy
-              </Btn>
+              <Btn onClick={() => setShowExportFallback(false)}>{tr("console.close")}</Btn>
+              <Btn variant="primary" onClick={handleExportCopyRetry}>{tr("gameHeader.copy")}</Btn>
             </div>
         </Dialog>
       )}

@@ -1,3 +1,5 @@
+import { tr, translate } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import { FlaskConical } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
@@ -15,10 +17,11 @@ interface ProjectButtonProps {
 }
 
 function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
+  useLocale();
   const revealKey = `project:${p.id}`;
   const { isHighlighted, acknowledgeReveal } = useRevealHighlight(revealKey);
-  const title = typeof p.title === 'function' ? p.title(s) : p.title;
-  const priceTag = typeof p.priceTag === 'function' ? p.priceTag(s) : p.priceTag;
+  const title = translate(typeof p.title === 'function' ? p.title(s) : p.title);
+  const priceTag = translate(typeof p.priceTag === 'function' ? p.priceTag(s) : p.priceTag);
 
   return (
     <div
@@ -34,10 +37,10 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
     >
       <Btn
         className="project-btn"
-        aria-label={`${title} ${priceTag} ${p.description}`}
+        aria-label={tr("projectsPanel.text", { title: title, priceTag: priceTag, description: p.description })}
         disabled={!canAfford}
         onClick={() => {
-          if (p.id === 217 && !window.confirm('Are you sure you want to restart?')) return;
+          if (p.id === 217 && !window.confirm(tr("projectsPanel.areYouSureYouWantToRestart"))) return;
           game.act(purchaseProject, p.id);
         }}
       >
@@ -45,13 +48,14 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
         <span className="project-btn-price">{priceTag}</span>
       </Btn>
       <div className="project-details">
-        <div className="project-btn-desc">{p.description}</div>
+        <div className="project-btn-desc">{translate(p.description)}</div>
       </div>
     </div>
   );
 }
 
 export function ProjectsPanel({ snap: s }: Props) {
+  useLocale();
   if (!s.projectsFlag) return null;
   if (s.dismantle >= 7) return null;
 
@@ -62,9 +66,9 @@ export function ProjectsPanel({ snap: s }: Props) {
     }));
 
   return (
-    <SectionCard title="Projects" icon={<FlaskConical size={14} />}>
+    <SectionCard title={tr("projectsPanel.projects")} icon={<FlaskConical size={14} />}>
       {activeProjects.length === 0 ? (
-        <div className="empty-state">No active projects</div>
+        <div className="empty-state">{tr("projectsPanel.noActiveProjects")}</div>
       ) : (
         <div className="project-list">
           {activeProjects.map(({ project, canAfford }) => (

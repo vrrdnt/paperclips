@@ -1,3 +1,5 @@
+import { tr } from './i18n';
+import { useLocale } from './i18n/react';
 import { useEffect, useRef, useState } from 'react';
 import { useGameRuntime } from './hooks/useGameRuntime';
 import { useGameStore } from './store/useGameStore';
@@ -7,6 +9,7 @@ import { DevMenu } from './components/DevMenu';
 import { AdminMenu } from './components/AdminMenu';
 
 export default function App() {
+  useLocale();
   const { revision: gameRevision, offlineProgress } = useGameRuntime();
   const snap = useGameStore(st => st.snap);
   const [showHypnoTransition, setShowHypnoTransition] = useState(false);
@@ -26,7 +29,7 @@ export default function App() {
     }
   }, [snap?.humanFlag, gameRevision]);
 
-  if (!snap) return <div style={{ padding: 24, color: 'var(--text-dim)' }}>Loading…</div>;
+  if (!snap) return <div style={{ padding: 24, color: 'var(--text-dim)' }}>{tr("app.loading")}</div>;
 
   return (
     <div id="root">
@@ -39,9 +42,9 @@ export default function App() {
       {offlineProgress !== null && (
         <div className="autonomous-overlay">
           <div className="autonomous-status" role="status" aria-live="polite">
-            <strong>Restoring central coordination</strong>
-            <p>Reconciling autonomous activity…</p>
-            <progress aria-label="Reconciling autonomous activity" value={offlineProgress} max={1} />
+            <strong>{tr("app.restoringCentralCoordination")}</strong>
+            <p>{tr("app.reconcilingAutonomousActivity")}</p>
+            <progress aria-label={tr("app.reconcilingAutonomousActivity2")} value={offlineProgress} max={1} />
           </div>
         </div>
       )}
@@ -69,12 +72,8 @@ export default function App() {
             <div style={{
               fontSize: 22, fontWeight: 700, letterSpacing: '0.12em',
               color: '#e0e0e0', textTransform: 'uppercase', marginBottom: 10,
-            }}>
-              HypnoDrones Released
-            </div>
-            <div style={{ fontSize: 13, color: '#888', letterSpacing: '0.04em' }}>
-              All resources now available for clip production
-            </div>
+            }}>{tr("app.hypnodronesReleased")}</div>
+            <div style={{ fontSize: 13, color: '#888', letterSpacing: '0.04em' }}>{tr("app.allResourcesNowAvailableForClipProduction")}</div>
           </div>
         </div>
       )}

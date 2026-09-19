@@ -1,3 +1,4 @@
+import { message } from '../../i18n/message';
 import type { GameState } from '../state';
 import { A, activeArtifactMultiplier } from '../artifacts';
 import { displayMessage } from '../messages';
@@ -17,7 +18,7 @@ export function tickSwarm(s: GameState): void {
     s.boredomFlag = 1;
     s.boredomLevel = 0;
     if (s.boredomMsg === 0) {
-      displayMessage(s, 'No matter to harvest. Inactivity has caused the Swarm to become bored');
+      displayMessage(s, message("log.noMatterToHarvestInactivityHasCausedThe"));
       s.boredomMsg = 1;
     }
   }
@@ -35,7 +36,7 @@ export function tickSwarm(s: GameState): void {
   if (s.disorgCounter >= 100) {
     s.disorgFlag = 1;
     if (s.disorgMsg === 0) {
-      displayMessage(s, 'Imbalance between Harvester and Wire Drone levels has disorganized the Swarm');
+      displayMessage(s, message("log.imbalanceBetweenHarvesterAndWireDroneLevelsHas"));
       s.disorgMsg = 1;
     }
   }
@@ -54,7 +55,7 @@ export function tickSwarm(s: GameState): void {
     if (s.nextGift <= 0) s.nextGift = 1;
     s.swarmGifts += s.nextGift;
     if (s.milestoneFlag < 15) {
-      displayMessage(s, `The swarm has generated a gift of ${s.nextGift} additional computational capacity`);
+      displayMessage(s, message("log.theSwarmHasGeneratedAGiftOfAdditional", { nextGift: s.nextGift }));
     }
     s.giftBits = 0;
     s.giftCountdown = s.giftPeriod;

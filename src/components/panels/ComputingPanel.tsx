@@ -1,3 +1,5 @@
+import { tr } from '../../i18n';
+import { useLocale } from '../../i18n/react';
 import { useRef, useState, type ChangeEvent, type PointerEvent } from 'react';
 import { Cpu, Brain, Lightbulb } from 'lucide-react';
 import { SectionCard } from '../ui/SectionCard';
@@ -5,7 +7,7 @@ import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { game } from '../../game/runtime';
 import { addProc, addMem, addProcAmount, addMemAmount } from '../../game/actions';
-import { formatWithCommas } from '../../game/format';
+import { localizedNumber as formatWithCommas } from '../../i18n';
 
 interface Props { snap: DisplaySnapshot; }
 
@@ -20,6 +22,7 @@ function parseBatchAmount(value: string): number | null {
 }
 
 export function ComputingPanel({ snap: s }: Props) {
+  useLocale();
   const [batchAmount, setBatchAmount] = useState('');
   const batchInputRef = useRef<HTMLInputElement | null>(null);
   const batchTouchRef = useRef({ active: false, x: 0, y: 0, moved: false });
@@ -77,11 +80,11 @@ export function ComputingPanel({ snap: s }: Props) {
   }
 
   return (
-    <SectionCard title="Computing" icon={<Cpu size={14} />}>
+    <SectionCard title={tr("computingPanel.computing")} icon={<Cpu size={14} />}>
       {/* Ops */}
       <div className="stat-row">
-        <span className="stat-label">Operations</span>
-        <span className="stat-value">{formatWithCommas(s.operations)} / {formatWithCommas(s.memory * 1000)}</span>
+        <span className="stat-label">{tr("computingPanel.operations")}</span>
+        <span className="stat-value">{tr("computingPanel.text", { operations: formatWithCommas(s.operations), value2: formatWithCommas(s.memory * 1000) })}</span>
       </div>
       <div className="progress-bar">
         <div className="progress-fill" style={{ width: `${opsPct}%` }} />
@@ -91,7 +94,7 @@ export function ComputingPanel({ snap: s }: Props) {
 
       {/* Processors + Memory */}
       <div className="stat-row">
-        <span className="stat-label">{s.humanFlag === 1 ? 'Trust available' : 'Swarm gifts'}</span>
+        <span className="stat-label">{s.humanFlag === 1 ? tr("computingPanel.trustAvailable") : tr("computingPanel.swarmGifts")}</span>
         <span className="stat-value">{formatWithCommas(allocationAvailable)}</span>
       </div>
 
@@ -99,11 +102,11 @@ export function ComputingPanel({ snap: s }: Props) {
         {showProcessorDisplay && (
           <div style={{ flex: 1 }}>
             <div className="stat-row">
-              <span className="stat-label"><Cpu size={10} /> Processors</span>
+              <span className="stat-label"><Cpu size={10} />{tr("computingPanel.processors")}</span>
               <span className="stat-value">{s.processors}</span>
             </div>
             <Btn holdRepeat onClick={() => { game.act(addProc); }} disabled={!canAllocateCompute}
-              aria-label="Add processor"
+              aria-label={tr("computingPanel.addProcessor")}
               style={{ marginTop: 4, width: '100%' }}>
               +
             </Btn>
@@ -111,11 +114,11 @@ export function ComputingPanel({ snap: s }: Props) {
         )}
         <div style={{ flex: 1 }}>
           <div className="stat-row">
-            <span className="stat-label"><Brain size={10} /> Memory</span>
+            <span className="stat-label"><Brain size={10} />{tr("computingPanel.memory")}</span>
             <span className="stat-value">{s.memory}</span>
           </div>
           <Btn holdRepeat onClick={() => { game.act(addMem); }} disabled={!canAllocateCompute}
-            aria-label="Add memory"
+            aria-label={tr("computingPanel.addMemory")}
             style={{ marginTop: 4, width: '100%' }}>
             +
           </Btn>
@@ -126,8 +129,8 @@ export function ComputingPanel({ snap: s }: Props) {
       {showBatchAllocation && (
         <div className="compute-batch-control">
           <div className="compute-batch-head">
-            <span className="stat-label">Batch allocation</span>
-            <span className="stat-value dim">max {formatWithCommas(Math.floor(allocationAvailable))}</span>
+            <span className="stat-label">{tr("computingPanel.batchAllocation")}</span>
+            <span className="stat-value dim">{tr("computingPanel.max", { value1: formatWithCommas(Math.floor(allocationAvailable)) })}</span>
           </div>
           <div className="compute-batch-entry">
             <input
@@ -136,27 +139,23 @@ export function ComputingPanel({ snap: s }: Props) {
               type="text"
               inputMode="numeric"
               value={batchAmount}
-              placeholder="Amount"
-              aria-label="Batch allocation amount"
+              placeholder={tr("computingPanel.amount")}
+              aria-label={tr("computingPanel.batchAllocationAmount")}
               onChange={handleBatchAmountChange}
               onPointerDown={handleBatchPointerDown}
               onPointerMove={handleBatchPointerMove}
               onPointerUp={handleBatchPointerUp}
               onPointerCancel={handleBatchPointerCancel}
             />
-            <Btn onClick={() => setBatchAmount(String(Math.floor(allocationAvailable)))}>
-              Max
-            </Btn>
+            <Btn onClick={() => setBatchAmount(String(Math.floor(allocationAvailable)))}>{tr("computingPanel.max2")}</Btn>
           </div>
           <div className={showProcessorDisplay ? 'compute-batch-actions' : 'compute-batch-actions is-single'}>
             {showProcessorDisplay && (
               <Btn onClick={() => applyBatch('processors')} disabled={!batchAmountValid}>
-                <Cpu size={12} /> Processors
-              </Btn>
+                <Cpu size={12} />{tr("computingPanel.processors")}</Btn>
             )}
             <Btn onClick={() => applyBatch('memory')} disabled={!batchAmountValid}>
-              <Brain size={12} /> Memory
-            </Btn>
+              <Brain size={12} />{tr("computingPanel.memory")}</Btn>
           </div>
         </div>
       )}
@@ -166,12 +165,12 @@ export function ComputingPanel({ snap: s }: Props) {
         <>
           <hr className="divider" />
           <div className="stat-row">
-            <span className="stat-label">Trust</span>
+            <span className="stat-label">{tr("computingPanel.trust")}</span>
             <span className="stat-value">{s.trust}</span>
           </div>
           <div className="stat-row">
-            <span className="stat-label">Next trust at</span>
-            <span className="stat-value dim">{formatWithCommas(s.nextTrust)} clips</span>
+            <span className="stat-label">{tr("computingPanel.nextTrustAt")}</span>
+            <span className="stat-value dim">{tr("computingPanel.clips", { nextTrust: formatWithCommas(s.nextTrust) })}</span>
           </div>
         </>
       )}
@@ -181,7 +180,7 @@ export function ComputingPanel({ snap: s }: Props) {
         <>
           <hr className="divider" />
           <div className="stat-row">
-            <span className="stat-label"><Lightbulb size={10} /> Creativity</span>
+            <span className="stat-label"><Lightbulb size={10} />{tr("computingPanel.creativity")}</span>
             <span className="stat-value">{formatWithCommas(Math.floor(s.creativity))}</span>
           </div>
         </>

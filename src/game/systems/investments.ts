@@ -1,8 +1,8 @@
+import { numberValue, message } from '../../i18n/message';
 import { random } from '../random';
 import type { GameState } from '../state';
 import { A, hasActiveArtifact } from '../artifacts';
 import { displayMessage } from '../messages';
-import { formatWithCommas } from '../format';
 
 // ── Investments ───────────────────────────────────────────────────────────
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -110,6 +110,6 @@ export function tickInvestmentReport(s: GameState): void {
   if (s.stockReportCounter < 10000) return;
 
   const portTotal = s.bankroll + s.stocks.reduce((a, st) => a + st.val, 0);
-  displayMessage(s, `Lifetime investment revenue report: $${formatWithCommas(s.ledger + portTotal)}`);
+  displayMessage(s, message("log.lifetimeInvestmentRevenueReport", { value1: numberValue(s.ledger + portTotal) }));
   s.stockReportCounter = 0;
 }

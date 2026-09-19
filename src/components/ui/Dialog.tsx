@@ -51,7 +51,7 @@ export function Dialog({ title, onClose, children, className = '' }: Props) {
       document.body.style.overflow = previousOverflow;
       if (pushed && history.state?.paperclipsOverlay === marker) history.back();
       const target = trigger?.isConnected && trigger !== document.body
-        ? trigger : document.querySelector<HTMLElement>('[aria-label="More actions"]');
+        ? trigger : document.querySelector<HTMLElement>('[aria-haspopup="menu"]');
       target?.focus({ preventScroll: true });
     };
   }, []);

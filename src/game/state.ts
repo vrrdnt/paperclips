@@ -1,3 +1,4 @@
+import { message, type LocalizedText } from '../i18n/message';
 // ─── Complete game state ─────────────────────────────────────────────────────
 // Single mutable object. The game loop reads/writes this directly.
 // The Zustand display store syncs a snapshot every 100 ms.
@@ -295,7 +296,7 @@ export interface GameState {
   endTimer6: number;
   finalClips: number;
   // ── Console readouts ──────────────────────────────────────────────────────
-  readouts: string[];
+  readouts: LocalizedText[];
   // ── Projects ──────────────────────────────────────────────────────────────
   projectFlags: Record<number, number>;
   activeProjectIds: number[];
@@ -396,7 +397,7 @@ export function makeInitialState(seed = Math.floor(Math.random() * 4294967296)):
     dismantle: 0, endTimer1: 0, endTimer2: 0, endTimer3: 0,
     endTimer4: 0, endTimer5: 0, endTimer6: 0, finalClips: 0,
 
-    readouts: ['Welcome to Universal Paperclips'],
+    readouts: [message("log.welcomeToUniversalPaperclips")],
     projectFlags: {}, activeProjectIds: [], hiddenProjectIds: [],
     transaction: 1, blinkCounter: 0, testFlag: 0, clipCountCrunched: 0,
     randomState: seed >>> 0,
