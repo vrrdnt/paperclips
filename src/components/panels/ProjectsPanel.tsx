@@ -42,9 +42,9 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
         }}
       >
         <span className="project-btn-title">{title}</span>
+        <span className="project-btn-price">{priceTag}</span>
       </Btn>
       <div className="project-details">
-        <div className="project-btn-price">{priceTag}</div>
         <div className="project-btn-desc">{p.description}</div>
       </div>
     </div>

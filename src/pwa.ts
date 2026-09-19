@@ -32,6 +32,7 @@ function getCurrentAppShellUrls(): string[] {
     'script[src]',
     'link[rel="stylesheet"][href]',
     'link[rel="modulepreload"][href]',
+    'link[rel="preload"][as="font"][href]',
     'link[rel~="icon"][href]',
     'link[rel="manifest"][href]',
   ];

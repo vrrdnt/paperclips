@@ -1,4 +1,5 @@
 import { Dialog } from '../ui/Dialog';
+import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
@@ -44,7 +45,6 @@ import { activateArtifact, deactivateArtifact, warpToArtifactMapCell } from '../
 import {
   A,
   ARTIFACTS,
-  ARTIFACT_BY_ID,
   MAP_SIZE,
   MAX_ACTIVE_ARTIFACTS,
   artifactMapUnlocked,
@@ -223,6 +223,11 @@ function appendPathSegment(path: MapPoint[], target: MapPoint, nextTarget?: MapP
 }
 
 export function ArtifactsDropdown({ snap: s, onClose }: Props) {
+  const [view, setView] = useState<'list' | 'map'>('list');
+  const [filter, setFilter] = useState('');
+  const id = useId();
+  const listTab = useRef<HTMLButtonElement>(null);
+  const mapTab = useRef<HTMLButtonElement>(null);
   if (!artifactMapUnlocked(s)) return null;
 
   const world = currentWorld(s);
@@ -232,10 +237,16 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
   const active = new Set(s.activeArtifacts);
   const current = currentArtifacts(s);
   const available = ARTIFACTS.filter(artifact => canUseArtifact(s, artifact.id));
-  const guidePath = buildGuidePath(world, sim, completed);
-  const activeDefs = s.activeArtifacts
-    .map(id => ARTIFACT_BY_ID.get(id as ArtifactId))
-    .filter(Boolean);
+  const guidePath = view === 'map' ? buildGuidePath(world, sim, completed) : '';
+  const query = filter.trim().toLocaleLowerCase();
+  const filtered = available.filter(artifact => `${artifact.name} ${artifact.effect}`.toLocaleLowerCase().includes(query));
+  function navigateTabs(event: KeyboardEvent) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 'list' : event.key === 'End' ? 'map' : view === 'list' ? 'map' : 'list';
+    setView(next);
+    (next === 'list' ? listTab : mapTab).current?.focus();
+  }
 
   return (
     <Dialog className="artifact-dropdown" title="Artifact map" onClose={() => onClose?.()}>
@@ -257,6 +268,19 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
         <span className="stat-label">Active artifacts</span>
         <span className="stat-value">{s.activeArtifacts.length} / {MAX_ACTIVE_ARTIFACTS}</span>
       </div>
+      <div className="artifact-tabs" role="tablist" aria-label="Artifact views" onKeyDown={navigateTabs}>
+        <button ref={listTab} type="button" role="tab" id={`${id}-list-tab`} aria-controls={`${id}-list`}
+          aria-selected={view === 'list'} tabIndex={view === 'list' ? 0 : -1} onClick={() => setView('list')}>
+          <Gem size={14} aria-hidden="true" /> Artifacts ({available.length})
+        </button>
+        <button ref={mapTab} type="button" role="tab" id={`${id}-map-tab`} aria-controls={`${id}-map`}
+          aria-selected={view === 'map'} tabIndex={view === 'map' ? 0 : -1} onClick={() => setView('map')}>
+          <Compass size={14} aria-hidden="true" /> World map
+        </button>
+      </div>
+
+      <div className="artifact-view artifact-map-wrap" role="tabpanel" id={`${id}-map`}
+        aria-labelledby={`${id}-map-tab`} hidden={view !== 'map'} tabIndex={0}>
       {current.length > 0 && (
         <div className="artifact-current">
           {current.map(artifact => (
@@ -268,11 +292,6 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
         </div>
       )}
 
-      <div className="artifact-map-wrap">
-        <div className="artifact-map-title">
-          <Compass size={12} />
-          Map
-        </div>
         <div className="artifact-map-grid-wrap">
           <div className="artifact-map-grid">
             {Array.from({ length: MAP_SIZE }, (_, simIdx) => (
@@ -328,21 +347,14 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
         </div>
       </div>
 
-      <div className="artifact-slots" aria-label="Active artifact slots">
-        {Array.from({ length: MAX_ACTIVE_ARTIFACTS }, (_, i) => {
-          const def = activeDefs[i];
-          return (
-            <div key={i} className={def ? 'artifact-slot is-filled' : 'artifact-slot'}>
-              {def ? <ArtifactGlyph id={def.id} size={13} /> : ''}
-            </div>
-          );
-        })}
-      </div>
-
+      <div className="artifact-view artifact-list-view" role="tabpanel" id={`${id}-list`}
+        aria-labelledby={`${id}-list-tab`} hidden={view !== 'list'}>
+      {available.length > 8 && <input className="artifact-filter" type="search" aria-label="Filter artifacts"
+        placeholder="Filter by name or effect" value={filter} onChange={event => setFilter(event.target.value)} />}
       <div className="artifact-list">
         {available.length === 0 ? (
           <div className="empty-state">No artifacts available.</div>
-        ) : available.map(artifact => {
+        ) : filtered.length === 0 ? <div className="empty-state">No matching artifacts.</div> : filtered.map(artifact => {
           const isActive = active.has(artifact.id);
           const isPermanent = s.collectedArtifacts.includes(artifact.id);
           const useDisabled = !isActive && s.activeArtifacts.length >= MAX_ACTIVE_ARTIFACTS;
@@ -368,6 +380,7 @@ export function ArtifactsDropdown({ snap: s, onClose }: Props) {
             </div>
           );
         })}
+      </div>
       </div>
     </Dialog>
   );

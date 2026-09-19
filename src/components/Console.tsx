@@ -1,6 +1,5 @@
-import { memo, useLayoutEffect, useRef, useState } from 'react';
-import { Terminal } from 'lucide-react';
-import { SectionCard } from './ui/SectionCard';
+import { memo, useId, useLayoutEffect, useRef, useState } from 'react';
+import { Terminal, ChevronRight } from 'lucide-react';
 import { Btn } from './ui/Btn';
 import { Dialog } from './ui/Dialog';
 
@@ -8,6 +7,7 @@ interface Props { readouts: readonly string[]; }
 
 export const Console = memo(function Console({ readouts }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const previewId = useId();
   const historyRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
   useLayoutEffect(() => {
@@ -18,17 +18,18 @@ export const Console = memo(function Console({ readouts }: Props) {
 
   return (
     <>
-      <SectionCard title="Log" icon={<Terminal size={14} />}>
-        <div className="console-summary">
-          <div className="console-preview">
+      <Btn className="console-open" aria-label="Full history" aria-describedby={previewId} aria-haspopup="dialog" aria-expanded={expanded}
+        onClick={() => { followLatest.current = true; setExpanded(true); }}>
+          <span className="console-heading">
+            <span className="console-title"><Terminal size={14} aria-hidden="true" /> Log</span>
+            <span className="console-history-label">Full history <ChevronRight size={14} aria-hidden="true" /></span>
+          </span>
+          <span className="console-preview" id={previewId}>
             {readouts.slice(0, 3).reverse().map((line, i) => (
-              <div key={i} className="console-line">{line || '\u00a0'}</div>
+              <span key={i} className="console-line">{line || '\u00a0'}</span>
             ))}
-          </div>
-          <Btn aria-haspopup="dialog" aria-expanded={expanded}
-            onClick={() => { followLatest.current = true; setExpanded(true); }}>Full history</Btn>
-        </div>
-      </SectionCard>
+          </span>
+      </Btn>
       {expanded && (
         <Dialog title="Log history" className="log-dialog" onClose={() => setExpanded(false)}>
           <div className="dialog-heading"><h2>Log history</h2><Btn onClick={() => setExpanded(false)}>Close</Btn></div>

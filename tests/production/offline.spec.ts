@@ -1,5 +1,34 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { ARTIFACTS } from '../../src/game/artifacts';
+
+test('the built offline app exposes the entire artifact collection inside the phone viewport', async ({ page, context }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  const state = JSON.parse(readFileSync('dev-saves/03-phase1-late.json', 'utf8'));
+  state.collectedArtifacts = ARTIFACTS.map(artifact => artifact.id);
+  await page.addInitScript(state => {
+    if (!localStorage.getItem('upc_v2')) localStorage.setItem('upc_v2', JSON.stringify(state));
+  }, state);
+  await page.goto('/');
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  await page.locator('.header-save-btn').click();
+  await context.setOffline(true);
+  await page.reload();
+  await page.getByRole('button', { name: 'Artifact map', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Artifact map' });
+  await expect(dialog.locator('.artifact-item')).toHaveCount(32);
+  const last = dialog.locator('.artifact-item').last();
+  await last.scrollIntoViewIfNeeded();
+  for (const element of [dialog, last, dialog.getByRole('button', { name: 'Close', exact: true })]) {
+    const rect = (await element.boundingBox())!;
+    expect(rect.y).toBeGreaterThanOrEqual(0);
+    expect(rect.y + rect.height).toBeLessThanOrEqual(700);
+  }
+  await dialog.getByRole('searchbox', { name: 'Filter artifacts' }).fill('quark');
+  await expect(dialog.locator('.artifact-item')).toHaveCount(1);
+  await page.goBack();
+  await expect(dialog).toHaveCount(0);
+});
 
 test('the built browser keeps running through twenty minutes of throttled background callbacks', async ({ page }) => {
   const errors: string[] = [];
@@ -145,6 +174,11 @@ test('the built mobile PWA keeps sections and log usable offline', async ({ page
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('tab', { name: 'Production' })).toHaveAttribute('aria-selected', 'true');
+  // Loading the actual face offline catches a missing font in the app-shell cache.
+  expect(await page.evaluate(async () => {
+    const faces = await document.fonts.load('14px "IBM Plex Mono"');
+    return faces.length === 1 && faces[0].status === 'loaded';
+  })).toBe(true);
   await page.getByRole('tab', { name: 'Computing' }).click();
   await expect(page.getByText('Quantum Computing', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Full history' }).click();

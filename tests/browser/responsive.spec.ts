@@ -97,16 +97,16 @@ test('tabs retain scroll and mounted panels through switching and rotation', asy
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(300);
   await page.getByRole('tab', { name: 'Computing' }).click();
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
-  await page.evaluate(() => scrollTo(0, 150));
+  await page.evaluate(() => scrollTo(0, 100));
   await page.getByRole('tab', { name: 'Production' }).click();
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(300);
   await page.getByRole('tab', { name: 'Computing' }).click();
-  await expect.poll(() => page.evaluate(() => scrollY)).toBe(150);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(100);
   await page.setViewportSize({ width: 1000, height: 500 });
   await expect(page.getByRole('tablist')).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 500 });
   await expect(page.getByRole('tab', { name: 'Computing' })).toHaveAttribute('aria-selected', 'true');
-  await expect.poll(() => page.evaluate(() => scrollY)).toBe(150);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(100);
   await expect(page.locator('[data-mount-witness="retained"]')).toHaveCount(1);
 });
 

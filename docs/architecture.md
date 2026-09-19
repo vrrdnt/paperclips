@@ -42,11 +42,23 @@ sections fall back to Production. `PanelVisibility` cancels held buttons in
 hidden sections. Buttons also cancel on browser background/freeze/pagehide and
 touch movement. None of these presentation changes call runtime pause/resume.
 
-`Console` shows three entries and retains full history in a native `Dialog`.
+Project titles and costs share a wrapping purchase row; descriptions stay
+visible below it. Phone spacing is compact, with 14 px essential text and 48 px
+touch targets. Unaffordable controls retain readable text and disabled actions.
+
+`Console` shows three entries in a single large history button, retaining the
+dark text frame and full history in a native `Dialog`.
 The shared dialog handles focus containment/restoration, Escape, a temporary
 same-page history entry for Back, and visual-viewport sizing during keyboard
 input. It is also used by header dialogs. Neither dialog nor section state is
-serialized. Native Android Back/IME behavior still requires installed testing.
+serialized. Dialog height subtracts its top margin and bottom safe area from
+the visual viewport, so its bottom cannot extend off screen.
+
+Artifacts open on the available collection, with a separate keyboard-accessible
+World map tab and a name/effect filter for collections over eight items. The list
+and map each have one scroll region; the dialog heading and Close stay visible.
+The map keeps 48 px touch cells, with both directions scrollable on small screens.
+Native Android Back/IME behavior still requires installed testing.
 
 ## Timing and randomness
 
