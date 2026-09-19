@@ -95,6 +95,11 @@ requires the full game checks, signing verification, and production credentials.
 
 ## Local build and maintenance
 
+The wrapper requires Android 7.0 (API 24) or newer. This app's enabled Play
+automatic protection rejects bundles with a lower minimum SDK; Android 6.0
+devices cannot install this new wrapper version.
+[Play automatic protection requirements](https://support.google.com/googleplay/android-developer/answer/10183279?hl=en)
+
 Use JDK 17, Android platform 36, and Build Tools 35.0.0. The Gradle wrapper pins
 8.11.1 and its distribution checksum; Android Gradle Plugin is 8.10.1. This version
 supports API 36. The wrapper now targets API 36, required for mobile app updates

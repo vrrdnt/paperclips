@@ -55,7 +55,7 @@ android {
     namespace "ps.papercli.app"
     defaultConfig {
         applicationId "ps.papercli.app"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 36
         versionCode providers.gradleProperty('appVersionCode').getOrElse('3').toInteger()
         versionName providers.gradleProperty('appVersionName').getOrElse('3')
