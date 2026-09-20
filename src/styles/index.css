@@ -66,6 +66,9 @@
   --btn-top:   #505050;
   --btn-bot:   #363636;
   --btn-hover: #5c5c5c;
+  --disabled-bg: #242424;
+  --disabled-text: #a6a6a6;
+  --disabled-border: #585858;
   --danger:    #e08080;
   --success:   #80c080;
   /* Mobile-first base: slightly larger for readability */
@@ -545,8 +548,12 @@ textarea {
 
 .btn:disabled {
   opacity: 1;
-  background: var(--panel2);
-  border-color: var(--border);
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+  border-color: var(--disabled-border);
+  border-style: dashed;
+  box-shadow: none;
+  text-shadow: none;
   cursor: not-allowed;
 }
 
@@ -1902,8 +1909,10 @@ select {
 .app-body:focus-visible { outline: 2px solid #dceeff; outline-offset: 2px; }
 .stat-label { white-space: normal; overflow: visible; text-overflow: clip; }
 .project-reveal { border: 1px solid var(--border2); background: var(--panel2); }
+.project-reveal:not(.is-affordable) { border: 1px dashed var(--disabled-border); background: var(--disabled-bg); }
 .project-btn { border: 0; border-radius: 3px 3px 0 0; }
-.project-btn:disabled { opacity: 1; background: var(--panel2); color: var(--text); }
+.project-btn:disabled { background: var(--disabled-bg); color: var(--disabled-text); }
+.project-btn:disabled .project-btn-price { color: inherit; }
 .project-details { padding: var(--density-project-details, 3px 9px 7px); line-height: 1.4; }
 .project-btn-price, .project-btn-desc { color: var(--text-dim); font-size: 12px; }
 .project-btn-price { color: var(--text); }
@@ -1921,18 +1930,20 @@ select {
 .console-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .console-history-label { font-size: 12px; }
 .console-preview {
-  display: grid;
-  /* Reserve all three rows even before the log fills; new messages never move panels. */
-  grid-template-rows: repeat(3, 1.4em);
+  display: block;
   min-width: 0;
   padding: var(--density-log-padding, 6px 8px);
 }
-.console-preview .console-line {
-  line-height: 1.4;
+.console-preview-viewport {
+  display: block;
+  position: relative;
+  height: 4.2em;
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.4;
 }
+/* Anchor the latest wrapped line to the bottom without a scrollable control. */
+.console-preview-content { display: block; position: absolute; inset: auto 0 0; }
+.console-preview .console-line { line-height: 1.4; }
 .console-line { display: block; overflow-wrap: anywhere; }
 .game-dialog {
   --dialog-top: max(12px, env(safe-area-inset-top), calc((var(--viewport-height, 100dvh) - min(720px, var(--viewport-height, 100dvh) * .8)) / 2));
@@ -2053,7 +2064,7 @@ select {
   background-color: transparent !important;
 }
 
-.btn:not(.btn-success):not(.btn-danger):not(.is-saved) { color: #dedede; }
+.btn:not(:disabled):not(.btn-success):not(.btn-danger):not(.is-saved) { color: #dedede; }
 @media (max-width: 767px) {
   .game-panel-slot { --mobile-label-size: 14px; }
   .strat-select, .battle-heading, .battle-outcome-pill, .battle-outcome-row, .battle-report-grid, .battle-idle, .battle-item { font-size: 14px; }

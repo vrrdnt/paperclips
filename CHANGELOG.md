@@ -7,7 +7,8 @@ the [README](README.md#afk-and-background-behavior) for current behavior.
 ## Unreleased
 
 - Added a Projects tab count, a green check for purchasable projects, and a pale dot for newly revealed projects. Opening Projects clears the new-project indicator.
-- Fixed log updates shifting the panels below them. The preview always reserves three single-line rows; full history keeps complete, wrapping messages.
+- Fixed log updates shifting the panels below them. The preview shows the latest three wrapped visual lines in a fixed window; full history keeps complete messages.
+- Made disabled purchase and allocation buttons clearer with dark flat fills, dashed borders, and readable muted labels.
 - Added an Interface density preference: Auto preserves current sizing, Compact uses tighter spacing and 40 px touch controls, and Comfortable keeps ordinary controls at least 48 px on every device. Text sizes, navigation, and gameplay are unchanged.
 - Density persists separately from game saves and survives imports and resets. Changing it keeps panels mounted and cancels held allocation controls.
 

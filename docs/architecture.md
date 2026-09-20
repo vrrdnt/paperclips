@@ -54,7 +54,8 @@ ordinary touch controls to a 40 px minimum; Comfortable uses at least 48 px
 ordinary controls on every device. Text sizes and column breakpoints do not
 change. Phone section tabs keep their 52 px minimum and dialog close controls,
 artifact tabs, filtering, and map cells retain their existing touch sizing.
-Unaffordable controls retain readable text and disabled actions.
+Unaffordable controls use dark flat fills, dashed borders, and readable muted
+labels. Their native disabled actions and purchase eligibility remain unchanged.
 
 `src/browser/density.ts` owns the independent `paperclips.density` preference
 (`auto`, `compact`, or `comfortable`). It initializes the root `data-density`
@@ -73,9 +74,12 @@ new arrivals. This notification state lives in `GameLayout`, resets with a new
 run or import, and never changes saves or project eligibility. The tab's accessible
 description and tooltip give total, purchasable, and new counts.
 
-`Console` reserves three fixed-height preview rows in a single large history
-button. Long entries use an ellipsis in the preview and wrap fully in history,
-so log updates never move the panels below. The console retains the
+`Console` reserves a window three visual lines high in a single large history
+button. Entries wrap normally; the last visual line stays at the bottom and older
+lines are clipped above the window. A two-line entry occupies two of its three
+lines, and short logs leave unused space above. CSS handles wrapping and resizing
+without scroll timers or changing panel positions. Full history keeps complete
+messages. The console retains the
 dark text frame, bundled IBM Plex Mono font, subtle dithering, and retained
 history in the shared HTML `Dialog` component.
 The shared dialog handles focus containment/restoration, Escape, a temporary

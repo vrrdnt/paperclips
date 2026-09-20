@@ -141,13 +141,34 @@ test('tabs support arrow, Home, End and Tab keyboard navigation', async ({ page 
 });
 
 for (const width of [320, 390, 768, 1280]) {
-  test(`log updates keep three preview rows and stationary panels at ${width}px`, async ({ page }) => {
+  test(`log updates keep three visual lines and stationary panels at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await load(page, '03-phase1-late.json', { readouts: ['Newest', 'Middle', 'Oldest'] });
     await page.evaluate(() => document.fonts.ready);
     const preview = page.locator('.console-preview');
+    const viewport = preview.locator('.console-preview-viewport');
     const previewHeight = (await preview.boundingBox())!.height;
     const panelTop = (await page.locator('.app-body').boundingBox())!.y;
+    const lineHeight = await viewport.evaluate(el => parseFloat(getComputedStyle(el).lineHeight));
+    expect((await viewport.boundingBox())!.height / lineHeight).toBeCloseTo(3, 2);
+    const twoLineMessage = await viewport.evaluate(el => {
+      const canvas = document.createElement('canvas').getContext('2d')!;
+      const style = getComputedStyle(el);
+      canvas.font = `${style.fontSize} ${style.fontFamily}`;
+      return 'Wrapped message '.repeat(Math.ceil(el.clientWidth * 1.4 / canvas.measureText('Wrapped message ').width)).trim();
+    });
+    await change(page, { readouts: [twoLineMessage, 'Previous message', 'Older message'] });
+    const lines = preview.locator('.console-line');
+    await expect(lines.last()).toHaveText(twoLineMessage);
+    expect((await lines.last().boundingBox())!.height / lineHeight).toBeCloseTo(2, 2);
+    const visible = (await viewport.boundingBox())!;
+    const oldest = (await lines.first().boundingBox())!;
+    const previous = (await lines.nth(1).boundingBox())!;
+    const latest = (await lines.last().boundingBox())!;
+    expect(oldest.y + oldest.height).toBeLessThanOrEqual(visible.y + .1);
+    expect(previous.y).toBeCloseTo(visible.y, 1);
+    expect(latest.y + latest.height).toBeCloseTo(visible.y + visible.height, 1);
+    await expect(lines.last()).toHaveCSS('text-overflow', 'clip');
     const longMessage = 'Processor added, operations (or creativity) per sec increased. '.repeat(8);
     for (const readouts of [[longMessage, 'Memory added', 'Memory added'], ['Memory added'], [], ['Newest', 'Middle', 'Oldest']]) {
       await change(page, { readouts });
@@ -156,6 +177,13 @@ for (const width of [320, 390, 768, 1280]) {
       expect((await page.locator('.app-body').boundingBox())!.y).toBeCloseTo(panelTop, 1);
     }
     await change(page, { readouts: [longMessage, 'Memory added', 'Memory added'] });
+    const visibleLines = await lines.last().evaluate(el => {
+      const window = el.closest('.console-preview-viewport')!.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return [...range.getClientRects()].filter(rect => rect.top >= window.top - .1 && rect.bottom <= window.bottom + .1).length;
+    });
+    expect(visibleLines).toBe(3);
     await page.getByRole('button', { name: 'Full history', exact: true }).click();
     const completeEntry = page.locator('.log-history .console-line').last();
     await expect(completeEntry).toHaveText(longMessage);
@@ -195,6 +223,37 @@ test('full log scrolls, traps focus, restores focus and Back never leaves the ga
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(open).toBeFocused();
+});
+
+test('disabled purchase controls look inactive, stay legible, and update without moving', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await load(page, '01-phase1-start.json', { funds: 0, wireCost: 20, operations: 0, standardOps: 0 });
+  const wire = page.getByRole('button', { name: 'Buy wire ($20)', exact: true });
+  await expect(wire).toBeDisabled();
+  await expect(wire).toHaveCSS('border-top-style', 'dashed');
+  await expect(wire).toHaveCSS('background-image', 'none');
+  const disabledBounds = await wire.boundingBox();
+  const disabledColor = await wire.evaluate(el => getComputedStyle(el).color);
+  const before = await state(page);
+  await wire.evaluate((el: HTMLButtonElement) => el.click());
+  expect(await state(page)).toEqual(before);
+  await change(page, { funds: 20 });
+  await expect(wire).toBeEnabled();
+  await expect(wire).toHaveCSS('border-top-style', 'solid');
+  expect(await wire.evaluate(el => getComputedStyle(el).backgroundImage)).toContain('linear-gradient');
+  expect(await wire.evaluate(el => getComputedStyle(el).color)).not.toBe(disabledColor);
+  expect(await wire.boundingBox()).toEqual(disabledBounds);
+  await wire.click();
+  await expect(wire).toBeDisabled();
+  await expect(wire).toHaveCSS('border-top-style', 'dashed');
+  await page.getByRole('tab', { name: 'Computing', exact: true }).click();
+  const allocations = page.locator('[data-section="Computing"] button:disabled');
+  await change(page, { trust: 0, processors: 10, memory: 10, swarmGifts: 0 });
+  await expect(allocations.first()).toHaveCSS('border-top-style', 'dashed');
+  await page.getByRole('tab', { name: 'Projects', exact: true }).click();
+  const project = page.locator('.project-reveal:not(.is-affordable)').first();
+  await expect(project).toHaveCSS('border-top-style', 'dashed');
+  await expect(project.locator('button')).toHaveCSS('background-image', 'none');
 });
 
 test('import handles a reduced keyboard viewport and resets section and scroll', async ({ page }) => {

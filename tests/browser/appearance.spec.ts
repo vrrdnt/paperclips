@@ -2,6 +2,29 @@ import { test, expect } from '@playwright/test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
+test('the phone log shows one previous line and a two-line latest entry', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const save = JSON.parse(readFileSync('dev-saves/01-phase1-start.json', 'utf8'));
+  await page.addInitScript(save => {
+    Date.now = () => 1789200000000;
+    window.setInterval = (() => 0) as unknown as typeof window.setInterval;
+    localStorage.setItem('upc_v2', JSON.stringify(save));
+  }, save);
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const path = '/src/game/runtime.ts';
+    const { game } = await import(path);
+    game.state.readouts = [
+      'Processor added, operations (or creativity) per sec increased',
+      'Memory added, max operations increased',
+      'This older line is outside the preview',
+    ];
+    game.publish();
+  });
+  await expect(page.locator('.console-preview .console-line').last()).toContainText('Processor added');
+  await expect(page.locator('.console-open')).toHaveScreenshot('log-three-visual-lines-390.png');
+});
+
 for (const density of ['compact', 'comfortable']) {
   for (const [name, width, height, touch, file, section] of [
     ['phone-projects', 390, 844, true, '03-phase1-late.json', 'Projects'],

@@ -29,9 +29,14 @@ export const Console = memo(function Console({ readouts }: Props) {
             <span className="console-history-label">{tr("console.fullHistory2")}<ChevronRight size={14} aria-hidden="true" /></span>
           </span>
           <span className="console-preview" id={previewId}>
-            {readouts.slice(0, 3).reverse().map((line, i) => (
-              <span key={i} className="console-line">{translate(line) || '\u00a0'}</span>
-            ))}
+            <span className="console-preview-viewport">
+              <span className="console-preview-content">
+                {/* Each entry occupies at least one line, so only the latest three can be visible. */}
+                {readouts.slice(0, 3).reverse().map((line, i) => (
+                  <span key={i} className="console-line">{translate(line) || '\u00a0'}</span>
+                ))}
+              </span>
+            </span>
           </span>
       </Btn>
       {expanded && (
