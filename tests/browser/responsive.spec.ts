@@ -52,7 +52,7 @@ for (const width of [320, 390, 600, 768, 1000, 1280]) {
       await noOverflow(page);
       if (width < 768) {
         const tabs = page.getByRole('tab');
-        const names = await tabs.allTextContents();
+        const names = await tabs.locator('.section-tab-label').allTextContents();
         expect(names.includes('Fleet')).toBe(initial.spaceFlag === 1);
         for (const name of names) {
           await page.getByRole('tab', { name, exact: true }).click();
@@ -78,7 +78,7 @@ test('new game has no tabs; unlocks and dismantling follow live content', async 
   await page.goto('/');
   await expect(page.getByRole('tablist')).toHaveCount(0);
   await change(page, { compFlag: 1, projectsFlag: 1 });
-  await expect(page.getByRole('tab')).toHaveText(['Production', 'Computing', 'Projects']);
+  await expect(page.getByRole('tab').locator('.section-tab-label')).toHaveText(['Production', 'Computing', 'Projects']);
   await page.getByRole('tab', { name: 'Computing' }).click();
   await change(page, { compFlag: 0, qFlag: 0, swarmFlag: 0 });
   await expect(page.getByRole('tab', { name: 'Production' })).toHaveAttribute('aria-selected', 'true');
@@ -113,7 +113,8 @@ test('tabs retain scroll and mounted panels through switching and rotation', asy
   await expect(page.getByRole('tablist')).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 500 });
   await expect(page.getByRole('tab', { name: 'Computing' })).toHaveAttribute('aria-selected', 'true');
-  await expect.poll(() => page.evaluate(() => scrollY)).toBe(100);
+  // Responsive reflow can round the restored offset by one CSS pixel.
+  await expect.poll(async () => Math.abs(await page.evaluate(() => scrollY) - 100)).toBeLessThanOrEqual(1);
   await expect(page.locator('[data-mount-witness="retained"]')).toHaveCount(1);
 });
 
@@ -138,6 +139,32 @@ test('tabs support arrow, Home, End and Tab keyboard navigation', async ({ page 
   await page.keyboard.press('Shift+Tab');
   await expect(production).toBeFocused();
 });
+
+for (const width of [320, 390, 768, 1280]) {
+  test(`log updates keep three preview rows and stationary panels at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await load(page, '03-phase1-late.json', { readouts: ['Newest', 'Middle', 'Oldest'] });
+    await page.evaluate(() => document.fonts.ready);
+    const preview = page.locator('.console-preview');
+    const previewHeight = (await preview.boundingBox())!.height;
+    const panelTop = (await page.locator('.app-body').boundingBox())!.y;
+    const longMessage = 'Processor added, operations (or creativity) per sec increased. '.repeat(8);
+    for (const readouts of [[longMessage, 'Memory added', 'Memory added'], ['Memory added'], [], ['Newest', 'Middle', 'Oldest']]) {
+      await change(page, { readouts });
+      await expect(preview.locator('.console-line')).toHaveCount(readouts.length);
+      expect((await preview.boundingBox())!.height).toBeCloseTo(previewHeight, 1);
+      expect((await page.locator('.app-body').boundingBox())!.y).toBeCloseTo(panelTop, 1);
+    }
+    await change(page, { readouts: [longMessage, 'Memory added', 'Memory added'] });
+    await page.getByRole('button', { name: 'Full history', exact: true }).click();
+    const completeEntry = page.locator('.log-history .console-line').last();
+    await expect(completeEntry).toHaveText(longMessage);
+    // Complete messages still wrap in history and remain reachable by scrolling.
+    expect((await completeEntry.boundingBox())!.height).toBeGreaterThan(previewHeight);
+    await completeEntry.scrollIntoViewIfNeeded();
+    await expect(completeEntry).toBeVisible();
+  });
+}
 
 test('full log scrolls, traps focus, restores focus and Back never leaves the game', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 700 });

@@ -5,10 +5,13 @@ import { SectionCard } from '../ui/SectionCard';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { game } from '../../game/runtime';
-import { purchaseProject, getActiveProjects, Project } from '../../game/projects';
+import { purchaseProject, Project } from '../../game/projects';
 import { useRevealHighlight } from '../ui/useRevealHighlight';
 
-interface Props { snap: DisplaySnapshot; }
+interface Props {
+  snap: DisplaySnapshot;
+  projects: readonly { project: Project; canAfford: boolean }[];
+}
 
 interface ProjectButtonProps {
   project: Project;
@@ -54,24 +57,18 @@ function ProjectButton({ project: p, snap: s, canAfford }: ProjectButtonProps) {
   );
 }
 
-export function ProjectsPanel({ snap: s }: Props) {
+export function ProjectsPanel({ snap: s, projects }: Props) {
   useLocale();
   if (!s.projectsFlag) return null;
   if (s.dismantle >= 7) return null;
 
-  const activeProjects = getActiveProjects(s)
-    .map((project) => ({
-      project,
-      canAfford: project.cost(s),
-    }));
-
   return (
     <SectionCard title={tr("projectsPanel.projects")} icon={<FlaskConical size={14} />}>
-      {activeProjects.length === 0 ? (
+      {projects.length === 0 ? (
         <div className="empty-state">{tr("projectsPanel.noActiveProjects")}</div>
       ) : (
         <div className="project-list">
-          {activeProjects.map(({ project, canAfford }) => (
+          {projects.map(({ project, canAfford }) => (
             <ProjectButton
               key={project.id}
               project={project}

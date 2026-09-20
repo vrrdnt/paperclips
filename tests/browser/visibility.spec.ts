@@ -90,7 +90,7 @@ for (const file of readdirSync('dev-saves').filter(file => file.endsWith('.json'
   test(`all sections keep their final controls above phone navigation: ${file}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await load(page, file);
-    for (const section of await page.getByRole('tab').allTextContents()) {
+    for (const section of await page.getByRole('tab').locator('.section-tab-label').allTextContents()) {
       await page.getByRole('tab', { name: section, exact: true }).click();
       await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
       const last = page.locator('.app-body .section-card:visible').last();

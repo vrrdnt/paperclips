@@ -23,6 +23,7 @@ playwright-report/
 coverage/
 !tests/browser/appearance.spec.ts-snapshots/*.png
 !tests/browser/autonomy.spec.ts-snapshots/*.png
+!tests/browser/project-badge.spec.ts-snapshots/*.png
 
 # Checked-in Bubblewrap sources; exclude machine settings and release outputs.
 !android/app/src/main/res/**/*.png

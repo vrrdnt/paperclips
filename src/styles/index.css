@@ -1920,8 +1920,19 @@ select {
 .console-heading { justify-content: space-between; color: var(--text-dim); }
 .console-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .console-history-label { font-size: 12px; }
-.console-preview { display: block; min-width: 0; padding: var(--density-log-padding, 6px 8px); }
-.console-preview .console-line { line-height: 1.4; }
+.console-preview {
+  display: grid;
+  /* Reserve all three rows even before the log fills; new messages never move panels. */
+  grid-template-rows: repeat(3, 1.4em);
+  min-width: 0;
+  padding: var(--density-log-padding, 6px 8px);
+}
+.console-preview .console-line {
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .console-line { display: block; overflow-wrap: anywhere; }
 .game-dialog {
   --dialog-top: max(12px, env(safe-area-inset-top), calc((var(--viewport-height, 100dvh) - min(720px, var(--viewport-height, 100dvh) * .8)) / 2));
@@ -1969,7 +1980,22 @@ select {
     cursor: pointer; touch-action: manipulation;
   }
   .section-tabs button[aria-selected="true"] { color: #e0e0e0; background: #414141; border-color: #686868; }
-  .section-tabs span { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+  .section-tab-label { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+  .section-tab-symbol { display: flex; align-items: center; justify-content: center; gap: 3px; height: 20px; }
+  .section-tab-symbol > svg { flex-shrink: 0; }
+  .project-tab-badge {
+    position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+    min-width: 18px; height: 18px; padding: 0 4px;
+    border: 1px solid var(--border2); border-radius: 4px;
+    background: var(--console-bg); color: var(--text-dim);
+    font: 12px/1 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;
+  }
+  .project-tab-badge.has-new { border-color: #dceeff; color: #dceeff; }
+  .project-tab-badge.is-purchasable { border-color: #63c66f; background: #253a2a; color: #bfe9c5; }
+  .project-tab-new {
+    position: absolute; top: -4px; right: -4px; width: 6px; height: 6px;
+    border-radius: 50%; background: #dceeff; box-shadow: 0 0 0 2px var(--panel2);
+  }
   html:not([lang="en"]) .section-tabs button { flex: 1 1 0; min-width: 0; }
   .section-title { font-size: 14px; letter-spacing: .06em; margin-bottom: var(--density-heading-gap, 6px); padding-bottom: var(--density-heading-padding, 4px); }
   .section-card { padding: var(--density-panel-padding, 8px 10px); }

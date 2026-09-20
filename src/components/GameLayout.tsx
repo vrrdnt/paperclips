@@ -1,7 +1,9 @@
-import { tr } from '../i18n';
+import { tr, localizedNumber } from '../i18n';
+import { numberValue } from '../i18n/message';
 import { useLocale } from '../i18n/react';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Factory, Cpu, FlaskConical, Swords, Rocket } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Factory, Cpu, FlaskConical, Swords, Rocket, Check } from 'lucide-react';
+import { getActiveProjects } from '../game/projects';
 import { PanelVisibility } from './ui/PanelVisibility';
 import { Console } from './Console';
 import { BusinessPanel } from './panels/BusinessPanel';
@@ -49,6 +51,22 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
   if (space && (exploration || design || combat)) sections.push('Fleet');
   const active = sections.includes(selected) ? selected : 'Production';
   const hasTabs = sections.length > 1;
+  const projects = useMemo(() => s.projectsFlag && s.dismantle < 7
+    ? getActiveProjects(s).map(project => ({ project, canAfford: project.cost(s) })) : [], [s]);
+  // Restored projects are familiar. New arrivals stay unread until the section is opened.
+  // GameLayout remounts after imports and resets, keeping this state out of saves.
+  const [seenProjectIds, setSeenProjectIds] = useState(() => new Set(projects.map(({ project }) => project.id)));
+  const projectsVisible = !mobile || active === 'Projects';
+  const newProjects = projectsVisible ? 0 : projects.filter(({ project }) => !seenProjectIds.has(project.id)).length;
+  const purchasableProjects = projects.filter(({ canAfford }) => canAfford).length;
+  const projectSummary = tr('gameLayout.projectStatus', {
+    count: numberValue(projects.length), purchasable: numberValue(purchasableProjects), new: numberValue(newProjects),
+  });
+  useEffect(() => {
+    if (!projectsVisible) return;
+    setSeenProjectIds(seen => projects.every(({ project }) => seen.has(project.id)) ? seen
+      : new Set([...seen, ...projects.map(({ project }) => project.id)]));
+  }, [projects, projectsVisible]);
 
   useLayoutEffect(() => {
     const nav = navRef.current;
@@ -117,6 +135,8 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
           const Icon = sectionIcons[section];
           return <button key={section} id={`section-tab-${section}`} ref={element => { tabRefs.current[section] = element; }}
             type="button" role="tab" aria-selected={active === section} aria-controls="game-section-panel"
+            aria-describedby={section === 'Projects' ? 'projects-tab-summary' : undefined}
+            title={section === 'Projects' ? projectSummary : undefined}
             tabIndex={active === section ? 0 : -1} onClick={() => select(section)}
             onKeyDown={event => {
               const next = event.key === 'Home' ? 0 : event.key === 'End' ? sections.length - 1
@@ -126,7 +146,19 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
               event.preventDefault();
               select(sections[next]);
               tabRefs.current[sections[next]]?.focus({ preventScroll: true });
-            }}><Icon size={18} aria-hidden="true" /><span>{tr(sectionLabels[section])}</span></button>;
+            }}>
+              <span className="section-tab-symbol" aria-hidden="true">
+                <Icon size={18} />
+                {section === 'Projects' && projects.length > 0 && <span
+                  className={`project-tab-badge${purchasableProjects ? ' is-purchasable' : ''}${newProjects ? ' has-new' : ''}`}>
+                  {purchasableProjects > 0 && <Check size={10} strokeWidth={3} />}
+                  {localizedNumber(projects.length)}
+                  {newProjects > 0 && <span className="project-tab-new" />}
+                </span>}
+              </span>
+              <span className="section-tab-label">{tr(sectionLabels[section])}</span>
+              {section === 'Projects' && <span id="projects-tab-summary" hidden>{projectSummary}</span>}
+            </button>;
         })}
       </nav>}
       <main id="game-section-panel" className={`app-body app-body-${postHuman ? space ? 'phase3' : 'phase2' : 'human'}`}
@@ -141,7 +173,7 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
           {panel('Computing', <ComputingPanel snap={s} />, 'computing')}
           {postHuman && swarmPanel}
           {panel('Computing', <QuantumPanel snap={s} />, 'quantum')}
-          {panel('Projects', <ProjectsPanel snap={s} />, 'projects')}
+          {panel('Projects', <ProjectsPanel snap={s} projects={projects} />, 'projects')}
         </div>
         <div className="col-right">
           {panel('Strategy', <StrategyPanel snap={s} />, 'strategy')}

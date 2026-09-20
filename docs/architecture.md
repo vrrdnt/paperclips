@@ -65,7 +65,17 @@ preference; game exports contain no density setting. The header subscribes only
 to selection changes and uses native controls in its mixed actions/settings
 popover.
 
-`Console` shows three entries in a single large history button, retaining the
+The Projects tab counts the same revealed projects as its panel. A green check
+indicates at least one currently affordable project; a pale dot independently
+marks arrivals since the section was last viewed. Existing projects on load or
+import start as read. Viewing the section (or the desktop columns) acknowledges
+new arrivals. This notification state lives in `GameLayout`, resets with a new
+run or import, and never changes saves or project eligibility. The tab's accessible
+description and tooltip give total, purchasable, and new counts.
+
+`Console` reserves three fixed-height preview rows in a single large history
+button. Long entries use an ellipsis in the preview and wrap fully in history,
+so log updates never move the panels below. The console retains the
 dark text frame, bundled IBM Plex Mono font, subtle dithering, and retained
 history in the shared HTML `Dialog` component.
 The shared dialog handles focus containment/restoration, Escape, a temporary
