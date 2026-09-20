@@ -2,6 +2,32 @@ import { test, expect } from '@playwright/test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
+for (const density of ['compact', 'comfortable']) {
+  for (const [name, width, height, touch, file, section] of [
+    ['phone-projects', 390, 844, true, '03-phase1-late.json', 'Projects'],
+    ['tablet-landscape', 1280, 800, true, '06-phase3-space.json', null],
+    ['tablet-portrait', 800, 1280, true, '06-phase3-space.json', null],
+    ['tablet-4x3', 1024, 768, true, '05-phase2-swarm.json', null],
+    ['desktop', 1440, 900, false, '06-phase3-space.json', null],
+  ] as const) {
+    test(`density ${density}: ${name}`, async ({ browser }) => {
+      const context = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch });
+      await context.addInitScript(({ save, density }) => {
+        Date.now = () => 1789200000000;
+        Math.random = () => .5;
+        window.setInterval = (() => 0) as unknown as typeof window.setInterval;
+        localStorage.setItem('upc_v2', save);
+        localStorage.setItem('paperclips.density', density);
+      }, { save: readFileSync(join('dev-saves', file), 'utf8'), density });
+      const page = await context.newPage();
+      await page.goto('/');
+      if (section) await page.getByRole('tab', { name: section, exact: true }).click();
+      await expect(page).toHaveScreenshot(`density-${density}-${name}.png`, { animations: 'disabled' });
+      await context.close();
+    });
+  }
+}
+
 // Freeze gameplay, not the rendered interface, to compare the existing design.
 for (const width of [1280, 390]) {
   for (const file of readdirSync('dev-saves').filter(name => name.endsWith('.json'))) {

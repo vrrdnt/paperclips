@@ -2,6 +2,12 @@ import { test, expect, type Page, type Locator } from '@playwright/test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { ARTIFACTS } from '../../src/game/artifacts';
 
+for (const density of ['auto', 'compact', 'comfortable'] as const) {
+  test.describe(density, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(value => localStorage.setItem('paperclips.density', value), density);
+    });
+
 async function load(page: Page, file = '03-phase1-late.json', collection = false) {
   const state = JSON.parse(readFileSync(`dev-saves/${file}`, 'utf8'));
   if (collection) Object.assign(state, { prestigeU: 3, prestigeS: 2,
@@ -104,8 +110,8 @@ for (const [width, height] of [[320, 568], [700, 320]]) {
     await withinViewport(page, page.getByRole('dialog'));
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'More actions' }).click();
-    await withinViewport(page, page.getByRole('menu'));
-    await page.getByRole('menuitem', { name: 'Changelog', exact: true }).click();
+    await withinViewport(page, page.getByRole('group', { name: 'More actions' }));
+    await page.getByRole('button', { name: 'Changelog', exact: true }).click();
     const changelog = page.getByRole('dialog', { name: 'Changelog' });
     await withinViewport(page, changelog);
     const lastChange = changelog.locator('.changelog-entry li').last();
@@ -114,7 +120,7 @@ for (const [width, height] of [[320, 568], [700, 320]]) {
     await withinViewport(page, changelog.getByRole('button', { name: 'Close changelog' }));
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'More actions' }).click();
-    await page.getByRole('menuitem', { name: 'Import save', exact: true }).click();
+    await page.getByRole('button', { name: 'Import save', exact: true }).click();
     await page.setViewportSize({ width, height: 260 });
     const dialog = page.getByRole('dialog', { name: 'Import Save' });
     await withinViewport(page, dialog);
@@ -130,11 +136,14 @@ for (const [width, height] of [[320, 568], [700, 320]]) {
       document.execCommand = () => false;
     });
     await page.getByRole('button', { name: 'More actions' }).click();
-    await page.getByRole('menuitem', { name: 'Export save', exact: true }).click();
+    await page.getByRole('button', { name: 'Export save', exact: true }).click();
     const exportDialog = page.getByRole('dialog', { name: 'Export Save' });
     await withinViewport(page, exportDialog);
     const copy = exportDialog.getByRole('button', { name: 'Copy', exact: true });
     await copy.scrollIntoViewIfNeeded();
     await withinViewport(page, copy);
+  });
+}
+
   });
 }

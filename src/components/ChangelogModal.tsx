@@ -18,7 +18,7 @@ export function ChangelogModal({ onClose }: Props) {
             <div className="changelog-title">{tr("changelogModal.changelog")}</div>
             <div className="changelog-subtitle">{tr("changelogModal.versionHistory")}</div>
           </div>
-          <Btn onClick={onClose} title={tr("changelogModal.closeChangelog")} aria-label={tr("changelogModal.closeChangelog")}>
+          <Btn className="dialog-close" onClick={onClose} title={tr("changelogModal.closeChangelog")} aria-label={tr("changelogModal.closeChangelog")}>
             <X size={13} />
           </Btn>
         </div>

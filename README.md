@@ -20,7 +20,11 @@ credited to their creators below.
   with a separate World map tab and a name/effect filter when more than eight
   items are available.
 - The header provides saving, artifacts, and a menu for export, import, changelog,
-  and reset. Progress stays in browser storage; export a backup before changing
+  reset, and **Interface density**. Auto preserves the current layout; Compact
+  uses tighter spacing and 40 px touch controls; Comfortable uses at least 48 px
+  ordinary controls on every device. Text sizes stay unchanged. The preference
+  stays in this browser independently of saves, imports, and new runs.
+  Progress stays in browser storage; export a backup before changing
   devices or clearing site data. Import replaces the current run.
 - The PWA can reopen without a network after its assets have been cached. The
   Android app opens the same hosted game through its Bubblewrap wrapper.

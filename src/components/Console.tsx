@@ -36,7 +36,7 @@ export const Console = memo(function Console({ readouts }: Props) {
       </Btn>
       {expanded && (
         <Dialog title={tr("console.logHistory")} className="log-dialog" onClose={() => setExpanded(false)}>
-          <div className="dialog-heading"><h2>{tr("console.logHistory")}</h2><Btn onClick={() => setExpanded(false)}>{tr("console.close")}</Btn></div>
+          <div className="dialog-heading"><h2>{tr("console.logHistory")}</h2><Btn className="dialog-close" onClick={() => setExpanded(false)}>{tr("console.close")}</Btn></div>
           <div className="log-history" ref={historyRef} tabIndex={0} aria-label={tr("console.logEntries")}
             onScroll={event => {
               const el = event.currentTarget;

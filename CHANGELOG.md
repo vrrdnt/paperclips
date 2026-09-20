@@ -4,6 +4,11 @@ Entries describe behavior at the time of each update. Later entries can
 supersede earlier ones, particularly the background and offline policies. See
 the [README](README.md#afk-and-background-behavior) for current behavior.
 
+## Unreleased
+
+- Added an Interface density preference: Auto preserves current sizing, Compact uses tighter spacing and 40 px touch controls, and Comfortable keeps ordinary controls at least 48 px on every device. Text sizes, navigation, and gameplay are unchanged.
+- Density persists separately from game saves and survives imports and resets. Changing it keeps panels mounted and cancels held allocation controls.
+
 ## 2.3.23 - 2026-09-19
 
 ### Follow-up web and Android changes - 2026-09-20

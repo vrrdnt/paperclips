@@ -80,7 +80,11 @@ export function GameLayout({ snap: s }: { snap: DisplaySnapshot }) {
   }, [active, selected, mobile]);
   useEffect(() => {
     if (!mobile) return;
-    const remember = () => { scrollPositions.current[active] = window.scrollY; };
+    const remember = () => {
+      // A taller column layout may clamp scroll before React handles the media change.
+      // Do not overwrite the section's phone position with that desktop scroll event.
+      if (window.matchMedia('(max-width: 767px)').matches) scrollPositions.current[active] = window.scrollY;
+    };
     window.addEventListener('scroll', remember, { passive: true });
     return () => window.removeEventListener('scroll', remember);
   }, [active, mobile]);

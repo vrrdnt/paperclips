@@ -1,17 +1,24 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync, readdirSync } from 'node:fs';
 
+for (const density of ['auto', 'compact', 'comfortable'] as const) {
+  test.describe(density, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(value => localStorage.setItem('paperclips.density', value), density);
+    });
+
 const stages = readdirSync('dev-saves').filter(file => file.endsWith('.json'));
 async function load(page: Page, file = '06-phase3-space.json', overrides: Record<string, unknown> = {}, frozen = true) {
   const save = { ...JSON.parse(readFileSync(`dev-saves/${file}`, 'utf8')), ...overrides };
-  await page.addInitScript(({ save, frozen }) => {
+  await page.addInitScript(({ save, frozen, density }) => {
+    localStorage.setItem('paperclips.density', density);
     if (frozen) {
       Date.now = () => 1789200000000;
       Math.random = () => .5;
       window.setInterval = (() => 0) as unknown as typeof window.setInterval;
     }
     localStorage.setItem('upc_v2', JSON.stringify(save));
-  }, { save, frozen });
+  }, { save, frozen, density });
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Save game', exact: true })).toBeVisible();
 }
@@ -168,7 +175,7 @@ test('import handles a reduced keyboard viewport and resets section and scroll',
   await load(page);
   await page.getByRole('tab', { name: 'Fleet' }).click();
   await page.getByRole('button', { name: 'More actions' }).click();
-  await page.getByRole('menuitem', { name: 'Import save' }).click();
+  await page.getByRole('button', { name: 'Import save' }).click();
   await page.setViewportSize({ width: 390, height: 330 });
   const input = page.getByRole('textbox', { name: 'Save string', exact: true });
   await input.fill(Buffer.from(readFileSync('dev-saves/03-phase1-late.json','utf8')).toString('base64'));
@@ -221,6 +228,9 @@ test('production, tournament, combat and autosave continue across sections', asy
   const before = await state(page);
   expect(before.battles.length).toBeGreaterThan(0);
   expect(before.currentTournament.ticksRemaining).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'More actions' }).click();
+  await page.getByRole('combobox', { name: 'Interface density' }).selectOption(density === 'compact' ? 'comfortable' : 'compact');
+  await page.keyboard.press('Escape');
   await page.getByRole('tab', { name: 'Fleet' }).click();
   await page.getByRole('tab', { name: 'Projects' }).click();
   await page.clock.runFor(3000);
@@ -234,7 +244,7 @@ test('production, tournament, combat and autosave continue across sections', asy
 
 test.describe('touch controls', () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 700 } });
-  test('allocation targets are 48px and scrolling or hiding cancels a hold', async ({ page }) => {
+  test('allocation targets match density and scrolling or hiding cancels a hold', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-09-13T00:00:00Z') });
     await page.clock.pauseAt(new Date('2026-09-13T00:00:00Z'));
     await load(page, '06-phase3-space.json', { probeTrust: 100, maxTrust: 100 }, false);
@@ -242,8 +252,8 @@ test.describe('touch controls', () => {
     const button = page.getByRole('button', { name: 'Increase Speed', exact: true });
     await button.scrollIntoViewIfNeeded();
     const bounds = (await button.boundingBox())!;
-    expect(bounds.width).toBeGreaterThanOrEqual(48);
-    expect(bounds.height).toBeGreaterThanOrEqual(48);
+    expect(bounds.width).toBeGreaterThanOrEqual(density === 'compact' ? 40 : 48);
+    expect(bounds.height).toBeGreaterThanOrEqual(density === 'compact' ? 40 : 48);
     const before = (await state(page)).probeSpeed;
     const pointer = { pointerId: 1, pointerType: 'touch', isPrimary: true, button: 0, clientX: bounds.x+10, clientY: bounds.y+10 };
     await button.dispatchEvent('pointerdown', pointer);
@@ -279,7 +289,7 @@ test('header overlays dismiss with Back and restore the header controls', async 
   await expect(page.getByRole('button', { name: 'Artifact map', exact: true })).toBeFocused();
   for (const name of ['Changelog', 'Import save']) {
     await page.getByRole('button', { name: 'More actions' }).click();
-    await page.getByRole('menuitem', { name, exact: true }).click();
+    await page.getByRole('button', { name, exact: true }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await page.goBack();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -318,10 +328,10 @@ test('phone and landscape controls retain touch size and the selected section', 
     if (viewport.width < 768) {
       for (const name of ['Production', 'Computing', 'Projects', 'Strategy']) {
         await page.getByRole('tab', { name, exact: true }).click();
-        const short = await page.locator('.app-body button:visible, .app-header button:visible, .app-body select:visible').evaluateAll(els => els.filter(el => {
+        const short = await page.locator('.app-body button:visible, .app-header button:visible, .app-body select:visible').evaluateAll((els, targetSize) => els.filter(el => {
           const rect=el.getBoundingClientRect();
-          return rect.width < 48 || rect.height < 48;
-        }).map(el => el.textContent));
+          return rect.width < targetSize || rect.height < targetSize;
+        }).map(el => el.textContent), density === 'compact' ? 40 : 48);
         expect(short).toEqual([]);
       }
     }
@@ -331,3 +341,6 @@ test('phone and landscape controls retain touch size and the selected section', 
   await expect(page.getByRole('tab', { name: 'Strategy', exact: true })).toHaveAttribute('aria-selected', 'true');
   await context.close();
 });
+
+  });
+}

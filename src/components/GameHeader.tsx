@@ -2,7 +2,8 @@ import { message, type LocalizedText } from '../i18n/message';
 import { SaveFormatError } from '../game/saveValidation';
 import { tr, translate, getLocale, getLocales, setLocale } from '../i18n';
 import { useLocale } from '../i18n/react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
+import { DENSITIES, getDensity, setDensity, subscribeDensity } from '../browser/density';
 import { History, Map as MapIcon, MoreVertical, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { game } from '../game/runtime';
 import { copyText } from '../browser/clipboard';
@@ -17,6 +18,7 @@ import { Dialog } from './ui/Dialog';
 
 export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
   useLocale();
+  const density = useSyncExternalStore(subscribeDensity, getDensity);
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<LocalizedText>('');
@@ -60,7 +62,11 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
     const outside = (event: PointerEvent) => {
       if (!headerMenuRef.current?.contains(event.target as Node)) setShowTopMenu(false);
     };
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setShowTopMenu(false); };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setShowTopMenu(false);
+      headerMenuRef.current?.querySelector<HTMLButtonElement>('[data-header-actions]')?.focus({ preventScroll: true });
+    };
     document.addEventListener('pointerdown', outside);
     document.addEventListener('keydown', escape);
     return () => {
@@ -172,16 +178,16 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
               title={tr("gameHeader.moreActions")}
               aria-label={tr("gameHeader.moreActions")}
               aria-expanded={showTopMenu}
-              aria-haspopup="menu"
+              aria-controls="header-actions"
+              data-header-actions
             >
               <MoreVertical size={13} />
             </Btn>
             {showTopMenu && (
-              <div className="header-action-menu" role="menu" aria-label={tr("gameHeader.moreActions")}>
+              <div id="header-actions" className="header-action-menu" role="group" aria-label={tr("gameHeader.moreActions")}>
                 <button
                   type="button"
                   className="header-action-menu-item"
-                  role="menuitem"
                   onClick={() => { void handleExport(); setShowTopMenu(false); }}
                 >
                   <Upload size={14} />
@@ -190,7 +196,6 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                 <button
                   type="button"
                   className="header-action-menu-item"
-                  role="menuitem"
                   onClick={() => { setShowArtifactMap(false); setShowImport(true); setShowTopMenu(false); }}
                 >
                   <Download size={14} />
@@ -199,7 +204,6 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                 <button
                   type="button"
                   className="header-action-menu-item"
-                  role="menuitem"
                   onClick={() => { setShowArtifactMap(false); setShowChangelog(true); setShowTopMenu(false); }}
                 >
                   <History size={14} />
@@ -208,16 +212,18 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                 <button
                   type="button"
                   className="header-action-menu-item is-danger"
-                  role="menuitem"
                   onClick={() => { setShowTopMenu(false); handleReset(); }}
                 >
                   <RotateCcw size={14} />
                   <span>{tr("gameHeader.resetGame")}</span>
                 </button>
-                <p className="header-idle-note" role="note">
-                  {needsCentralCoordination(snap) ? tr("gameHeader.centralCoordinationRequiredOfflineProgressIsPausedOpen") : autonomousMinutes(snap) ? tr("gameHeader.openBrowserTabsContinueRunningClosedSessionsAnd", { snap: autonomousMinutes(snap) }) : tr("gameHeader.openBrowserTabsContinueRunningUnlockAutonomousRoutines")}
-                </p>
-                {getLocales().length > 1 && <label className="language-setting">
+                <label className="header-preference density-setting">
+                  <span>{tr('density.title')}</span>
+                  <select value={density} onChange={event => setDensity(event.target.value)}>
+                    {DENSITIES.map(value => <option key={value} value={value}>{tr(`density.${value}`)}</option>)}
+                  </select>
+                </label>
+                {getLocales().length > 1 && <label className="header-preference language-setting">
                   <span>{tr('language.title')}</span>
                   <select aria-label={tr('language.choose')} value={getLocale()}
                     onChange={event => setLocale(event.target.value)}>
@@ -226,6 +232,9 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                     </option>)}
                   </select>
                 </label>}
+                <p className="header-idle-note" role="note">
+                  {needsCentralCoordination(snap) ? tr("gameHeader.centralCoordinationRequiredOfflineProgressIsPausedOpen") : autonomousMinutes(snap) ? tr("gameHeader.openBrowserTabsContinueRunningClosedSessionsAnd", { snap: autonomousMinutes(snap) }) : tr("gameHeader.openBrowserTabsContinueRunningUnlockAutonomousRoutines")}
+                </p>
               </div>
             )}
           </div>
@@ -259,7 +268,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
-              <Btn onClick={() => setShowImport(false)}>{tr("gameHeader.cancel")}</Btn>
+              <Btn className="dialog-close" onClick={() => setShowImport(false)}>{tr("gameHeader.cancel")}</Btn>
               <Btn variant="primary" onClick={handleImportConfirm} disabled={!importText.trim()}>{tr("gameHeader.import")}</Btn>
             </div>
         </Dialog>
@@ -286,7 +295,7 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
               }}
             />
             <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
-              <Btn onClick={() => setShowExportFallback(false)}>{tr("console.close")}</Btn>
+              <Btn className="dialog-close" onClick={() => setShowExportFallback(false)}>{tr("console.close")}</Btn>
               <Btn variant="primary" onClick={handleExportCopyRetry}>{tr("gameHeader.copy")}</Btn>
             </div>
         </Dialog>

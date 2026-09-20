@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import { PanelVisibility } from './PanelVisibility';
+import { subscribeDensity } from '../../browser/density';
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'primary' | 'danger' | 'success';
@@ -90,7 +91,10 @@ export function Btn({
     document.addEventListener('visibilitychange', visibility);
     document.addEventListener('freeze', cancel);
     window.addEventListener('pagehide', cancel);
+    // Resizing a held control must not leave purchases repeating under a moved target.
+    const unsubscribeDensity = subscribeDensity(cancel);
     return () => {
+      unsubscribeDensity();
       document.removeEventListener('visibilitychange', visibility);
       document.removeEventListener('freeze', cancel);
       window.removeEventListener('pagehide', cancel);

@@ -36,6 +36,10 @@ preview. It helps reveal clipping; it is excluded from production builds and is
 not a translation. Runtime discovery bundles every catalog with the app, so new
 translations use the same PWA cache as the rest of the game.
 
+Also review Auto, Compact, and Comfortable under **Interface density**. Density
+changes spacing and control sizes without reducing the translated text size;
+long labels, costs, and descriptions must remain readable in each preference.
+
 ## Catalog format
 
 ```json

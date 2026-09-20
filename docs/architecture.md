@@ -43,12 +43,27 @@ existing calculations unchanged.
 The selected section and scroll offsets live only in the layout component.
 The existing game-revision key resets them after imports and new runs; removed
 sections fall back to Production. `PanelVisibility` cancels held buttons in
-hidden sections. Buttons also cancel on browser background/freeze/pagehide and
-touch movement. None of these presentation changes call runtime pause/resume.
+hidden sections. Buttons also cancel on browser background/freeze/pagehide,
+touch movement, and a density change. None of these presentation changes call
+runtime pause/resume.
 
 Project titles and costs share a wrapping purchase row; descriptions stay
-visible below it. Phone spacing is compact, with 14 px essential text and 48 px
-touch targets. Unaffordable controls retain readable text and disabled actions.
+visible below it. Auto preserves the existing responsive sizing, including
+14 px essential phone text and 48 px touch targets. Compact reduces spacing and
+ordinary touch controls to a 40 px minimum; Comfortable uses at least 48 px
+ordinary controls on every device. Text sizes and column breakpoints do not
+change. Phone section tabs keep their 52 px minimum and dialog close controls,
+artifact tabs, filtering, and map cells retain their existing touch sizing.
+Unaffordable controls retain readable text and disabled actions.
+
+`src/browser/density.ts` owns the independent `paperclips.density` preference
+(`auto`, `compact`, or `comfortable`). It initializes the root `data-density`
+attribute before React renders; CSS variables control the presentation without
+remounting panels. Missing/invalid preferences fall back to Auto, and blocked
+storage still allows an in-memory selection. Imports and resets preserve this
+preference; game exports contain no density setting. The header subscribes only
+to selection changes and uses native controls in its mixed actions/settings
+popover.
 
 `Console` shows three entries in a single large history button, retaining the
 dark text frame, bundled IBM Plex Mono font, subtle dithering, and retained

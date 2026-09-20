@@ -4,6 +4,10 @@
   "direction": "ltr",
   "numberLocale": "en-US",
   "messages": {
+    "density.title": "Interface density",
+    "density.auto": "Auto",
+    "density.compact": "Compact",
+    "density.comfortable": "Comfortable",
     "adminMenu.devEditState": "Dev: Edit State",
     "adminMenu.editAFieldAndPressEnterOrClick": "Edit a field and press Enter or click away to apply. Accepts scientific notation (e.g. 3e54).",
     "adminMenu.pressEscOrClickOutsideToClose": "Press Esc or click outside to close",

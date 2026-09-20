@@ -76,7 +76,7 @@ test('invalid imports leave current progress intact and show an error', async ({
   await loadStage(page, '03-phase1-late.json');
   const before = (await liveState(page)).clips;
   await page.getByRole('button', { name: 'More actions' }).click();
-  await page.getByRole('menuitem', { name: 'Import save' }).click();
+  await page.getByRole('button', { name: 'Import save' }).click();
   await page.getByPlaceholder('Paste save string here…').fill('e30=');
   await page.getByRole('button', { name: 'Import', exact: true }).click();
   await expect(page.getByText('Missing or invalid clips.', { exact: true })).toBeVisible();
@@ -89,7 +89,7 @@ test('legacy save import replaces the stage and resets the displayed strategy', 
   oldSave.selectedStrategy = 'B100';
   const encoded = Buffer.from(JSON.stringify(oldSave)).toString('base64');
   await page.getByRole('button', { name: 'More actions' }).click();
-  await page.getByRole('menuitem', { name: 'Import save' }).click();
+  await page.getByRole('button', { name: 'Import save' }).click();
   await page.getByPlaceholder('Paste save string here…').fill(encoded);
   await page.getByRole('button', { name: 'Import', exact: true }).click();
   await expect(page.locator('.strat-select:not(.investment-risk-select)')).toHaveValue('B100');

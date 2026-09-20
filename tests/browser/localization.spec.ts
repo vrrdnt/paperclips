@@ -2,6 +2,12 @@ import { test, expect, type Page } from '@playwright/test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { ARTIFACTS } from '../../src/game/artifacts';
 
+for (const density of ['auto', 'compact', 'comfortable'] as const) {
+  test.describe(density, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(value => localStorage.setItem('paperclips.density', value), density);
+    });
+
 async function load(page: Page, file: string, locale = 'en-XA') {
   await page.addInitScript(({ save, locale }) => {
     Date.now = () => 1789200000000;
@@ -71,7 +77,7 @@ test('language selection persists without resetting navigation, logs, or game st
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-XA');
   expect(await page.evaluate(() => localStorage.getItem('paperclips.locale'))).toBe('en-XA');
   // Switching back also retranslates messages emitted before the switch.
-  await page.locator('[aria-haspopup="menu"]').click();
+  await page.locator('[data-header-actions]').click();
   await page.locator('.language-setting select').selectOption('en');
   await page.keyboard.press('Escape');
   expect(await page.locator('.console-preview').innerText()).toBe(englishLog);
@@ -115,9 +121,12 @@ for (const width of [320, 390]) {
     const clipped = await dialog.locator('.artifact-item').evaluateAll(items => items.filter(el => el.scrollWidth > el.clientWidth + 1).length);
     expect(clipped).toBe(0);
     await page.keyboard.press('Escape');
-    await page.locator('[aria-haspopup="menu"]').click();
+    await page.locator('[data-header-actions]').click();
     await page.locator('.language-setting select').scrollIntoViewIfNeeded();
     const picker = (await page.locator('.language-setting select').boundingBox())!;
     expect(picker.y + picker.height).toBeLessThanOrEqual(700);
+  });
+}
+
   });
 }
