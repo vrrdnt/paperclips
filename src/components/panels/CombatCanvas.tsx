@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { subscribeTheme } from '../../browser/theme';
 import type { Battle, Ship } from '../../game/state';
 import { game } from '../../game/runtime';
 
@@ -6,7 +7,6 @@ import { game } from '../../game/runtime';
 const W = 310;
 const H = 150;
 const SCALE = 2;
-const BG = '#252525';
 
 function visibleBattle(): Battle | null {
   for (let i = game.state.battles.length - 1; i >= 0; i--) {
@@ -25,11 +25,19 @@ export function CombatCanvas() {
     ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
 
     let raf = 0;
+    let palette: Record<string, string> = {};
+    const updatePalette = () => {
+      const style = getComputedStyle(document.documentElement);
+      palette = Object.fromEntries(['combat-bg', 'probe', 'drifter', 'drifter-backing', 'explosion']
+        .map(key => [key, style.getPropertyValue(`--${key}`).trim()]));
+    };
+    updatePalette();
+    const unsubscribe = subscribeTheme(updatePalette);
 
     function drawShip(sh: Ship, color: string, contrastBacking = false) {
       if (!sh.alive) {
         if (sh.framesDead < 10) {
-          ctx!.fillStyle = '#ffffff';
+          ctx!.fillStyle = palette.explosion;
           if (sh.framesDead < 1) {
             ctx!.fillRect(sh.x - 3, sh.y - 3, 7, 7);
           } else if (sh.framesDead < 2) {
@@ -43,7 +51,7 @@ export function CombatCanvas() {
         return;
       }
       if (contrastBacking) {
-        ctx!.fillStyle = 'rgba(220, 220, 220, 0.55)';
+        ctx!.fillStyle = palette['drifter-backing'];
         ctx!.fillRect(sh.x - 2, sh.y - 2, 4, 4);
       }
       ctx!.fillStyle = color;
@@ -55,8 +63,8 @@ export function CombatCanvas() {
       for (let i = 0; i < maxShips; i++) {
         const drifter = battle.drifterShips[i];
         const probe = battle.probeShips[i];
-        if (drifter) drawShip(drifter, '#000000', true);
-        if (probe) drawShip(probe, '#ffffff');
+        if (drifter) drawShip(drifter, palette.drifter, true);
+        if (probe) drawShip(probe, palette.probe);
       }
     }
 
@@ -64,7 +72,7 @@ export function CombatCanvas() {
       raf = requestAnimationFrame(frame);
       const battle = visibleBattle();
 
-      ctx!.fillStyle = BG;
+      ctx!.fillStyle = palette['combat-bg'];
       ctx!.fillRect(0, 0, W, H);
 
       if (battle) {
@@ -73,7 +81,10 @@ export function CombatCanvas() {
     }
 
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      unsubscribe();
+    };
   }, []);
 
   return (

@@ -55,7 +55,7 @@ function QWave({ chips, activeCount }: { chips: number[]; activeCount: number })
   return (
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
-      style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+      style={{ display: 'block', margin: '2px 0 4px', borderRadius: 3, background: 'var(--wave-bg)', border: '1px solid var(--wave-border)' }}>
       <defs>
         <linearGradient id="qwave-signal" x1="0" y1="0" x2={W} y2="0" gradientUnits="userSpaceOnUse">
           {chips.map((v, i) => (
@@ -77,7 +77,7 @@ function QWave({ chips, activeCount }: { chips: number[]; activeCount: number })
         </linearGradient>
       </defs>
       {/* Baseline */}
-      <line x1="0" y1={MID} x2={W} y2={MID} stroke="#1c1c1c" strokeWidth="0.5" />
+      <line x1="0" y1={MID} x2={W} y2={MID} stroke="var(--wave-guide)" strokeWidth="0.5" />
       {/* Fill under wave */}
       <path d={fillPath} fill="url(#qwave-fill)" />
       {/* Wave line */}

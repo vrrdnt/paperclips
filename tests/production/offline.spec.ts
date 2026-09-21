@@ -186,3 +186,27 @@ test('the built mobile PWA keeps sections and log usable offline', async ({ page
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Full history' })).toBeFocused();
 });
+
+
+test('all five themes switch and persist in the built offline app', async ({ page, context }) => {
+  await page.setViewportSize({ width: 390, height: 700 });
+  await page.goto('/');
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  await page.locator('[data-header-actions]').click();
+  await page.getByRole('combobox', { name: 'Theme', exact: true }).selectOption('phosphor');
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'phosphor');
+  expect(await page.evaluate(async () => {
+    const faces = await document.fonts.load('14px "IBM Plex Mono"');
+    return faces.length === 1 && faces[0].status === 'loaded';
+  })).toBe(true);
+  for (const theme of ['graphite', 'paper', 'phosphor', 'amber', 'blueprint']) {
+    await page.locator('[data-header-actions]').click();
+    await page.getByRole('combobox', { name: 'Theme', exact: true }).selectOption(theme);
+    await page.keyboard.press('Escape');
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    await expect(page.getByRole('button', { name: 'Make Paperclip', exact: true })).toBeVisible();
+  }
+});
