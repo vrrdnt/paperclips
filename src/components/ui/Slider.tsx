@@ -12,7 +12,7 @@ interface SliderProps {
   className?: string;
   fill?: boolean;
   style?: React.CSSProperties;
-  mobileMode?: 'stepper' | 'readout';
+  mobileMode?: 'stepper' | 'readout' | 'range';
   mobileStep?: number;
   valueLabel?: string;
   allowAboveMax?: boolean;
@@ -142,7 +142,7 @@ export function Slider({
     );
   }
 
-  if (isCoarsePointer) {
+  if (isCoarsePointer && mobileMode !== 'range') {
     const mobileClass = [
       'slider-mobile-control',
       mobileMode === 'readout' ? 'is-readout' : '',

@@ -2048,6 +2048,50 @@ select {
   background-color: transparent !important;
 }
 
+/* A bipolar scale: Work stays left, Think stays right on every input device. */
+.swarm-balance { margin-top: 10px; --swarm-focus: var(--text); }
+.swarm-balance[data-focus="work"] { --swarm-focus: var(--swarm-work); }
+.swarm-balance[data-focus="think"] { --swarm-focus: var(--swarm-think); }
+.swarm-balance-track { position: relative; }
+.swarm-balance-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  background: var(--text-muted);
+  pointer-events: none;
+}
+input[type="range"].swarm-balance-slider {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  border: 0;
+  background: linear-gradient(to right, var(--swarm-track-work), var(--swarm-track-mid), var(--swarm-track-think)) center / 100% 4px no-repeat;
+}
+input[type="range"].swarm-balance-slider::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--swarm-thumb-border);
+  background: var(--swarm-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--swarm-focus) 15%, transparent);
+}
+input[type="range"].swarm-balance-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--swarm-thumb-border);
+  background: var(--swarm-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--swarm-focus) 15%, transparent);
+}
+input[type="range"].swarm-balance-slider:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.swarm-balance-labels { display: flex; justify-content: space-between; gap: 8px; font-size: var(--mobile-label-size, 12px); color: var(--text-dim); }
+.swarm-balance[data-focus="work"] .swarm-balance-work,
+.swarm-balance[data-focus="think"] .swarm-balance-think { color: var(--swarm-focus); text-decoration: underline; text-underline-offset: 3px; }
+
 .btn:not(:disabled):not(.btn-success):not(.btn-danger):not(.is-saved) { color: var(--button-text); }
 @media (max-width: 767px) {
   .game-panel-slot { --mobile-label-size: 14px; }

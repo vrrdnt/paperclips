@@ -35,6 +35,12 @@
   --chart-positive: #63c66f;
   --chart-negative: #d86660;
   --slider-thumb: #b8b8b8;
+  --swarm-work: #afc6b4;
+  --swarm-think: #b1c4d8;
+  --swarm-track-work: #829488;
+  --swarm-track-mid: #999;
+  --swarm-track-think: #8398ac;
+  --swarm-thumb-border: #d6d6d6;
   --reveal-border: #7b8da0;
   --reveal-bright: #f4fbff;
   --instrument-top: #191919;
@@ -115,6 +121,12 @@
   --chart-positive: var(--success);
   --chart-negative: var(--danger);
   --slider-thumb: var(--accent);
+  --swarm-work: var(--success);
+  --swarm-think: var(--accent);
+  --swarm-track-work: color-mix(in srgb, var(--success) 70%, var(--panel));
+  --swarm-track-mid: var(--text-muted);
+  --swarm-track-think: color-mix(in srgb, var(--accent) 70%, var(--panel));
+  --swarm-thumb-border: var(--panel);
   --reveal-border: var(--border2);
   --reveal-bright: var(--accent);
   --meter-bg: var(--console-bg);

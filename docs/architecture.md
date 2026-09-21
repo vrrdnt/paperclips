@@ -57,6 +57,13 @@ artifact tabs, filtering, and map cells retain their existing touch sizing.
 Unaffordable controls use dark flat fills, dashed borders, and readable muted
 labels. Their native disabled actions and purchase eligibility remain unchanged.
 
+Work/Think keeps a native range slider on both fine and coarse pointers, for both
+drone and probe swarms. Its two-tone track, center mark, and favored-side label
+show the existing 0–200 focus setting without changing its gameplay meaning.
+The track and focus colors use semantic palette tokens to follow the active theme.
+Touch targets follow density, and native keyboard range controls remain available.
+The price control retains its existing mobile readout and step buttons.
+
 `src/browser/density.ts` owns the independent `paperclips.density` preference
 (`auto`, `compact`, or `comfortable`). It initializes the root `data-density`
 attribute before React renders; CSS variables control the presentation without

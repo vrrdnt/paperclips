@@ -2,6 +2,24 @@ import { test, expect } from '@playwright/test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
+for (const [swarm, file] of [['drone', '05-phase2-swarm.json'], ['probe', '06-phase3-space.json']] as const) {
+  for (const position of [40, 100, 160]) {
+    test(`${swarm} balance track at ${position} on touch`, async ({ browser }) => {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      await context.addInitScript(save => {
+        Date.now = () => 1789200000000;
+        window.setInterval = (() => 0) as unknown as typeof window.setInterval;
+        localStorage.setItem('upc_v2', JSON.stringify(save));
+      }, { ...JSON.parse(readFileSync(`dev-saves/${file}`, 'utf8')), sliderPos: position });
+      const page = await context.newPage();
+      await page.goto('/');
+      await page.getByRole('tab', { name: 'Computing', exact: true }).click();
+      await expect(page.locator('.swarm-balance')).toHaveScreenshot(`${swarm}-balance-${position}-390.png`);
+      await context.close();
+    });
+  }
+}
+
 test('the phone log shows one previous line and a two-line latest entry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const save = JSON.parse(readFileSync('dev-saves/01-phase1-start.json', 'utf8'));

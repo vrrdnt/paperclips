@@ -6,6 +6,7 @@ the [README](README.md#afk-and-background-behavior) for current behavior.
 
 ## Unreleased
 
+- Kept Work/Think as a slider for both drone and probe swarms on every device, with a subtle two-tone track, center mark, and emphasis on the favored side.
 - Added a Projects tab count, a green check for purchasable projects, and a pale dot for newly revealed projects. Opening Projects clears the new-project indicator.
 - Fixed log updates shifting the panels below them. The preview shows the latest three wrapped visual lines in a fixed window; full history keeps complete messages.
 - Made disabled purchase and allocation buttons clearer with dark flat fills, dashed borders, and readable muted labels.

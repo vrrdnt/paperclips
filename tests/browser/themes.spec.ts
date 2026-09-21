@@ -139,6 +139,30 @@ test('the combat canvas recolors live without remounting or changing battles', a
 });
 
 for (const theme of THEMES) {
+  test(`${theme}: swarm balance labels stay readable in every position`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await load(page, theme);
+    await page.getByRole('tab', { name: 'Computing', exact: true }).click();
+    const slider = page.getByRole('slider', { name: 'Swarm work vs think balance' });
+    for (const position of [40, 100, 160]) {
+      await slider.fill(String(position));
+      const ratios = await page.locator('.swarm-balance-labels > span').evaluateAll(labels => {
+        function luminance(color: string) {
+          const rgb = color.match(/[\d.]+/g)!.slice(0, 3).map(Number)
+            .map(v => v / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+          return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
+        }
+        return labels.map(label => {
+          const text = luminance(getComputedStyle(label).color);
+          const panel = luminance(getComputedStyle(label.closest('.section-card')!).backgroundColor);
+          return (Math.max(text, panel) + .05) / (Math.min(text, panel) + .05);
+        });
+      });
+      for (const ratio of ratios) expect(ratio, `${theme} focus ${position}`).toBeGreaterThanOrEqual(4.5);
+    }
+    await expect(page.locator('.swarm-balance')).toHaveScreenshot(`${theme}-swarm-390.png`);
+  });
+
   for (const width of [320, 1280]) {
     for (const file of ['03-phase1-late.json', '05-phase2-swarm.json', '06-phase3-space.json']) {
       test(`${theme}: ${file} at ${width}px across densities`, async ({ page }) => {

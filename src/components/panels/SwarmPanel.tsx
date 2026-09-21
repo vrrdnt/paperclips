@@ -7,7 +7,7 @@ import { Slider } from '../ui/Slider';
 import { Btn } from '../ui/Btn';
 import { DisplaySnapshot } from '../../store/useGameStore';
 import { game } from '../../game/runtime';
-import { entertainSwarm, synchSwarm } from '../../game/actions';
+import { entertainSwarm, setSlider, synchSwarm } from '../../game/actions';
 import { localizedNumber as formatWithCommas } from '../../i18n';
 
 // Status labels matching original updateSwarm() — status 7 hides the row entirely
@@ -56,23 +56,24 @@ export function SwarmPanel({ snap: s }: Props) {
       )}
 
       {showSlider && (
-        <div style={{ marginTop: 10 }}>
+        <div className="swarm-balance" data-focus={s.sliderPos < 100 ? 'work' : s.sliderPos > 100 ? 'think' : 'balanced'}>
           <div className="stat-row" style={{ marginBottom: 4 }}>
             <span className="stat-label">{s.spaceFlag === 1 ? tr("swarmPanel.probeFocus") : tr("swarmPanel.droneFocus")}</span>
           </div>
-          <Slider
-            className="price-slider"
-            min={0}
-            max={200}
-            value={s.sliderPos}
-            fill
-            mobileStep={5}
-            aria-label={tr("swarmPanel.swarmWorkVsThinkBalance")}
-            onInput={v => { game.act(state => { state.sliderPos = v; }); }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--mobile-label-size, 10px)', color: 'var(--text-muted)', marginTop: 2 }}>
-            <span>{tr("swarmPanel.work")}</span>
-            <span>{tr("swarmPanel.think")}</span>
+          <div className="swarm-balance-track">
+            <Slider
+              className="swarm-balance-slider"
+              min={0}
+              max={200}
+              value={s.sliderPos}
+              mobileMode="range"
+              aria-label={tr("swarmPanel.swarmWorkVsThinkBalance")}
+              onInput={v => { game.act(setSlider, v); }}
+            />
+          </div>
+          <div className="swarm-balance-labels">
+            <span className="swarm-balance-work">{tr("swarmPanel.work")}</span>
+            <span className="swarm-balance-think">{tr("swarmPanel.think")}</span>
           </div>
         </div>
       )}
