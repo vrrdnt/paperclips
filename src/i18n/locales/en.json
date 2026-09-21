@@ -5,6 +5,12 @@
   "numberLocale": "en-US",
   "messages": {
     "gameLayout.projectStatus": "Available: {count}. Purchasable: {purchasable}. New: {new}.",
+    "theme.title": "Theme",
+    "theme.graphite": "Graphite",
+    "theme.paper": "Paper",
+    "theme.phosphor": "Phosphor",
+    "theme.amber": "Amber",
+    "theme.blueprint": "Blueprint",
     "density.title": "Interface density",
     "density.auto": "Auto",
     "density.compact": "Compact",

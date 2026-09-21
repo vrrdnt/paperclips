@@ -30,7 +30,7 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
       padding: '1px 4px',
       borderRadius: 2,
       border: isFlashing
-        ? `1px solid ${score > other ? 'var(--success)' : score < other ? 'var(--danger)' : '#777'}`
+        ? `1px solid ${score > other ? 'var(--success)' : score < other ? 'var(--danger)' : 'var(--score-tie)'}`
         : '1px solid transparent',
     });
 
@@ -38,12 +38,12 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
       <td style={{
         padding: '4px 6px',
         textAlign: 'center',
-        background: isFlashing ? '#3a3a3a' : '#1c1c1c',
+        background: isFlashing ? 'var(--btn-active-top)' : 'var(--score-bg)',
         transition: 'background 0.04s',
         borderRadius: 2,
-        border: '1px solid #2a2a2a',
+        border: '1px solid var(--score-border)',
       }}>
-        <div style={{ fontSize: 'var(--mobile-label-size, 12px)', fontWeight: 600, color: '#ccc', fontVariantNumeric: 'tabular-nums' }}>
+        <div style={{ fontSize: 'var(--mobile-label-size, 12px)', fontWeight: 600, color: 'var(--score-text)', fontVariantNumeric: 'tabular-nums' }}>
           <span style={scoreStyle(hVal, vVal)}>{hVal}</span>
         </div>
         <div style={{ fontSize: 'var(--mobile-label-size, 9px)', color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>

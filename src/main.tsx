@@ -6,9 +6,12 @@ import { registerServiceWorker } from './pwa';
 import { initializeLocale } from './i18n';
 import { initializeDensity } from './browser/density';
 import './styles/index.css';
+import './styles/themes.css';
+import { initializeTheme } from './browser/theme';
 
 initializeLocale();
 initializeDensity();
+initializeTheme();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

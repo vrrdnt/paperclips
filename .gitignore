@@ -43,3 +43,5 @@ globals.js
 interface.css
 main.js
 projects.js
+
+!tests/browser/themes.spec.ts-snapshots/*.png

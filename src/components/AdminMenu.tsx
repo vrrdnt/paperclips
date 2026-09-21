@@ -81,7 +81,7 @@ export function AdminMenu() {
       onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 500,
-        background: 'rgba(0,0,0,0.75)',
+        background: 'var(--dev-backdrop)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
@@ -91,7 +91,7 @@ export function AdminMenu() {
         borderRadius: 8,
         padding: '20px 24px',
         width: 460, maxWidth: '92vw',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+        boxShadow: 'var(--overlay-shadow)',
       }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{tr("adminMenu.devEditState")}</div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 14 }}>{tr("adminMenu.editAFieldAndPressEnterOrClick")}</div>
@@ -115,9 +115,9 @@ export function AdminMenu() {
                   onKeyDown={e => { if (e.key === 'Enter') { commit(f, raw); (e.target as HTMLInputElement).blur(); } }}
                   style={{
                     flex: 1, minWidth: 0,
-                    background: '#111', border: '1px solid var(--border)',
+                    background: 'var(--input-bg)', border: '1px solid var(--border)',
                     borderRadius: 4, color: 'var(--text)',
-                    fontFamily: 'monospace', fontSize: 12,
+                    fontFamily: 'var(--font-code)', fontSize: 12,
                     padding: '5px 8px', outline: 'none',
                   }}
                 />

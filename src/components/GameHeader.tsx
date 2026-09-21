@@ -3,6 +3,7 @@ import { SaveFormatError } from '../game/saveValidation';
 import { tr, translate, getLocale, getLocales, setLocale } from '../i18n';
 import { useLocale } from '../i18n/react';
 import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
+import { THEMES, getTheme, setTheme, subscribeTheme } from '../browser/theme';
 import { DENSITIES, getDensity, setDensity, subscribeDensity } from '../browser/density';
 import { History, Map as MapIcon, MoreVertical, Paperclip, RotateCcw, Save, Upload, Download } from 'lucide-react';
 import { game } from '../game/runtime';
@@ -19,6 +20,7 @@ import { Dialog } from './ui/Dialog';
 export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
   useLocale();
   const density = useSyncExternalStore(subscribeDensity, getDensity);
+  const theme = useSyncExternalStore(subscribeTheme, getTheme);
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<LocalizedText>('');
@@ -223,6 +225,12 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
                     {DENSITIES.map(value => <option key={value} value={value}>{tr(`density.${value}`)}</option>)}
                   </select>
                 </label>
+                <label className="header-preference theme-setting">
+                  <span>{tr('theme.title')}</span>
+                  <select value={theme} onChange={event => setTheme(event.target.value)}>
+                    {THEMES.map(value => <option key={value} value={value}>{tr(`theme.${value}`)}</option>)}
+                  </select>
+                </label>
                 {getLocales().length > 1 && <label className="header-preference language-setting">
                   <span>{tr('language.title')}</span>
                   <select aria-label={tr('language.choose')} value={getLocale()}
@@ -255,9 +263,9 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
               rows={5}
               style={{
                 width: '100%', boxSizing: 'border-box',
-                background: '#111', border: `1px solid ${importError ? 'var(--danger)' : 'var(--border)'}`,
+                background: 'var(--input-bg)', border: `1px solid ${importError ? 'var(--danger)' : 'var(--border)'}`,
                 borderRadius: 4, color: 'var(--text)',
-                fontFamily: 'monospace', fontSize: 10,
+                fontFamily: 'var(--font-code)', fontSize: 10,
                 padding: '8px 10px', resize: 'vertical',
                 outline: 'none',
               }}
@@ -287,9 +295,9 @@ export function GameHeader({ snap }: { snap: DisplaySnapshot }) {
               rows={5}
               style={{
                 width: '100%', boxSizing: 'border-box',
-                background: '#111', border: '1px solid var(--border)',
+                background: 'var(--input-bg)', border: '1px solid var(--border)',
                 borderRadius: 4, color: 'var(--text)',
-                fontFamily: 'monospace', fontSize: 10,
+                fontFamily: 'var(--font-code)', fontSize: 10,
                 padding: '8px 10px', resize: 'vertical',
                 outline: 'none',
               }}

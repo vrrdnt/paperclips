@@ -104,7 +104,7 @@ export function InvestmentPanel({ snap: s }: Props) {
             const profitColor = st.profit >= 0 ? 'var(--success)' : 'var(--danger)';
             return (
               <div key={st.symbol} className="stat-row" style={{ padding: '2px 0' }}>
-                <span style={{ fontFamily: 'monospace', fontSize: 'var(--mobile-label-size, 11px)', color: 'var(--text-dim)' }}>
+                <span style={{ fontFamily: 'var(--font-code)', fontSize: 'var(--mobile-label-size, 11px)', color: 'var(--text-dim)' }}>
                   {st.symbol}{"\u00a0"}<span style={{ color: up ? 'var(--success)' : 'var(--danger)', fontSize: 'var(--mobile-label-size, 9px)' }}>{up ? "▲" : "▼"}</span>{"\u00a0$"}{formatWithCommas(st.price, 2)}
                 </span>
                 <span style={{ fontSize: 'var(--mobile-label-size, 10px)', color: profitColor, fontVariantNumeric: 'tabular-nums' }}>

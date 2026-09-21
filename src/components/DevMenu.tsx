@@ -39,7 +39,7 @@ export function DevMenu() {
       onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 500,
-        background: 'rgba(0,0,0,0.75)',
+        background: 'var(--dev-backdrop)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
@@ -49,7 +49,7 @@ export function DevMenu() {
         borderRadius: 8,
         padding: '20px 24px',
         width: 420, maxWidth: '92vw',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+        boxShadow: 'var(--overlay-shadow)',
       }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{tr("devMenu.devLoadStage")}</div>
         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 14 }}>{tr("devMenu.replacesCurrentSaveNoUndo")}</div>
@@ -71,7 +71,7 @@ export function DevMenu() {
               }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--accent)';
-                (e.currentTarget as HTMLButtonElement).style.background = 'var(--panel-hover, #1a1a1a)';
+                (e.currentTarget as HTMLButtonElement).style.background = 'var(--dev-hover)';
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';

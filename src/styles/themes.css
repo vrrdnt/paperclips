@@ -1,0 +1,264 @@
+/* Presentation only. Graphite values retain the original rendered palette. */
+:root {
+  --bg:        #2a2a2a;
+  --panel:     #333333;
+  --panel2:    #2e2e2e;
+  --border:    #484848;
+  --border2:   #565656;
+  --text:      #c8c8c8;
+  --text-dim:  #b0b0b0;
+  --text-muted:#aaaaaa;
+  --accent:    #b0b0b0;
+  --console-bg:#1a1a1a;
+  --btn-top:   #505050;
+  --btn-bot:   #363636;
+  --btn-hover: #5c5c5c;
+  --disabled-bg: #242424;
+  --disabled-text: #a6a6a6;
+  --disabled-border: #585858;
+  --danger:    #e08080;
+  --success:   #80c080;
+  --icon: #d0d0d0;
+  --focus: #dceeff;
+  --reveal-text: #eef7ff;
+  --btn-hover-bottom: #404040;
+  --btn-active-border: #686868;
+  --btn-active-top: #3a3a3a;
+  --btn-active-bottom: #505050;
+  --btn-primary-top: #585858;
+  --danger-text: #ffc3c3;
+  --success-text: #b6e3b6;
+  --saved-text: #b9e8b9;
+  --chart-bg: #222;
+  --input-bg: #111;
+  --chart-neutral: #d0cdc4;
+  --chart-positive: #63c66f;
+  --chart-negative: #d86660;
+  --slider-thumb: #b8b8b8;
+  --reveal-border: #7b8da0;
+  --reveal-bright: #f4fbff;
+  --instrument-top: #191919;
+  --instrument-bottom: #0b0b0b;
+  --meter-bg: #151515;
+  --stock-up: #70b870;
+  --stock-down: #b87070;
+  --combat-bg: #252525;
+  --artifact-cell: #292929;
+  --artifact-completed: #424242;
+  --artifact-outline: #d8d8d8;
+  --artifact-current-text: #f0f0f0;
+  --artifact-empty: #272727;
+  --artifact-filled: #3f3f3f;
+  --selected-bg: #414141;
+  --selected-text: #e0e0e0;
+  --purchasable-bg: #253a2a;
+  --purchasable-text: #bfe9c5;
+  --button-text: #dedede;
+  --selected-border: #888;
+  --danger-menu: #e08080;
+  --score-bg: #1c1c1c;
+  --score-border: #2a2a2a;
+  --score-text: #ccc;
+  --score-tie: #777;
+  --wave-bg: #0a0a0a;
+  --wave-border: #1a1a1a;
+  --ink-rgb: 255,255,255;
+  --shadow-rgb: 0,0,0;
+  --inset-rgb: 20,20,20;
+  --well-rgb: 18,18,18;
+  --focus-rgb: 220,238,255;
+  --glow-rgb: 160,205,255;
+  --reveal-rgb: 244,251,255;
+  --success-rgb: 80,160,80;
+  --saved-top-rgb: 80,130,80;
+  --saved-bottom-rgb: 42,74,42;
+  --chart-label-rgb: 200,200,200;
+  --chart-shadow-rgb: 12,12,12;
+  --slider-focus-rgb: 122,148,122;
+  --positive-rgb: 99,198,111;
+  --negative-rgb: 192,80,80;
+  --victory-rgb: 72,187,120;
+  --defeat-rgb: 245,101,101;
+  --font-body: 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Consolas', monospace;
+  --font-code: monospace;
+  --font-heading: var(--font-body);
+  --backdrop: #000b;
+  --dev-backdrop: rgba(0,0,0,0.75);
+  --dev-hover: #1a1a1a;
+  --overlay-shadow: 0 8px 32px rgba(0,0,0,0.7);
+  --heading-glow: none;
+  --page-texture: none;
+  --probe: #ffffff;
+  --drifter: #000000;
+  --drifter-backing: rgba(220,220,220,0.55);
+  --explosion: #ffffff;
+  --wave-guide: #1c1c1c;
+  --instrument-ink-rgb: 255,255,255;
+}
+
+:root:where([data-theme]:not([data-theme="graphite"])) {
+  --icon: var(--text);
+  --focus: var(--accent);
+  --reveal-text: var(--text);
+  --btn-hover-bottom: var(--btn-hover);
+  --btn-active-border: var(--accent);
+  --btn-active-top: var(--panel2);
+  --btn-active-bottom: var(--btn-top);
+  --btn-primary-top: var(--btn-top);
+  --danger-text: var(--danger);
+  --success-text: var(--success);
+  --saved-text: var(--success);
+  --chart-bg: var(--panel2);
+  --input-bg: var(--console-bg);
+  --chart-neutral: var(--text-dim);
+  --chart-positive: var(--success);
+  --chart-negative: var(--danger);
+  --slider-thumb: var(--accent);
+  --reveal-border: var(--border2);
+  --reveal-bright: var(--accent);
+  --meter-bg: var(--console-bg);
+  --stock-up: var(--success);
+  --stock-down: var(--danger);
+  --combat-bg: var(--console-bg);
+  --artifact-cell: var(--panel2);
+  --artifact-completed: var(--btn-top);
+  --artifact-outline: var(--accent);
+  --artifact-current-text: var(--text);
+  --artifact-empty: var(--console-bg);
+  --artifact-filled: var(--btn-top);
+  --selected-bg: var(--btn-top);
+  --selected-text: var(--text);
+  --purchasable-bg: color-mix(in srgb, var(--success) 12%, var(--panel));
+  --purchasable-text: var(--success);
+  --button-text: var(--text);
+  --selected-border: var(--accent);
+  --danger-menu: var(--danger);
+  --score-bg: var(--console-bg);
+  --score-border: var(--border);
+  --score-text: var(--text);
+  --score-tie: var(--text-muted);
+  --ink-rgb: var(--theme-ink-rgb);
+  --inset-rgb: var(--theme-inset-rgb);
+  --well-rgb: var(--theme-inset-rgb);
+  --focus-rgb: var(--accent-rgb);
+  --glow-rgb: var(--accent-rgb);
+  --reveal-rgb: var(--accent-rgb);
+  --saved-top-rgb: var(--success-rgb);
+  --saved-bottom-rgb: var(--success-rgb);
+  --chart-label-rgb: var(--theme-ink-rgb);
+  --chart-shadow-rgb: var(--theme-inset-rgb);
+  --slider-focus-rgb: var(--accent-rgb);
+  --positive-rgb: var(--success-rgb);
+  --negative-rgb: var(--danger-rgb);
+  --victory-rgb: var(--success-rgb);
+  --defeat-rgb: var(--danger-rgb);
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+  --font-code: var(--font-mono);
+  --dev-backdrop: var(--backdrop);
+  --dev-hover: var(--btn-hover);
+  --disabled-bg: var(--console-bg);
+  --disabled-text: var(--text-muted);
+  --disabled-border: var(--border2);
+  --wave-border: var(--border2);
+  --wave-guide: rgba(255,255,255,0.12);
+  --instrument-top: var(--wave-bg);
+  --instrument-bottom: var(--wave-bg);
+}
+
+:root[data-theme="paper"] {
+  --bg: #eee9df; --panel: #fbf8ef; --panel2: #f2ede2;
+  --border: #c5bcaa; --border2: #928775;
+  --text: #292b2d; --text-dim: #52514b; --text-muted: #625e55;
+  --accent: #315b7d; --accent-rgb: 49,91,125;
+  --console-bg: #e8e2d5; --btn-top: #f7f3e9; --btn-bot: #f7f3e9; --btn-hover: #e3dac8;
+  --btn-active-top: var(--btn-top);
+  --danger: #a32e36; --danger-rgb: 163,46,54;
+  --success: #286040; --success-rgb: 40,96,64;
+  --theme-ink-rgb: 41,43,45; --theme-inset-rgb: 110,96,71;
+  --font-heading: Georgia, 'Times New Roman', serif;
+  --backdrop: rgba(37,33,25,0.48);
+  --page-texture: linear-gradient(110deg, rgba(255,255,255,0.25), transparent 55%);
+  --wave-bg: #222821;
+  --combat-bg: #e8e2d5; --probe: #244e6e; --drifter: #9b3335;
+  --drifter-backing: #fbf8ef; --explosion: #765819;
+}
+:root[data-theme="phosphor"] {
+  --bg: #080f0b; --panel: #101c14; --panel2: #0c1710;
+  --border: #2d5037; --border2: #4a7755;
+  --text: #c7e6cd; --text-dim: #a2c7ab; --text-muted: #92b99b;
+  --accent: #79ec98; --accent-rgb: 121,236,152;
+  --console-bg: #080f0b; --btn-top: #1d3625; --btn-bot: #1d3625; --btn-hover: #284831;
+  --danger: #ffaaaa; --danger-rgb: 255,170,170;
+  --success: #94edab; --success-rgb: 148,237,171;
+  --theme-ink-rgb: 199,230,205; --theme-inset-rgb: 0,0,0;
+  --font-body: 'IBM Plex Mono', 'Consolas', monospace;
+  --heading-glow: 0 0 8px rgba(121,236,152,0.18);
+  --page-texture: radial-gradient(ellipse at top, rgba(121,236,152,0.035), transparent 70%);
+  --wave-bg: #070e09;
+  --probe: #b7ffca; --drifter: #ffaaaa; --drifter-backing: #352122; --explosion: #f1ffd6;
+}
+:root[data-theme="amber"] {
+  --bg: #161109; --panel: #251c10; --panel2: #1d160d;
+  --border: #57442a; --border2: #866a40;
+  --text: #f1dfbd; --text-dim: #d5ba8c; --text-muted: #c8ad80;
+  --accent: #ffc363; --accent-rgb: 255,195,99;
+  --console-bg: #120e08; --btn-top: #332718; --btn-bot: #43321b; --btn-hover: #513c20;
+  --danger: #ffa59a; --danger-rgb: 255,165,154;
+  --success: #b6dc96; --success-rgb: 182,220,150;
+  --theme-ink-rgb: 241,223,189; --theme-inset-rgb: 0,0,0;
+  --font-body: 'IBM Plex Mono', 'Consolas', monospace;
+  --heading-glow: 0 0 7px rgba(255,195,99,0.12);
+  --page-texture: radial-gradient(ellipse at top, rgba(255,195,99,0.035), transparent 70%);
+  --wave-bg: #130f09;
+  --probe: #ffd486; --drifter: #acc9fa; --drifter-backing: #252d3b; --explosion: #fff6da;
+}
+:root[data-theme="blueprint"] {
+  --bg: #0c1c30; --panel: #12283e; --panel2: #102337;
+  --border: #33546e; --border2: #527c98;
+  --text: #d2e7f2; --text-dim: #aec9dc; --text-muted: #9fbbcf;
+  --accent: #80dce9; --accent-rgb: 128,220,233;
+  --console-bg: #0a1a2a; --btn-top: #142f47; --btn-bot: #142f47; --btn-hover: #23465f;
+  --danger: #ffaca6; --danger-rgb: 255,172,166;
+  --success: #9ee3ba; --success-rgb: 158,227,186;
+  --theme-ink-rgb: 210,231,242; --theme-inset-rgb: 0,0,0;
+  --font-heading: 'IBM Plex Mono', 'Consolas', monospace;
+  --page-texture: repeating-linear-gradient(0deg, transparent 0 23px, rgba(128,220,233,0.045) 23px 24px), repeating-linear-gradient(90deg, transparent 0 23px, rgba(128,220,233,0.045) 23px 24px);
+  --wave-bg: #081723;
+  --probe: #b9f6ff; --drifter: #ffbd96; --drifter-backing: #513d32; --explosion: #ffffff;
+}
+
+/* Apply personality without overriding density, panel order, or numeric sizing. */
+body { background-image: var(--page-texture); }
+.section-title, .artifact-map-title, .game-dialog h2 { font-family: var(--font-heading); }
+:root[data-theme]:not([data-theme="graphite"]) .section-title {
+  color: var(--accent);
+  text-shadow: var(--heading-glow);
+}
+:root[data-theme="paper"] .section-title { letter-spacing: 0.04em; }
+:root[data-theme="paper"] .section-card { box-shadow: 0 1px 3px rgba(68,54,30,0.08); }
+:root[data-theme="paper"] .btn { box-shadow: none; }
+:root[data-theme="phosphor"] :is(.section-card, .btn, .header-action-menu, .header-preference select),
+:root[data-theme="blueprint"] :is(.section-card, .btn) { border-radius: 1px; }
+:root[data-theme="phosphor"] .btn-primary { box-shadow: inset 2px 0 var(--accent); }
+:root[data-theme="amber"] .btn:not(:disabled) { box-shadow: inset 0 1px 3px rgba(0,0,0,0.35); }
+:root[data-theme="blueprint"] .btn:not(:disabled) { border-color: var(--border2); }
+:root[data-theme]:not([data-theme="graphite"]) .section-tabs button[aria-selected="true"],
+:root[data-theme]:not([data-theme="graphite"]) .artifact-tabs [aria-selected="true"] {
+  box-shadow: inset 0 -2px var(--accent);
+}
+.header-preference select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.header-preference select { min-width: 0; }
+
+/* Quantum instruments retain dark wells so their distinct particle colors stay
+   legible, including in Paper. Their chrome follows the surrounding theme. */
+.qchip-tile {
+  --ink-rgb: var(--instrument-ink-rgb);
+  --success-rgb: 80,160,80;
+  --negative-rgb: 192,80,80;
+}
+
+:root[data-theme]:not([data-theme="graphite"]) .sparkline-axis-label {
+  color: var(--text-muted);
+  text-shadow: none;
+}
