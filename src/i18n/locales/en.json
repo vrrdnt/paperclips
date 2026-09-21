@@ -852,6 +852,7 @@
     "spacePanel.wireProduction": "Wire Production",
     "spacePanel.wireSec": "Wire/sec",
     "strategyPanel.auto": "Auto {value1}",
+    "strategyPanel.payoffMatrix": "Tournament payoff matrix",
     "strategyPanel.round": "Round {animRound} / {totalRounds} — {value3}",
     "strategyPanel.runTournamentOps": "Run Tournament ({newTourneyCost} ops)",
     "strategyPanel.strategy": "Strategy",

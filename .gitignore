@@ -45,3 +45,4 @@ main.js
 projects.js
 
 !tests/browser/themes.spec.ts-snapshots/*.png
+!tests/browser/strategy-layout.spec.ts-snapshots/*.png

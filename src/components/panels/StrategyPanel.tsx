@@ -22,6 +22,9 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
 }) {
   useLocale();
   const [a, b] = choiceNames ?? ['A', 'B'];
+  const label = (name: string) => translate(choiceText(name)).split('_').map((word, i, words) => (
+    <React.Fragment key={i}>{word}{i < words.length - 1 && <>_<wbr /></>}</React.Fragment>
+  ));
   const cell = (id: Cell, hVal: number, vVal: number) => {
     const isFlashing = flash === id;
     const scoreStyle = (score: number, other: number): React.CSSProperties => ({
@@ -53,39 +56,30 @@ function PayoffGrid({ payoff, choiceNames, flash }: {
     );
   };
 
-  const labelStyle: React.CSSProperties = {
-    fontSize: 'var(--mobile-label-size, 9px)', fontWeight: 600, color: 'var(--text-muted)',
-    textTransform: 'uppercase', letterSpacing: '0.04em',
-    padding: '0 2px', overflowWrap: 'anywhere',
-  };
-
   return (
-    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 3, marginTop: 4 }}>
-      <colgroup>
-        <col style={{ width: '18%' }} />
-        <col style={{ width: '41%' }} />
-        <col style={{ width: '41%' }} />
-      </colgroup>
-      <thead>
-        <tr>
-          <td />
-          <th style={{ ...labelStyle, textAlign: 'center' }}>{translate(choiceText(a))}</th>
-          <th style={{ ...labelStyle, textAlign: 'center' }}>{translate(choiceText(b))}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th style={{ ...labelStyle, textAlign: 'right' }}>{translate(choiceText(a))}</th>
-          {cell('AA', payoff[0][0], payoff[0][0])}
-          {cell('AB', payoff[0][1], payoff[1][0])}
-        </tr>
-        <tr>
-          <th style={{ ...labelStyle, textAlign: 'right' }}>{translate(choiceText(b))}</th>
-          {cell('BA', payoff[1][0], payoff[0][1])}
-          {cell('BB', payoff[1][1], payoff[1][1])}
-        </tr>
-      </tbody>
-    </table>
+    <div className="payoff-grid-scroll" role="region" aria-label={tr("strategyPanel.payoffMatrix")} tabIndex={0}>
+      <table className="payoff-grid">
+        <thead>
+          <tr>
+            <td />
+            <th scope="col">{label(a)}</th>
+            <th scope="col">{label(b)}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">{label(a)}</th>
+            {cell('AA', payoff[0][0], payoff[0][0])}
+            {cell('AB', payoff[0][1], payoff[1][0])}
+          </tr>
+          <tr>
+            <th scope="row">{label(b)}</th>
+            {cell('BA', payoff[1][0], payoff[0][1])}
+            {cell('BB', payoff[1][1], payoff[1][1])}
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
 

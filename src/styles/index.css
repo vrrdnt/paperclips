@@ -1241,6 +1241,30 @@ input[type="range"].price-slider::-moz-range-thumb {
 .stock-down { color: var(--stock-down); }
 
 /* ── Tournament / strategy ──────────────────────────────────────── */
+.payoff-grid-scroll { max-width: 100%; overflow-x: auto; }
+.payoff-grid-scroll:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.payoff-grid {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 2px;
+  margin-top: 4px;
+}
+.payoff-grid th {
+  padding: 0 2px;
+  font-size: var(--mobile-label-size, 9px);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  text-align: center;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+/* Let complete words determine the row-label width before sharing score space. */
+.payoff-grid tbody th { width: 1%; text-align: right; }
+.payoff-grid tbody td { width: 50%; }
+
 .strat-select {
   background: var(--panel2);
   border: 1px solid var(--border);
